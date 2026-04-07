@@ -1,0 +1,402 @@
+================================================================================
+DealLock — PROJECT ARCHITECTURE & COMPONENTS OVERVIEW
+================================================================================
+Workspace root: fte4312 (Hardhat + DealLock Solidity + React frontend + docs)
+
+This document describes the current system architecture, major components, data
+flows, and how pieces connect. It reflects the repository as of the latest
+implementation:
+
+- Milestone escrow for digital freelance deliverables
+- Optional off-chain agreement metadata in the browser (localStorage)
+- **Sepolia-first** MVP demo (chain id 11155111); Hardhat local remains optional
+
+
+--------------------------------------------------------------------------------
+1. HIGH-LEVEL ARCHITECTURE
+--------------------------------------------------------------------------------
+
+The project is a **client-only decentralized application (dApp)** backed by a
+**single Solidity contract per agreement**. There is **no backend server**,
+**no database**, and **no factory contract** in scope.
+
+  ┌─────────────────────────────────────────────────────────────────────────┐
+  │                         USER BROWSER                                     │
+  │  React UI (Vite) ── wagmi/viem ── Wallet (e.g. MetaMask)                │
+  │       │                                                                  │
+  │       ├── Reads/writes: Ethereum JSON-RPC (Sepolia primary; Hardhat opt.)│
+  │       ├── Optional: localStorage (contract address + agreement metadata) │
+  │       └── Network UX: switch-to-Sepolia, explorer links (Sepolia only)   │
+  └─────────────────────────────────────────────────────────────────────────┘
+                                    │
+                                    ▼
+  ┌─────────────────────────────────────────────────────────────────────────┐
+  │         EVM NETWORK — Sepolia (11155111) is the default demo target      │
+  │         Hardhat (31337) optional for local dev                           │
+  │                    One deployed DealLock instance = one agreement         │
+  └─────────────────────────────────────────────────────────────────────────┘
+
+**Product / demo stance**
+- **Sepolia** is the primary network for end-to-end demos: public RPC, Etherscan,
+  realistic confirmation times.
+- **Hardhat** stays in wagmi for developers who run `npx hardhat node` + Vite
+  proxy; the UI does not treat it as the default flow.
+
+**Separation of concerns**
+- **On-chain:** roles, escrow balance, agreement state, milestone list (text,
+  wei amounts, deadlines, proof string, submittedAt, per-milestone state).
+- **Off-chain (browser only):** project title, service template choice,
+  evidence/acceptance/dispute notes, per-milestone notes — keyed by contract
+  address for UI context; **not** verified by the contract.
+
+
+--------------------------------------------------------------------------------
+2. REPOSITORY LAYOUT
+--------------------------------------------------------------------------------
+
+fte4312/
+├── hardhat.config.ts          # Solidity paths; optional `sepolia` network
+│                              # (SEPOLIA_RPC_URL + PRIVATE_KEY)
+├── scripts/
+│   └── deploy-sepolia.ts      # CLI sample deploy to Sepolia
+├── description.txt            # This file
+│
+├── DealLock/
+│   ├── contracts/
+│   │   └── DealLock.sol
+│   ├── test/
+│   │   └── DealLock.ts
+│   ├── docs/
+│   │   └── mvp.md
+│   └── README.md              # Sepolia demo runbook + install / flow
+│
+└── frontend/
+    ├── .env.example             # VITE_SEPOLIA_RPC_URL, VITE_SEPOLIA_EXPLORER
+    ├── package.json
+    ├── vite.config.ts         # Dev: Hardhat RPC middleware /rpc-hardhat → :8545
+    ├── tsconfig.json
+    └── src/
+        ├── main.tsx
+        ├── App.tsx
+        ├── index.css
+        ├── wagmi.ts           # Sepolia-first chain order; env-driven Sepolia RPC
+        ├── network.ts         # Chain IDs, explorer URLs, switchToSepolia()
+        ├── contract.ts
+        ├── bytecode.ts
+        ├── types.ts
+        ├── templates.ts
+        ├── storage.ts
+        └── components/
+            ├── WalletPanel.tsx
+            ├── CreateAgreementForm.tsx
+            ├── AgreementOverview.tsx
+            ├── AgreementContextSections.tsx
+            ├── MilestoneList.tsx
+            └── ActionPanel.tsx
+
+
+--------------------------------------------------------------------------------
+3. SMART CONTRACT LAYER (DealLock.sol)
+--------------------------------------------------------------------------------
+
+**Language / tooling:** Solidity ^0.8.20, compiled via Hardhat (optimizer on).
+
+**Core idea:** One deployment = one bilateral agreement between an immutable
+`client` (deployer) and `provider`, with a fixed array of milestones. Funds move
+only through explicit functions; sequential rules prevent skipping ahead.
+
+**State machines**
+- **AgreementState:** Proposed → Accepted → Funded → Completed (Cancelled enum
+  value exists for possible extension; MVP focuses on the main path).
+- **MilestoneState:** Pending → Submitted → Released OR Refunded.
+
+**Milestone struct (on-chain)**
+- description (string)
+- amount (wei)
+- deadline (unix timestamp)
+- proof (string — delivery reference: URL, hash, CID, etc.)
+- submittedAt
+- state (MilestoneState)
+
+**Notable external surface (conceptual)**
+- Constructor: provider address + parallel arrays of descriptions, amounts,
+  deadlines. `client` = msg.sender; `totalAmount` = sum of milestone amounts.
+- Provider: `acceptAgreement()`
+- Client: `fundAgreement()` payable with exact `totalAmount`
+- Provider: `submitMilestone(milestoneId, proof)`
+- Client: `approveMilestone(milestoneId)`
+- Client: `refundExpiredMilestone(milestoneId)` when pending past deadline
+- Views: `client`, `provider`, `totalAmount`, `fundedAmount`, `releasedAmount`,
+  `refundedAmount`, `agreementState`, `getContractBalance`, `getMilestoneCount`,
+  `getMilestone(index)`, etc.
+
+**Events:** AgreementAccepted, AgreementFunded, MilestoneSubmitted,
+MilestoneReleased, MilestoneRefunded.
+
+**Tests:** `DealLock/test/DealLock.ts` — local Hardhat only; unchanged by
+Sepolia wiring.
+
+**CLI deploy (optional):** `scripts/deploy-sepolia.ts` deploys a sample
+three-milestone agreement when `npx hardhat run ... --network sepolia` is used
+with env vars set (see README).
+
+
+--------------------------------------------------------------------------------
+4. HARDHAT CONFIGURATION (ROOT)
+--------------------------------------------------------------------------------
+
+- **paths:** sources under `DealLock/contracts`, Mocha tests under `DealLock/test`.
+- **networks.sepolia:** Present only when both `SEPOLIA_RPC_URL` and `PRIVATE_KEY`
+  are set in the environment (for scripted deploys, not required for frontend).
+
+
+--------------------------------------------------------------------------------
+5. FRONTEND RUNTIME STACK
+--------------------------------------------------------------------------------
+
+**Framework:** React 19, TypeScript, Vite 6.
+
+**Web3**
+- **wagmi** — React hooks for account, chain, read/write contracts.
+- **viem** — Address types, `parseEther`, clients; wagmi actions for receipts.
+
+**Data fetching**
+- **@tanstack/react-query** — Required by wagmi v2.
+
+**Wallet connection**
+- Injected connector (e.g. MetaMask).
+
+**Configured chains** (`frontend/src/wagmi.ts`)
+- **Sepolia** is listed **first** in `createConfig({ chains: [sepolia, hardhat] })`
+  so wagmi treats it as the default chain for new sessions.
+- **Sepolia RPC:** `http(import.meta.env.VITE_SEPOLIA_RPC_URL)` when set; otherwise
+  wagmi/viem default public transport for Sepolia.
+- **Hardhat** (31337): `http()` to `window.location.origin + '/rpc-hardhat'` in
+  dev (Vite proxy), or `http://127.0.0.1:8545` in production preview.
+
+Mainnet is intentionally omitted.
+
+**Environment variables** (`frontend/.env`, see `.env.example`)
+- `VITE_SEPOLIA_RPC_URL` — optional dedicated Sepolia JSON-RPC (Alchemy, Infura).
+- `VITE_SEPOLIA_EXPLORER` — defaults to `https://sepolia.etherscan.io`; used for
+  tx and address links in the UI.
+
+**Local RPC / CORS (Hardhat only)**
+- Vite proxies `/rpc-hardhat` → `http://127.0.0.1:8545` with path rewrite.
+- Used only when developing against a local node.
+
+
+--------------------------------------------------------------------------------
+6. NETWORK MODULE (network.ts)
+--------------------------------------------------------------------------------
+
+Centralizes demo network behavior:
+
+- **Constants:** `SEPOLIA_CHAIN_ID` (11155111), `HARDHAT_CHAIN_ID` (31337),
+  `SEPOLIA_EXPLORER` (from env or default), `SUPPORTED_CHAIN_IDS`.
+- **Helpers:** `isSupportedChain()`, `isSepoliaChain()`, `chainName()`.
+- **Explorer URLs:** `explorerTxUrl(chainId, hash)`,
+  `explorerAddressUrl(chainId, address)` — return URLs on Sepolia; `null` on
+  Hardhat (no explorer in UI for local).
+- **switchToSepolia():** `wallet_switchEthereumChain` for chain 0xaa36a7; on error
+  4902, `wallet_addEthereumChain` with public RPC + explorer metadata.
+
+
+--------------------------------------------------------------------------------
+7. FRONTEND SOURCE MODULES (DETAIL)
+--------------------------------------------------------------------------------
+
+main.tsx
+  WagmiProvider + QueryClientProvider + App.
+
+App.tsx
+  - Persists `deallock_contract_address`; create/load tabs; agreement metadata.
+  - Clears `localStorage` when active contract is removed (avoids stale address).
+  - **Supported chain gate:** reads enabled only when `isSupportedChain(chainId)`.
+  - **Wrong-network banner** with “Switch to Sepolia” (calls `switchToSepolia`).
+  - **Contract read error banner** when `client()` fails (wrong chain/address hints,
+    Sepolia Etherscan link, “Clear saved contract & start over”, collapsible viem detail).
+  - **Refresh contract state** button (refetches all read contracts).
+  - Load card: copy + Sepolia Etherscan link for active contract when applicable.
+  - Passes `contractAddress` into AgreementOverview for contract row + links.
+
+wagmi.ts
+  Sepolia-first `createConfig`; module augmentation for Register.config.
+
+network.ts
+  See section 6.
+
+contract.ts / bytecode.ts / types.ts / templates.ts / storage.ts
+  Unchanged roles from prior overview (ABI, bytecode, types, templates, metadata).
+
+WalletPanel.tsx
+  - Network **badge** (Sepolia / Hardhat / unsupported).
+  - **Role badge** (client / provider).
+  - Copy + Etherscan link for connected address (Sepolia).
+  - **Switch to Sepolia** when not on Sepolia.
+  - **Connect Wallet** uses `connectAsync` with visible error formatting (no silent failures).
+
+CreateAgreementForm.tsx
+  - Deploy allowed only on a **supported** chain; message if wrong network.
+  - Deploy signer: `useWalletClient`, then `getWalletClient` fallback, then
+    `window.ethereum` + viem `createWalletClient(custom)` if needed.
+  - Deploy flow: pending → confirming (with Sepolia tx link) → success with
+    contract + deployment tx links; validation errors surfaced inline.
+
+AgreementOverview.tsx
+  - Contract address row: copy + Etherscan.
+  - Client / provider cells: short address, copy, explorer link (Sepolia).
+  - Financial grid unchanged in meaning.
+
+AgreementContextSections.tsx
+  Product framing (service context, evidence, covered vs manual disputes).
+
+MilestoneList.tsx
+  Milestone cards with optional off-chain notes and submission evidence display.
+
+ActionPanel.tsx
+  - All action buttons **disabled** when chain is not supported.
+  - Tx status: wallet signature → submitted → confirming → success/error;
+    **Sepolia Etherscan** links for hashes when available.
+
+
+--------------------------------------------------------------------------------
+8. DATA & CONTROL FLOWS
+--------------------------------------------------------------------------------
+
+**Deploy new agreement**
+1. User connects wallet on a **supported** chain (Sepolia for demo).
+2. CreateAgreementForm builds constructor args; wallet signs deployment tx.
+3. App saves address + AgreementMetadata; switches to load view.
+
+**Load existing agreement**
+1. User pastes `0x…` and loads; metadata loaded from localStorage if present.
+
+**Typical on-chain lifecycle** (unchanged)
+1. Proposed → provider `acceptAgreement` → Accepted.
+2. Client `fundAgreement` (exact total) → Funded.
+3. Sequential: `submitMilestone` → `approveMilestone` or `refundExpiredMilestone`.
+4. All milestones resolved → Completed.
+
+
+--------------------------------------------------------------------------------
+9. DOCUMENTATION & SPECIFICATION
+--------------------------------------------------------------------------------
+
+- **DealLock/README.md** — Sepolia-focused runbook: install, env, MetaMask,
+  faucets, two-wallet demo, E2E steps, presentation cheat sheet, optional CLI deploy.
+- **DealLock/docs/mvp.md** — Functional spec, scenario framing, off-chain metadata note.
+
+
+--------------------------------------------------------------------------------
+10. WHAT IS EXPLICITLY OUT OF SCOPE (CURRENT MVP)
+--------------------------------------------------------------------------------
+
+- Backend API, OAuth, centralized database, SIWE
+- ERC-20 (native ETH only)
+- Factory / marketplace / indexer / reputation / arbitration
+- On-chain milestone edits after deploy
+- Quality oracle for the `proof` string
+
+
+--------------------------------------------------------------------------------
+11. MVP TROUBLESHOOTING (COMMON USER ISSUES)
+--------------------------------------------------------------------------------
+
+These issues are usually environment or copy-paste mistakes, not contract bugs.
+
+**Wrong network in MetaMask (very common)**  
+- The MVP targets **Sepolia** (chain id **11155111**).  
+- If MetaMask is on **Ethereum Mainnet** (chain id **1**), deploy and reads fail with
+  chain mismatch errors (e.g. “Current Chain ID: 1 Expected Chain ID: 11155111”).  
+- **Fix:** MetaMask network dropdown → **Sepolia**. Enable test networks in MetaMask
+  Settings → Advanced if Sepolia is hidden.
+
+**Wallet address vs contract address**  
+- After deploy, use the **contract address** shown in the app or on the deployment tx
+  on Sepolia Etherscan (address must appear as a **Contract**).  
+- Pasting a **wallet** address into Load causes `client()` to return no data (`0x`).  
+- **Fix:** Use **Clear saved contract & start over** (or remove `deallock_contract_address`
+  from site localStorage) and load the real contract address.
+
+**Sepolia gas / “internal error” on deploy**  
+- Deployment needs **Sepolia test ETH** (faucets; see DealLock/README.md).  
+- Optional: set `VITE_SEPOLIA_RPC_URL` in `frontend/.env` to a reliable RPC if the
+  default public endpoint is flaky.
+
+**Local Hardhat**  
+- Wallet on Hardhat (31337) requires `npx hardhat node` running; dev app proxies
+  `/rpc-hardhat` to `localhost:8545`. If nothing listens, RPC calls fail.
+
+
+--------------------------------------------------------------------------------
+12. FRONTEND DESIGN & VISUAL SYSTEM
+--------------------------------------------------------------------------------
+
+All presentation lives in **`frontend/src/index.css`** (no CSS-in-JS, no UI kit).
+The layout is a **single-column, dark “dashboard”** aimed at clarity for demos.
+
+**Layout & structure**  
+- Root **`.app`**: max-width **720px**, centered, comfortable vertical padding.  
+- **Header**: centered title “DealLock” + muted subtitle (Sepolia testnet framing).  
+- Content is a **stack of cards** (`.card`): bordered panels with consistent spacing.
+
+**Color tokens (CSS variables on `:root`)**  
+- **Background** `--bg` (#0f1117) and **surface** `--surface` (#1a1d27) for cards.  
+- **Border** `--border` (#2a2d3a); **text** / **text-dim** for hierarchy.  
+- **Accent** indigo (`--accent` / `--accent-hover`) for primary buttons and focus rings.  
+- **Semantic**: `--green`, `--red`, `--orange`, `--blue` for states, badges, and banners.
+
+**Typography**  
+- System UI stack (San Francisco / Segoe / Roboto).  
+- **Monospace** for addresses, hashes, and numeric contract fields.  
+- Section titles inside cards: **uppercase**, small caps tracking, dim color — reads as labels.
+
+**Components & patterns**  
+- **Tabs** (Create New / Load Existing): full-width paired buttons, active state highlighted.  
+- **Wallet panel**: horizontal flex — short address, copy / Etherscan chips, network badge,
+  role badge, disconnect; orange **Switch to Sepolia** when not on Sepolia.  
+- **Banners**: full-width alerts — **warn** (wrong network), **error** (contract read /
+  wallet errors with optional `<details>` for raw message), **info** (loading).  
+- **Forms**: dark inputs on darker bg; focus border uses accent; validation errors in a
+  dedicated block; deploy progress as **tx-status** lines (pending / success / error) with
+  Etherscan links on Sepolia.  
+- **Agreement overview**: responsive **CSS grid** of labeled stat tiles; contract row with
+  copy + explorer.  
+- **Milestone list**: each milestone is a **card** with header, state **pill badge**, and
+  optional off-chain notes; agreement context sections are separate readable text blocks.  
+- **Action panel**: grouped primary actions with disabled state when chain unsupported;
+  transaction feedback mirrors deploy styling.
+
+**Interaction**  
+- Primary actions: solid indigo buttons; destructive / secondary uses `.btn-small`,
+  `.btn-danger`, `.btn-icon` (ghost outline chips for copy/links).  
+- Hover transitions kept short (≈150ms) for a crisp tool feel.
+
+Overall: **minimal, high-contrast dark theme**, strong **status color language**, and
+**readability-first** layout for wallet + contract debugging during coursework demos.
+
+
+--------------------------------------------------------------------------------
+13. OPERATIONAL COMMANDS (REFERENCE)
+--------------------------------------------------------------------------------
+
+Workspace root (fte4312):
+  npm install
+  npx hardhat test                    # Local tests (no Sepolia required)
+  npx hardhat node                    # Optional local chain for Hardhat path
+  # Optional Sepolia CLI deploy (set SEPOLIA_RPC_URL + PRIVATE_KEY):
+  npx hardhat run scripts/deploy-sepolia.ts --network sepolia
+
+frontend/:
+  cp .env.example .env              # optional: VITE_SEPOLIA_RPC_URL, explorer
+  npm install
+  npm run dev                       # http://localhost:5173
+  npm run build                     # tsc + vite build
+
+Regenerate `frontend/src/bytecode.ts` after recompiling `DealLock.sol`.
+
+
+================================================================================
+END OF OVERVIEW
+================================================================================

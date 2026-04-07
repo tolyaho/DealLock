@@ -2,24 +2,63 @@
 
 ## 1. Purpose
 
-This document defines the exact MVP scope and behavior of **DealLock**, a milestone-based escrow smart contract for online service agreements.
+This document defines the exact MVP scope and behavior of **DealLock**, a milestone-based escrow smart contract for **structured digital freelance deliverables** (e.g. websites, UI/UX, branding packages, small frontends/MVPs)—not a generic “all online services” platform.
 
-The goal of the MVP is to provide a clear, implementation-ready specification before coding begins.
+The goal of the MVP is to provide a clear, implementation-ready specification. The **on-chain** behavior is unchanged from the original escrow design; this document also records **product and dispute-boundary framing** so implementations do not overclaim what the contract enforces.
 
 ## 2. MVP Goal
 
 The MVP should support a simple two-party workflow:
 
-- a client proposes an agreement to a specific provider;
+- a client deploys an agreement toward a specific provider (with milestone descriptions, amounts, and deadlines fixed at deploy time);
 - the provider explicitly accepts the agreement;
 - the client deposits the exact total payment into escrow;
 - milestones are processed in sequence;
-- the provider submits proof for the current milestone;
-- the client approves valid submissions;
+- the provider submits a **non-empty delivery reference** for the current milestone (on-chain field: `proof`—typically a URL, commit hash, content hash, IPFS CID, etc.);
+- the client approves submissions (release of funds is the on-chain “approval”);
 - approved milestone funds are released to the provider;
 - expired, unreleased milestones can be refunded by the client in order.
 
-The MVP is intentionally minimal and does not attempt to solve full dispute resolution.
+The MVP is intentionally minimal. It does **not** resolve subjective quality disputes, revision counts, or scope creep—the contract enforces **workflow and escrow rules**, not “was the design good enough?” judgments.
+
+### 2.1 Suitable service categories (product framing)
+
+The reference frontend and documentation assume work that decomposes into **staged digital handoffs**, for example:
+
+- Website or landing page development (structure → build → deploy)  
+- UI/UX design (flows/wires → hi-fi → export / design system)  
+- Branding / logo packages (concepts → refinement → final kit)  
+- Simple MVP or frontend milestones defined clearly in milestone text  
+
+### 2.2 Suitable evidence types (off-chain pointers)
+
+The contract stores a **string reference** only. Suitable patterns include:
+
+- Git repository, release, or commit links  
+- Figma or design-tool links (with version where possible)  
+- Hashes of ZIP/PDF exports (e.g. SHA-256)  
+- Preview URLs, Loom or demo links  
+- Shared drive folders (with access agreed off-chain)  
+- IPFS CIDs  
+
+### 2.3 Disputes the system structurally supports
+
+- Enforcing **accept → fund → sequential milestones**  
+- Recording **that** a reference was submitted and **when**  
+- **Release** after client approval  
+- **Refund** path for expired pending milestones (in order)  
+
+### 2.4 Disputes not covered by the MVP
+
+- Subjective design or UX quality  
+- Code correctness, security, or hidden bugs after approval  
+- Whether informal chat messages changed the scope  
+- Aesthetic or brand “fit” without objective checklist in milestone text  
+- Arbitration, reputation, or third-party judging  
+
+### 2.5 Why this specialization matters
+
+Positioning DealLock as **digital milestone escrow with delivery references** aligns user expectations with **on-chain capabilities**. Claiming coverage for “any online service” implies quality and scope enforcement the contract does not provide. A narrower framing makes the MVP **academically honest** and easier to evaluate against real freelance workflows.
 
 ## 3. Actors
 
@@ -62,7 +101,7 @@ Permissions:
 
 The MVP does **not** include:
 
-- arbitration or dispute resolution;
+- arbitration or dispute resolution (including automated “quality” rulings);
 - partial milestone release;
 - milestone revision after deployment;
 - multiple providers or clients;
@@ -70,7 +109,12 @@ The MVP does **not** include:
 - service fees;
 - automatic approval logic;
 - reputation systems;
-- factory contracts for mass deployment.
+- factory contracts for mass deployment;
+- backend, database, or OAuth—any **off-chain** agreement metadata in the reference UI is **browser localStorage only**, for display and scenario context, not consensus.
+
+### 5.1 Frontend-only metadata (non-normative)
+
+The reference React app may store **per-contract-address** metadata locally (e.g. project title, service template id, evidence/acceptance guidance, per-milestone notes). This data is **not** part of the consensus layer and must not be relied on for security or legal proof; the canonical agreement terms for the chain are the **constructor parameters** and subsequent on-chain state.
 
 ## 6. Agreement State Model
 
@@ -136,7 +180,7 @@ Each milestone should store:
 - `description` — short text description
 - `amount` — payment amount in wei
 - `deadline` — UNIX timestamp
-- `proof` — string containing hash, CID, or reference
+- `proof` — string containing a delivery reference (URL, hash, CID, etc.); the reference UI calls this **submission / delivery evidence**
 - `submittedAt` — timestamp of submission
 - `state` — milestone state
 

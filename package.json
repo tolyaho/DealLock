@@ -1,0 +1,25 @@
+{
+  "name": "deallock",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "hardhat test",
+    "build": "hardhat build",
+    "test:mocha": "hardhat test mocha",
+    "test:deallock": "hardhat test test/DealLock.ts",
+    "clean": "hardhat clean"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "type": "module",
+  "private": "true",
+  "devDependencies": {
+    "@nomicfoundation/hardhat-toolbox-mocha-ethers": "^3.0.3",
+    "@types/mocha": "^10.0.10",
+    "@types/node": "^25.5.0",
+    "hardhat": "^3.2.0",
+    "typescript": "^6.0.2"
+  }
+}
