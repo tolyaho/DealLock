@@ -1,9 +1,9 @@
-import { type ReactNode } from "react";
+import { type ReactNode, useState } from "react";
 import { Link } from "react-router-dom";
 import { useAccount, useConnect, useDisconnect, useChainId } from "wagmi";
 import { injected } from "wagmi/connectors";
 import { shortAddress } from "../../types.ts";
-import { chainName, isSupportedChain, isSepoliaChain } from "../../network.ts";
+import { chainName, isSupportedChain, isSepoliaChain, switchToSepolia } from "../../network.ts";
 
 interface AppShellProps {
   children: ReactNode;
@@ -14,40 +14,74 @@ export default function AppShell({ children }: AppShellProps) {
   const { connect } = useConnect();
   const { disconnect } = useDisconnect();
   const chainId = useChainId();
+  const [switching, setSwitching] = useState(false);
 
-  const networkBadgeClass = isSepoliaChain(chainId)
-    ? "badge badge-sepolia"
-    : isSupportedChain(chainId)
-      ? "badge badge-hardhat-chain"
-      : "badge badge-wrong";
+  const sepolia = isSepoliaChain(chainId);
+  const supported = isSupportedChain(chainId);
+
+  async function handleSepolia() {
+    setSwitching(true);
+    await switchToSepolia();
+    setSwitching(false);
+  }
 
   return (
     <div className="app-shell">
       <header className="app-topbar">
         <div className="app-topbar-inner">
           <div className="app-topbar-left">
-            <Link to="/" className="app-topbar-logo">
-              <span className="app-topbar-logo-icon">D</span>
-              DealLock
+            <Link to="/" className="app-topbar-brand" aria-label="DealLock home">
+              <span className="app-topbar-logo-mark" aria-hidden />
+              <span className="app-topbar-brand-text">
+                <span className="app-topbar-logo-name">DealLock</span>
+                <span className="app-topbar-logo-sub">Milestone escrow</span>
+              </span>
             </Link>
-            <div className="app-topbar-sep" />
-            <span className="app-topbar-page">Dashboard</span>
+            <span className="app-topbar-divider" aria-hidden />
+            <span className="app-topbar-env" title={`Connected chain: ${chainName(chainId)}`}>
+              <span
+                className="app-topbar-env-dot"
+                data-state={sepolia ? "ok" : supported ? "local" : "bad"}
+                aria-hidden
+              />
+              <span className="app-topbar-env-label">{chainName(chainId)}</span>
+            </span>
           </div>
           <div className="app-topbar-right">
+            {!sepolia && isConnected && (
+              <button
+                type="button"
+                className="btn btn-warning btn-sm"
+                onClick={handleSepolia}
+                disabled={switching}
+                title="Switch MetaMask to Sepolia"
+              >
+                {switching ? "Switching…" : "Use Sepolia"}
+              </button>
+            )}
             {isConnected && address ? (
-              <div className="app-topbar-wallet">
-                <span className={networkBadgeClass}>{chainName(chainId)}</span>
+              <div className="app-topbar-wallet" title={address}>
+                <span className="app-topbar-wallet-avatar" aria-hidden>
+                  {address.slice(2, 4).toUpperCase()}
+                </span>
                 <span className="app-topbar-addr">{shortAddress(address)}</span>
-                <button className="btn btn-ghost btn-sm" onClick={() => disconnect()}>
+                <button
+                  type="button"
+                  className="btn btn-ghost btn-xs"
+                  onClick={() => disconnect()}
+                  aria-label="Disconnect wallet"
+                  title="Disconnect"
+                >
                   Disconnect
                 </button>
               </div>
             ) : (
               <button
+                type="button"
                 className="btn btn-primary btn-sm"
                 onClick={() => connect({ connector: injected() })}
               >
-                Connect Wallet
+                Connect wallet
               </button>
             )}
           </div>

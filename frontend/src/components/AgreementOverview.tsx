@@ -1,133 +1,134 @@
 import { useChainId } from "wagmi";
 import { type Address } from "viem";
-import { formatEth, shortAddress, agreementLabel } from "../types.ts";
+import { formatEth, shortAddress, type Role } from "../types.ts";
 import { explorerAddressUrl } from "../network.ts";
+import CopyButton from "./ui/CopyButton.tsx";
 
 interface Props {
+  viewerRole: Role;
   clientAddr?: Address;
   providerAddr?: Address;
   totalAmount?: bigint;
   fundedAmount?: bigint;
   releasedAmount?: bigint;
   refundedAmount?: bigint;
-  agreementState?: number;
   balance?: bigint;
-  projectTitle?: string;
-  contractAddress?: Address;
 }
 
-function CopyBtn({ text }: { text: string }) {
-  return (
-    <button
-      type="button"
-      className="btn-icon"
-      title="Copy"
-      onClick={() => navigator.clipboard.writeText(text)}
-    >
-      Copy
-    </button>
-  );
-}
-
-function AddressCell({
+function PartyCard({
   label,
   addr,
   chainId,
+  highlight,
+  tone,
 }: {
   label: string;
   addr?: Address;
   chainId: number;
+  highlight: boolean;
+  tone: "client" | "provider";
 }) {
   const url = addr ? explorerAddressUrl(chainId, addr) : null;
+  const dotColor = tone === "client" ? "var(--client)" : "var(--provider)";
   return (
-    <div className="overview-item">
-      <div className="label">{label}</div>
-      <div className="value address-value">
-        {addr ? (
-          <>
-            <span>{shortAddress(addr)}</span>
-            <CopyBtn text={addr} />
+    <div className={`party-card ${highlight ? "party-card--highlight" : ""}`}>
+      <div className="party-card-label">
+        <span className="party-card-label-icon" style={{ background: dotColor }} aria-hidden />
+        {label}
+      </div>
+      {addr ? (
+        <div className="party-card-body">
+          <span className="party-card-addr">{shortAddress(addr)}</span>
+          <div className="party-card-actions">
+            <CopyButton text={addr} label="Copy" className="btn-xs" />
             {url && (
-              <a href={url} target="_blank" rel="noopener noreferrer" className="btn-icon">
-                ↗
+              <a
+                href={url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="btn btn-ghost btn-xs"
+              >
+                Explorer ↗
               </a>
             )}
-          </>
-        ) : (
-          "—"
-        )}
-      </div>
+          </div>
+        </div>
+      ) : (
+        <span className="text-muted text-small">Not set</span>
+      )}
     </div>
   );
 }
 
 export default function AgreementOverview({
+  viewerRole,
   clientAddr,
   providerAddr,
   totalAmount,
   fundedAmount,
   releasedAmount,
   refundedAmount,
-  agreementState,
   balance,
-  projectTitle,
-  contractAddress,
 }: Props) {
   const chainId = useChainId();
-  const stateLabel = agreementState !== undefined ? agreementLabel(agreementState) : "—";
-  const badgeClass = `badge badge-lg badge-${stateLabel.toLowerCase()}`;
-  const contractUrl = contractAddress ? explorerAddressUrl(chainId, contractAddress) : null;
 
   return (
-    <section className="card">
-      <div className="card-header">
-        <span className="card-title">Agreement Overview</span>
-        {agreementState !== undefined && (
-          <span className={badgeClass}>{stateLabel}</span>
-        )}
+    <section
+      id="dealock-overview"
+      className="surface-card surface-card--pad overview-root anim-fade-rise"
+    >
+      <div className="section-header">
+        <h2 className="section-header-title">Overview</h2>
+        <span className="section-header-desc">Parties and money in escrow</span>
       </div>
-      {projectTitle && <p className="overview-project-title">{projectTitle}</p>}
 
-      {contractAddress && (
-        <div className="overview-contract-row">
-          <span
-            className="text-muted text-xs"
-            style={{ fontWeight: 600, textTransform: "uppercase", letterSpacing: "0.06em" }}
-          >
-            Contract
+      <div className="overview-parties">
+        <PartyCard
+          label="Client"
+          addr={clientAddr}
+          chainId={chainId}
+          highlight={viewerRole === "client"}
+          tone="client"
+        />
+        <PartyCard
+          label="Provider"
+          addr={providerAddr}
+          chainId={chainId}
+          highlight={viewerRole === "provider"}
+          tone="provider"
+        />
+      </div>
+
+      <div className="overview-metrics">
+        <div className="metric-tile">
+          <span className="metric-label">Total</span>
+          <span className="metric-value">
+            {totalAmount !== undefined ? `${formatEth(totalAmount)} ETH` : "—"}
           </span>
-          <code className="mono-sm">{contractAddress}</code>
-          <CopyBtn text={contractAddress} />
-          {contractUrl && (
-            <a href={contractUrl} target="_blank" rel="noopener noreferrer" className="btn-icon">
-              Etherscan ↗
-            </a>
-          )}
         </div>
-      )}
-
-      <div className="overview-grid">
-        <AddressCell label="Client" addr={clientAddr} chainId={chainId} />
-        <AddressCell label="Provider" addr={providerAddr} chainId={chainId} />
-        <div className="overview-item">
-          <div className="label">Total</div>
-          <div className="value">{totalAmount !== undefined ? `${formatEth(totalAmount)} ETH` : "—"}</div>
+        <div className="metric-tile">
+          <span className="metric-label">Funded</span>
+          <span className="metric-value">
+            {fundedAmount !== undefined ? `${formatEth(fundedAmount)} ETH` : "—"}
+          </span>
         </div>
-        <div className="overview-item">
-          <div className="label">Funded</div>
-          <div className="value">{fundedAmount !== undefined ? `${formatEth(fundedAmount)} ETH` : "—"}</div>
+        <div className="metric-tile">
+          <span className="metric-label">Released</span>
+          <span className="metric-value">
+            {releasedAmount !== undefined ? `${formatEth(releasedAmount)} ETH` : "—"}
+          </span>
         </div>
-        <div className="overview-item">
-          <div className="label">Released</div>
-          <div className="value">{releasedAmount !== undefined ? `${formatEth(releasedAmount)} ETH` : "—"}</div>
+        <div className="metric-tile">
+          <span className="metric-label">Refunded</span>
+          <span className="metric-value">
+            {refundedAmount !== undefined ? `${formatEth(refundedAmount)} ETH` : "—"}
+          </span>
         </div>
-        <div className="overview-item">
-          <div className="label">Refunded</div>
-          <div className="value">{refundedAmount !== undefined ? `${formatEth(refundedAmount)} ETH` : "—"}</div>
-        </div>
-        <div className="overview-item">
-          <div className="label">Balance</div>
-          <div className="value">{balance !== undefined ? `${formatEth(balance)} ETH` : "—"}</div>
+        <div className="metric-tile metric-tile--wide">
+          <span className="metric-label">In escrow right now</span>
+          <span className="metric-value">
+            {balance !== undefined ? `${formatEth(balance)} ETH` : "—"}
+          </span>
         </div>
       </div>
     </section>

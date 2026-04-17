@@ -235,37 +235,47 @@ export default function CreateAgreementForm({ onDeployed }: Props) {
 
   const busy = deployState.status === "pending" || deployState.status === "confirming";
 
+  function scrollToOverview() {
+    document.getElementById("dealock-overview")?.scrollIntoView({ behavior: "smooth", block: "start" });
+  }
+
   return (
-    <section className="card">
-      <div className="card-header">
-        <span className="card-title">Create Agreement</span>
+    <section className="surface-card surface-card--pad" id="dealock-create">
+      <div className="surface-card-head">
+        <h2 className="surface-card-title">Create agreement</h2>
+        <p className="surface-card-desc">
+          Deploy milestone escrow for <strong>digital freelance deliverables</strong>. Only provider
+          address, milestone text, amounts, and deadlines go on-chain. Titles and guidance stay in this
+          browser.
+        </p>
       </div>
-      <p className="form-intro">
-        Deploy a milestone escrow for <strong>digital freelance deliverables</strong>. Only provider address,
-        milestone texts, amounts, and deadlines go on-chain. Titles and guidance are saved locally.
-      </p>
 
       {!isConnected && (
-        <div className="empty-state">
-          <div className="empty-state-icon">🔗</div>
-          <div className="empty-state-title">Connect your wallet</div>
-          <p className="empty-state-text">The deploying wallet becomes the client.</p>
+        <div className="form-empty">
+          <div className="form-empty-icon" aria-hidden>
+            ◈
+          </div>
+          <h3 className="form-empty-title">Connect your wallet</h3>
+          <p className="form-empty-text">The deploying wallet becomes the on-chain client.</p>
         </div>
       )}
 
       {isConnected && !chainOk && (
-        <div className="empty-state">
-          <div className="empty-state-icon">⚠️</div>
-          <div className="empty-state-title">Wrong network</div>
-          <p className="empty-state-text">Switch to Sepolia to deploy an agreement.</p>
+        <div className="form-empty">
+          <div className="form-empty-icon" aria-hidden>
+            ⚠
+          </div>
+          <h3 className="form-empty-title">Switch to Sepolia</h3>
+          <p className="form-empty-text">Deployments target the Sepolia demo network.</p>
         </div>
       )}
 
       {isConnected && chainOk && (
         <>
-          {/* Service template */}
+          <div className="form-section">
+            <h3 className="form-section-title">Template & project</h3>
           <div className="field">
-            <label className="label">Service Template</label>
+            <label className="label">Service template</label>
             <select
               value={serviceTemplateId}
               onChange={(e) => applyTemplate(e.target.value as ServiceTemplateId)}
@@ -277,12 +287,11 @@ export default function CreateAgreementForm({ onDeployed }: Props) {
                 </option>
               ))}
             </select>
-            <p className="hint">Prefills sample milestones and guidance. Edit anything before deploy.</p>
+            <p className="hint">Prefills milestones and guidance — edit before deploy.</p>
           </div>
 
-          {/* Project title */}
           <div className="field">
-            <label className="label">Project Title</label>
+            <label className="label">Project title</label>
             <input
               type="text"
               placeholder="e.g. Marketing landing v2"
@@ -292,9 +301,8 @@ export default function CreateAgreementForm({ onDeployed }: Props) {
             />
           </div>
 
-          {/* Provider address */}
           <div className="field">
-            <label className="label">Provider Address</label>
+            <label className="label">Provider address</label>
             <input
               type="text"
               className="input-mono"
@@ -305,30 +313,31 @@ export default function CreateAgreementForm({ onDeployed }: Props) {
             />
           </div>
 
-          {/* Milestones */}
+          </div>
+
+          <div className="form-section">
+            <h3 className="form-section-title">Milestones (on-chain)</h3>
           <div className="field">
-            <label className="label">Milestones (on-chain)</label>
             {milestones.map((m, i) => (
-              <div key={i} className="milestone-form-row">
+              <div key={i} className="milestone-editor-card">
                 <div className="milestone-form-header">
-                  <span className="flex items-center gap-sm">
+                  <span className="milestone-form-header-left">
                     <span className="milestone-index">{i}</span>
-                    <span className="text-sm" style={{ fontWeight: 600 }}>
-                      Milestone {i}
-                    </span>
+                    <span>Milestone {i}</span>
                   </span>
                   {milestones.length > 1 && (
                     <button
                       type="button"
-                      className="btn btn-danger btn-sm"
+                      className="btn btn-ghost btn-xs"
                       onClick={() => removeMilestone(i)}
                       disabled={busy}
+                      title="Remove this milestone"
                     >
                       Remove
                     </button>
                   )}
                 </div>
-                <div className="milestone-form-fields">
+                <div className="milestone-field-row">
                   <input
                     type="text"
                     placeholder="Description (stored on-chain)"
@@ -351,10 +360,12 @@ export default function CreateAgreementForm({ onDeployed }: Props) {
                     onChange={(e) => updateMilestone(i, "deadline", e.target.value)}
                     disabled={busy}
                   />
-                  <label className="label label-inline">Off-chain note (shown on milestone cards)</label>
+                </div>
+                <div className="milestone-note-field">
+                  <label className="label">Off-chain note (UI only)</label>
                   <textarea
                     rows={2}
-                    placeholder="e.g. what evidence you plan to attach"
+                    placeholder="e.g. evidence you plan to attach (link, repo, screenshots)"
                     value={m.note}
                     onChange={(e) => updateMilestone(i, "note", e.target.value)}
                     disabled={busy}
@@ -362,14 +373,21 @@ export default function CreateAgreementForm({ onDeployed }: Props) {
                 </div>
               </div>
             ))}
-            <button type="button" className="btn btn-secondary btn-sm" onClick={addMilestone} disabled={busy}>
+            <button
+              type="button"
+              className="btn btn-secondary btn-sm"
+              onClick={addMilestone}
+              disabled={busy}
+            >
               + Add milestone
             </button>
           </div>
+          </div>
 
-          {/* Guidance fields */}
+          <div className="form-section">
+            <h3 className="form-section-title">Off-chain guidance</h3>
           <div className="field">
-            <label className="label">Evidence Guidance (off-chain)</label>
+            <label className="label">Evidence guidance</label>
             <textarea
               rows={3}
               placeholder="What links, hashes, or CIDs you expect per milestone"
@@ -379,7 +397,7 @@ export default function CreateAgreementForm({ onDeployed }: Props) {
             />
           </div>
           <div className="field">
-            <label className="label">Acceptance Guidance (off-chain)</label>
+            <label className="label">Acceptance guidance</label>
             <textarea
               rows={3}
               placeholder="How the client should verify before approving on-chain"
@@ -389,7 +407,7 @@ export default function CreateAgreementForm({ onDeployed }: Props) {
             />
           </div>
           <div className="field">
-            <label className="label">Dispute / Scope Note (off-chain)</label>
+            <label className="label">Dispute / scope note</label>
             <textarea
               rows={2}
               placeholder="What the contract does NOT decide"
@@ -398,8 +416,8 @@ export default function CreateAgreementForm({ onDeployed }: Props) {
               disabled={busy}
             />
           </div>
+          </div>
 
-          {/* Validation errors */}
           {errors.length > 0 && (
             <div className="validation-errors">
               {errors.map((e, idx) => (
@@ -408,17 +426,10 @@ export default function CreateAgreementForm({ onDeployed }: Props) {
             </div>
           )}
 
-          {/* Deploy button */}
-          <button
-            className="btn btn-primary btn-lg w-full"
-            onClick={handleDeploy}
-            disabled={busy}
-            style={{ marginTop: "0.5rem" }}
-          >
-            {busy ? "Deploying…" : "Deploy Agreement"}
+          <button type="button" className="btn btn-primary btn-lg btn-block deploy-cta" onClick={handleDeploy} disabled={busy}>
+            {busy ? "Deploying…" : "Deploy agreement"}
           </button>
 
-          {/* Deploy status */}
           {deployState.status === "pending" && (
             <div className="tx-status tx-pending">Waiting for wallet signature…</div>
           )}
@@ -438,17 +449,22 @@ export default function CreateAgreementForm({ onDeployed }: Props) {
             </div>
           )}
           {deployState.status === "success" && (
-            <div className="tx-status tx-success">
-              <strong>Contract deployed!</strong>
+            <div className="deploy-success">
+              <div className="deploy-success-badge">Deployed</div>
+              <h3 className="deploy-success-title">Agreement is live on-chain</h3>
+              <p className="deploy-success-text">
+                It is now the active agreement in this workspace. Use the overview and actions below —
+                or pick it anytime from <strong>My agreements</strong> in the sidebar.
+              </p>
               <div className="deployed-address">
                 <code>{deployState.address}</code>
-                <button type="button" className="btn-icon" onClick={copyAddress}>
+                <button type="button" className="btn btn-secondary btn-sm" onClick={copyAddress}>
                   Copy
                 </button>
                 {(() => {
                   const url = explorerAddressUrl(chainId, deployState.address);
                   return url ? (
-                    <a href={url} target="_blank" rel="noopener noreferrer" className="btn-icon">
+                    <a href={url} target="_blank" rel="noopener noreferrer" className="btn btn-secondary btn-sm">
                       Etherscan ↗
                     </a>
                   ) : null;
@@ -464,6 +480,11 @@ export default function CreateAgreementForm({ onDeployed }: Props) {
                   <code className="mono-sm">{deployState.hash}</code>
                 );
               })()}
+              <div className="deploy-success-actions">
+                <button type="button" className="btn btn-primary btn-sm" onClick={scrollToOverview}>
+                  Jump to agreement overview
+                </button>
+              </div>
             </div>
           )}
           {deployState.status === "error" && (

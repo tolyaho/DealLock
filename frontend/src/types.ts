@@ -1,3 +1,5 @@
+import { type Address } from "viem";
+
 export const AGREEMENT_STATES = [
   "Proposed",
   "Accepted",
@@ -29,6 +31,9 @@ export interface MilestoneData {
 
 export type Role = "client" | "provider" | "other";
 
+/** Sidebar filter for browser-local agreement history (not global). */
+export type AgreementSidebarFilter = "all" | "client" | "provider" | "other";
+
 /* ---- formatting helpers ---- */
 
 export function formatEth(wei: bigint): string {
@@ -54,4 +59,17 @@ export function agreementLabel(state: number): AgreementStateLabel {
 
 export function milestoneLabel(state: number): MilestoneStateLabel {
   return MILESTONE_STATES[state] ?? ("Unknown" as MilestoneStateLabel);
+}
+
+/** Whether the connected wallet is client, provider, or not a party — purely from addresses. */
+export function deriveRole(
+  account: Address | string | undefined,
+  clientAddr: Address | string | undefined,
+  providerAddr: Address | string | undefined,
+): Role {
+  if (!account) return "other";
+  const a = String(account).toLowerCase();
+  if (clientAddr && a === String(clientAddr).toLowerCase()) return "client";
+  if (providerAddr && a === String(providerAddr).toLowerCase()) return "provider";
+  return "other";
 }

@@ -28,16 +28,43 @@ function safeTemplate(id: string | undefined): ServiceTemplateId {
   return "custom";
 }
 
+function Panel({
+  icon,
+  title,
+  open,
+  children,
+}: {
+  icon: string;
+  title: string;
+  open?: boolean;
+  children: React.ReactNode;
+}) {
+  return (
+    <details className="context-panel" open={open}>
+      <summary>
+        <span className="context-panel-icon" aria-hidden>
+          {icon}
+        </span>
+        <h2 className="context-panel-title">{title}</h2>
+        <span className="context-panel-toggle" aria-hidden />
+      </summary>
+      <div className="context-panel-body">{children}</div>
+    </details>
+  );
+}
+
 export default function AgreementContextSections({ metadata }: Props) {
   const tmplId = metadata ? safeTemplate(metadata.serviceTemplate) : "custom";
   const tmpl = getServiceTemplate(tmplId);
 
   return (
-    <>
-      <section className="card context-card">
-        <div className="card-header">
-          <span className="card-title">Service context</span>
-        </div>
+    <div className="context-group anim-fade-rise">
+      <div className="section-header">
+        <h2 className="section-header-title">Context & scope</h2>
+        <span className="section-header-desc">Service brief, evidence guidance, and boundary notes</span>
+      </div>
+
+      <Panel icon="◇" title="Service context" open>
         {metadata ? (
           <>
             <p className="context-lead">
@@ -49,9 +76,9 @@ export default function AgreementContextSections({ metadata }: Props) {
             </p>
             <p className="context-body">{tmpl.relationshipBlurb}</p>
             <p className="context-fine">
-              The smart contract enforces <strong>escrow workflow and timing</strong>, not subjective
-              quality judgment. Milestone text and your off-chain notes describe what “done” should
-              mean for humans.
+              The smart contract enforces <strong>escrow workflow and timing</strong>, not
+              subjective quality judgment. Milestone text and your off-chain notes describe what
+              “done” means to humans.
             </p>
             {metadata.acceptanceGuidance.trim() && (
               <div className="context-subblock">
@@ -59,7 +86,7 @@ export default function AgreementContextSections({ metadata }: Props) {
                 <p className="context-body">{metadata.acceptanceGuidance}</p>
               </div>
             )}
-            <p className="context-tiny dim">
+            <p className="context-tiny">
               Saved locally when this agreement was created ·{" "}
               {new Date(metadata.createdAt).toLocaleString()}
             </p>
@@ -67,70 +94,64 @@ export default function AgreementContextSections({ metadata }: Props) {
         ) : (
           <>
             <p className="context-body">
-              No saved project context for this contract address in this browser. DealLock is
-              framed for <strong>structured digital freelance deliverables</strong> with staged
-              handoffs (sites, UI/UX, branding, small MVPs). Load from the same device/browser
-              where you created the agreement to see titles and notes, or use the milestone text on
-              chain as the source of truth.
+              No saved project context for this contract in this browser. DealLock is framed for{" "}
+              <strong>structured digital freelance deliverables</strong> with staged handoffs. Load
+              from the same device where you created the agreement to see titles and notes, or rely
+              on on-chain milestone text.
             </p>
             <p className="context-body">{tmpl.relationshipBlurb}</p>
           </>
         )}
-      </section>
+      </Panel>
 
-      <section className="card context-card">
-        <div className="card-header">
-          <span className="card-title">Suitable delivery evidence</span>
-        </div>
+      <Panel icon="◎" title="Delivery evidence">
         <p className="context-body">
-          On-chain storage is only a <strong>submission evidence</strong> string—typically a link,
-          commit hash, content hash, or IPFS CID pointing at what you delivered for that milestone.
+          On-chain storage is a <strong>submission evidence</strong> string — typically a link,
+          commit hash, content hash, or IPFS CID.
         </p>
         {metadata?.evidenceGuidance.trim() && (
           <div className="context-subblock">
-            <h3>Guidance for this agreement (off-chain)</h3>
+            <h3>For this agreement</h3>
             <p className="context-body">{metadata.evidenceGuidance}</p>
           </div>
         )}
-        <h3 className="context-list-title">Examples for {tmpl.label}</h3>
-        <ul className="context-list">
-          {tmpl.suitableEvidenceExamples.map((item) => (
-            <li key={item}>{item}</li>
-          ))}
-        </ul>
-      </section>
-
-      <section className="card context-card">
-        <div className="card-header">
-          <span className="card-title">What DealLock covers</span>
+        <div>
+          <h3 style={{ margin: "0 0 var(--space-xs)", fontSize: "var(--type-small)" }}>
+            Examples for {tmpl.label}
+          </h3>
+          <ul className="context-list">
+            {tmpl.suitableEvidenceExamples.map((item) => (
+              <li key={item}>{item}</li>
+            ))}
+          </ul>
         </div>
-        <ul className="context-list">
+      </Panel>
+
+      <Panel icon="✓" title="What DealLock covers">
+        <ul className="context-list context-list--columns">
           {COVERS_ITEMS.map((item) => (
             <li key={item}>{item}</li>
           ))}
         </ul>
-      </section>
+      </Panel>
 
-      <section className="card context-card">
-        <div className="card-header">
-          <span className="card-title">What still requires manual resolution</span>
-        </div>
+      <Panel icon="!" title="What still needs manual resolution">
         <p className="context-body">
           The contract does not run arbitration, reputation, or automated QA. Plan clear milestone
-          wording and off-chain checklists for anything you care about beyond the workflow below.
+          wording and off-chain checklists for anything beyond the workflow.
         </p>
-        <ul className="context-list">
+        <ul className="context-list context-list--columns">
           {MANUAL_ITEMS.map((item) => (
             <li key={item}>{item}</li>
           ))}
         </ul>
         {metadata?.disputeBoundaryNote.trim() && (
           <div className="context-subblock">
-            <h3>Note for this agreement (off-chain)</h3>
+            <h3>Note for this agreement</h3>
             <p className="context-body">{metadata.disputeBoundaryNote}</p>
           </div>
         )}
-      </section>
-    </>
+      </Panel>
+    </div>
   );
 }

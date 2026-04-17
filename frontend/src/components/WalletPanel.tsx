@@ -1,35 +1,17 @@
 import { useState } from "react";
-import { useAccount, useConnect, useDisconnect, useChainId } from "wagmi";
+import { useAccount, useConnect } from "wagmi";
 import { injected } from "wagmi/connectors";
-import { type Role, shortAddress } from "../types.ts";
-import {
-  chainName,
-  isSupportedChain,
-  isSepoliaChain,
-  switchToSepolia,
-  explorerAddressUrl,
-} from "../network.ts";
 
-export default function WalletPanel({ role }: { role: Role }) {
-  const { address, isConnected } = useAccount();
+/**
+ * Wallet panel — now only renders the "Connect" experience.
+ * The connected-state chrome lives in the topbar (`AppShell`) to avoid redundancy.
+ */
+export default function WalletPanel() {
+  const { isConnected } = useAccount();
   const { connectAsync, error: connectError, isPending: isConnecting } = useConnect();
-  const { disconnect } = useDisconnect();
-  const chainId = useChainId();
-  const [switching, setSwitching] = useState(false);
   const [manualConnectError, setManualConnectError] = useState<string | null>(null);
 
-  const supported = isSupportedChain(chainId);
-  const onSepolia = isSepoliaChain(chainId);
-
-  async function handleSwitch() {
-    setSwitching(true);
-    await switchToSepolia();
-    setSwitching(false);
-  }
-
-  function copyAddr() {
-    if (address) navigator.clipboard.writeText(address);
-  }
+  if (isConnected) return null;
 
   function formatConnectError(err: unknown): string {
     if (!err) return "Unknown wallet error.";
@@ -57,85 +39,48 @@ export default function WalletPanel({ role }: { role: Role }) {
         typeof window !== "undefined" && !!(window as Window & { ethereum?: unknown }).ethereum;
       if (!hasInjectedProvider) {
         setManualConnectError(
-          "No injected wallet found. Install MetaMask and refresh this page."
+          "No injected wallet detected. Install MetaMask (or compatible) and refresh.",
         );
         return;
       }
       await connectAsync({ connector: injected() });
     } catch (err) {
-      const msg = formatConnectError(err);
-      setManualConnectError(msg.slice(0, 220));
+      setManualConnectError(formatConnectError(err).slice(0, 220));
     }
   }
 
-  const addrExplorerUrl = address ? explorerAddressUrl(chainId, address) : null;
-
   return (
-    <section className="card wallet-panel">
-      {isConnected && address ? (
-        <>
-          <div className="wallet-info">
-            <div className="wallet-avatar">{address.slice(2, 4).toUpperCase()}</div>
-            <span className="wallet-addr">{shortAddress(address)}</span>
-            <button type="button" className="btn-icon" title="Copy address" onClick={copyAddr}>
-              Copy
-            </button>
-            {addrExplorerUrl && (
-              <a
-                href={addrExplorerUrl}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="btn-icon"
-              >
-                Etherscan ↗
-              </a>
-            )}
-            <span
-              className={`badge ${onSepolia ? "badge-sepolia" : supported ? "badge-hardhat-chain" : "badge-wrong"}`}
-            >
-              {chainName(chainId)}
-            </span>
-            {role !== "other" && <span className={`badge badge-${role}`}>{role}</span>}
-          </div>
-          <div className="wallet-actions">
-            {!onSepolia && (
-              <button
-                className="btn btn-warning btn-sm"
-                onClick={handleSwitch}
-                disabled={switching}
-              >
-                {switching ? "Switching…" : "Switch to Sepolia"}
-              </button>
-            )}
-            <button className="btn btn-ghost btn-sm" onClick={() => disconnect()}>
-              Disconnect
-            </button>
-          </div>
-        </>
-      ) : (
-        <div className="empty-state">
-          <div className="empty-state-icon">🔗</div>
-          <div className="empty-state-title">Wallet not connected</div>
-          <p className="empty-state-text">Connect your wallet to create or interact with agreements.</p>
-          <button
-            className="btn btn-primary"
-            style={{ marginTop: "1rem" }}
-            onClick={handleConnectWallet}
-            disabled={isConnecting}
-          >
-            {isConnecting ? "Connecting…" : "Connect Wallet"}
-          </button>
-          {(manualConnectError || connectError) && (
-            <div
-              className="banner banner-error"
-              style={{ marginTop: "0.75rem", textAlign: "left" }}
-            >
-              <strong>Connection failed.</strong>{" "}
-              {(manualConnectError ?? connectError?.message ?? "Unknown error").slice(0, 260)}
-            </div>
-          )}
+    <section className="surface-card surface-card--pad wallet-panel-card anim-fade-rise">
+      <div className="wallet-empty">
+        <div className="wallet-empty-icon" aria-hidden>
+          ◈
         </div>
-      )}
+        <h3 className="wallet-empty-title">Connect your wallet</h3>
+        <p className="wallet-empty-text">
+          Create agreements, fund escrow, and sign milestones. Uses Sepolia test ETH only — your
+          keys stay in the wallet, nothing leaves your browser except RPC calls you approve.
+        </p>
+        <button className="btn btn-primary btn-lg" onClick={handleConnectWallet} disabled={isConnecting}>
+          {isConnecting ? "Connecting…" : "Connect wallet"}
+        </button>
+        <div className="wallet-empty-trust">
+          <span className="chip">
+            <span className="chip-dot" aria-hidden /> No custody
+          </span>
+          <span className="chip">
+            <span className="chip-dot" aria-hidden /> Client-only
+          </span>
+          <span className="chip">
+            <span className="chip-dot" aria-hidden /> Sepolia test ETH
+          </span>
+        </div>
+        {(manualConnectError || connectError) && (
+          <div className="banner banner-error banner--inline">
+            <strong>Connection failed.</strong>{" "}
+            {(manualConnectError ?? connectError?.message ?? "Unknown error").slice(0, 260)}
+          </div>
+        )}
+      </div>
     </section>
   );
 }
