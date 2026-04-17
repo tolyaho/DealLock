@@ -16,9 +16,9 @@ export default defineConfig({
     },
   },
   paths: {
-    sources: "contracts",
+    sources: "DealLock/contracts",
     tests: {
-      mocha: "./test",
+      mocha: "./DealLock/test",
     },
   },
   test: {
