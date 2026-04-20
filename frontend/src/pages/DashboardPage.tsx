@@ -296,6 +296,13 @@ export default function DashboardPage() {
 
   function handleLoadByAddress() {
     setMode("load");
+    // Load UI only renders when no contract is selected; clear so "Load by address"
+    // works even if another agreement was already open.
+    if (contractAddress) {
+      setContractAddress(null);
+      setInputAddr("");
+      localStorage.removeItem(STORAGE_KEY);
+    }
     setSidebarCollapsed(true);
   }
 
