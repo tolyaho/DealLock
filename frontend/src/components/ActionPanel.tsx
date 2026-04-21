@@ -58,7 +58,6 @@ export default function ActionPanel({
   const isProvider = role === "provider";
   const disabled = isConfirming || !chainOk;
 
-  // Auto-pick the next pending milestone for the submit form
   const nextPendingIdx = useMemo(
     () => milestones.findIndex((m) => m.state === 0),
     [milestones],
@@ -97,7 +96,6 @@ export default function ActionPanel({
     (m) => m.state === 0 && m.deadline < BigInt(Math.floor(Date.now() / 1000)),
   );
 
-  // Guided empty states — show a "waiting" message when no actions are currently available.
   const showProviderAccept = isProvider && agreementState === 0;
   const showClientFund = isClient && agreementState === 1 && totalAmount !== undefined;
   const showProviderSubmit = isProvider && agreementState === 2;

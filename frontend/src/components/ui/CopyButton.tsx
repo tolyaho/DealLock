@@ -15,7 +15,6 @@ export default function CopyButton({ text, className = "", label = "Copy" }: Cop
       setDone(true);
       setTimeout(() => setDone(false), 1600);
     } catch {
-      /* ignore */
     }
   }
 

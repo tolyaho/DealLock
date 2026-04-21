@@ -6,10 +6,6 @@ interface WelcomeHeroProps {
   children?: ReactNode;
 }
 
-/**
- * Welcome hero — shown only when no active agreement is selected.
- * Active-agreement chrome is owned by `WorkspaceHeader`.
- */
 export default function WelcomeHero({ chainOk, isConnected, children }: WelcomeHeroProps) {
   let headline = "Your escrow workspace";
   let sub =

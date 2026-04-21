@@ -1,250 +1,138 @@
 # DealLock
 
-**DealLock** is a milestone-based escrow smart contract for **structured digital freelance agreements** — websites, UI/UX, branding packages, and similar digital deliverables with staged handoffs.
+DealLock is a client-only escrow dApp for milestone-based digital freelance agreements. One Solidity contract represents one agreement between a client and a provider, holds ETH in escrow, and enforces acceptance, exact funding, sequential milestone submission, approval, and expired-milestone refund.
 
-The MVP demo runs on **Sepolia testnet**. No real ETH is involved.
+The frontend runs in the browser with React, Vite, TypeScript, wagmi, and viem. Sepolia is the main demo network; Hardhat is used for local tests and optional local development.
 
----
+## Features
 
-## What Sepolia is used for
+- One deployed `DealLock.sol` contract per agreement.
+- Client/provider role checks enforced on-chain.
+- Sequential milestone workflow: proposed, accepted, funded, completed.
+- Native ETH escrow with release or refund per milestone.
+- Browser-only metadata for titles, templates, notes, and local agreement history.
+- Sepolia Etherscan links for addresses and transactions.
 
-Sepolia is Ethereum's primary public testnet. It uses test ETH (no monetary value) and gives us a real blockchain environment with:
+## Tech Stack
 
-- public block explorer (Etherscan)
-- real wallet signing (MetaMask)
-- realistic transaction confirmation times (~12 s)
-- permanent contract addresses that anyone can inspect
+- Solidity `0.8.20`
+- Hardhat 3
+- React 19, Vite 6, TypeScript
+- wagmi, viem, TanStack Query
+- MetaMask or another injected wallet
 
-DealLock treats Sepolia as the **primary demo network**. Hardhat local is supported for development but the UI, docs, and defaults are Sepolia-first.
+## Project Structure
 
----
+```text
+contracts/              DealLock smart contract
+test/                   Hardhat test suite
+scripts/                Sepolia deployment script
+docs/                   MVP specification
+frontend/               React/Vite dApp
+report/                 Final report source and PDF
+```
 
-## Quick start
+## Prerequisites
 
-### 1. Install dependencies
+- Node.js 20+
+- npm
+- MetaMask for the browser demo
+- Sepolia test ETH for live testnet transactions
+
+## Install
+
+From the repository root:
 
 ```bash
-# Root (Hardhat + Solidity)
 npm install
-
-# Frontend
-cd frontend && npm install
+cd frontend
+npm install
 ```
 
-### 2. Run tests (local Hardhat, no Sepolia needed)
+## Run Tests
+
+From the repository root:
 
 ```bash
-npx hardhat test
+npm test
 ```
 
-### 3. Run the frontend
+This runs the Hardhat test suite against a local in-memory chain. No Sepolia RPC or wallet private key is required.
+
+## Run the Frontend
 
 ```bash
 cd frontend
-cp .env.example .env        # optional: set VITE_SEPOLIA_RPC_URL for a custom RPC
+cp .env.example .env
 npm run dev
 ```
 
-Open `http://localhost:5173` in a browser with MetaMask.
+Open:
 
-### 4. (Optional) Deploy from CLI to Sepolia
+```text
+http://localhost:5173
+```
+
+Connect MetaMask and switch to Sepolia. The frontend can deploy a new agreement or load an existing DealLock contract address.
+
+## Frontend Environment
+
+`frontend/.env`:
+
+```bash
+VITE_SEPOLIA_RPC_URL=
+VITE_SEPOLIA_EXPLORER=https://sepolia.etherscan.io
+```
+
+`VITE_SEPOLIA_RPC_URL` is optional. Set it to an Alchemy, Infura, or other Sepolia RPC URL for better reliability.
+
+## Optional Sepolia CLI Deploy
+
+From the repository root:
 
 ```bash
 SEPOLIA_RPC_URL=https://eth-sepolia.g.alchemy.com/v2/YOUR_KEY \
 PRIVATE_KEY=0xYOUR_PRIVATE_KEY \
+PROVIDER_ADDRESS=0xPROVIDER_ADDRESS \
 npx hardhat run scripts/deploy-sepolia.ts --network sepolia
 ```
 
-The deploy script creates a sample 3-milestone agreement. Edit `scripts/deploy-sepolia.ts` to change parameters.
+The deployer becomes the client. `PROVIDER_ADDRESS` is optional; if omitted, the script uses the deployer address as provider for a simple smoke test.
 
----
+## Demo Flow
 
-## Environment variables
+1. Open the frontend and connect the client wallet on Sepolia.
+2. Create an agreement with provider address, milestone amounts, and deadlines.
+3. Switch MetaMask to the provider wallet and load the contract address.
+4. Provider accepts the agreement.
+5. Switch back to the client wallet and fund the exact total.
+6. Provider submits milestone evidence, such as a URL, commit hash, or IPFS CID.
+7. Client approves the submitted milestone, releasing funds to the provider.
+8. Repeat until all milestones are released, or refund expired pending milestones.
 
-### Root (Hardhat CLI deploys)
+## Build
 
-| Variable | Purpose |
-|---|---|
-| `SEPOLIA_RPC_URL` | Sepolia JSON-RPC endpoint (Alchemy, Infura, etc.) |
-| `PRIVATE_KEY` | Deployer private key (hex, with `0x` prefix) |
-| `PROVIDER_ADDRESS` | (optional) Provider address for the sample deploy script |
+Frontend production build:
 
-### Frontend (`frontend/.env`)
-
-| Variable | Default | Purpose |
-|---|---|---|
-| `VITE_SEPOLIA_RPC_URL` | wagmi public default | Custom Sepolia RPC for higher reliability |
-| `VITE_SEPOLIA_EXPLORER` | `https://sepolia.etherscan.io` | Explorer base URL for links |
-
-Copy `frontend/.env.example` to `frontend/.env` and fill in values.
-
----
-
-## How to connect MetaMask
-
-1. Install the [MetaMask](https://metamask.io/) browser extension.
-2. Open MetaMask → click the network dropdown → **Show test networks** (in Settings → Advanced if hidden).
-3. Select **Sepolia**.
-4. Your account address is now on Sepolia.
-
-### How to get Sepolia ETH
-
-Faucets (free test ETH):
-
-- [Google Cloud Sepolia Faucet](https://cloud.google.com/application/web3/faucet/ethereum/sepolia)
-- [Alchemy Sepolia Faucet](https://www.alchemy.com/faucets/ethereum-sepolia)
-- [Infura Sepolia Faucet](https://www.infura.io/faucet/sepolia)
-
-Request 0.05–0.5 SepoliaETH; that is more than enough for many demo agreements.
-
----
-
-## Two-wallet demo setup
-
-To demo the full flow you need **two MetaMask accounts** (or two browser profiles):
-
-| Role | What they do |
-|---|---|
-| **Client** (Account 1) | Creates / deploys the agreement, funds it, approves milestones, can refund expired ones |
-| **Provider** (Account 2) | Accepts the agreement, submits delivery evidence per milestone |
-
-Both accounts must be on **Sepolia** and hold some test ETH.
-
-**Tip:** In MetaMask click your avatar → **Create account** to make a second account in the same wallet. Copy the second address to use as the provider when creating the agreement.
-
----
-
-## End-to-end demo flow
-
-### Create agreement (Client)
-
-1. Open the app, connect as **Client** (Account 1) on Sepolia.
-2. Click **Create New** tab.
-3. Pick a service template (e.g. "Website Development").
-4. Fill in:
-   - Project title
-   - Provider address (Account 2)
-   - Milestone descriptions, amounts (small: 0.005–0.01 ETH each), deadlines
-5. Click **Deploy agreement** → confirm in MetaMask.
-6. Wait for confirmation; copy the contract address.
-
-### Accept (Provider)
-
-1. Switch MetaMask to **Account 2** (provider) on Sepolia.
-2. Paste the contract address in **Load Existing** → **Load**.
-3. The role badge should say **Provider**.
-4. Click **Accept** → confirm in MetaMask.
-5. Agreement state changes from Proposed → **Accepted**.
-
-### Fund (Client)
-
-1. Switch MetaMask back to **Account 1** (client).
-2. Refresh contract state (the Refresh button).
-3. Click **Fund (X ETH)** → confirm. Sends the exact total to the contract.
-4. State → **Funded**. Milestone workflow is now active.
-
-### Submit delivery evidence (Provider)
-
-1. Switch to Account 2 (provider).
-2. Refresh.
-3. In the Submit section, enter milestone `0` and a delivery reference string (e.g. `https://github.com/you/repo/releases/tag/v0.1`).
-4. Click **Submit** → confirm.
-5. Milestone #0 moves to **Submitted**.
-
-### Approve (Client)
-
-1. Switch to Account 1 (client).
-2. Refresh.
-3. Click **Approve #0** → confirm.
-4. Milestone #0 → **Released**; funds are sent to the provider.
-
-### Refund path (Client, alternative)
-
-If a milestone stays **Pending** past its deadline:
-
-1. As client, click **Refund #N** (shown only when deadline has passed).
-2. The milestone amount is returned to the client; milestone → **Refunded**.
-
-### Completion
-
-When all milestones are either Released or Refunded, the agreement state becomes **Completed**.
-
----
-
-## How to interpret explorer links
-
-Every transaction hash and address in the UI links to **Sepolia Etherscan**:
-
-- **Contract address** → shows constructor args, balance, state, event logs.
-- **Transaction hash** → shows sender, value, gas, status (success/revert), decoded logs.
-- **Client / Provider address** → shows their balance and recent transactions.
-
-If a transaction reverts, Etherscan shows the revert reason (e.g. "Only client", "Invalid agreement state").
-
----
-
-## Sepolia demo flow (presentation cheat sheet)
-
-```
-1. Open app → connect Client wallet (Sepolia)
-2. Create New → pick template → set provider → set milestones → Deploy
-3. Copy contract address
-4. Switch to Provider wallet → Load address → Accept
-5. Switch to Client → Refresh → Fund
-6. Switch to Provider → Refresh → Submit #0 (paste evidence link)
-7. Switch to Client → Refresh → Approve #0
-   → Milestone Released, funds sent to provider
-8. Repeat submit/approve for remaining milestones
-9. Agreement → Completed
-10. Click any Etherscan link to show on-chain proof
+```bash
+cd frontend
+npm run build
 ```
 
----
+Hardhat build:
 
-## Tech stack
-
-- **Solidity 0.8.20** — DealLock contract
-- **Hardhat 3** — compile, test, Sepolia deploy
-- **React + Vite + TypeScript** — frontend
-- **wagmi / viem** — wallet and contract hooks
-- **MetaMask** — signing
-
-## MVP scope boundaries
-
-**Included:** roles, sequential milestone escrow, delivery reference recording, release / refund, Sepolia explorer links, off-chain metadata (localStorage), service templates.
-
-**Explicitly not included:** backend, database, OAuth, factory contract, marketplace, arbitration, reputation, ERC-20 tokens.
-
-## Repository layout
-
+```bash
+npm run build
 ```
-fte4312/
-├── hardhat.config.ts
-├── scripts/
-│   └── deploy-sepolia.ts
-├── DealLock/
-│   ├── contracts/DealLock.sol
-│   ├── test/DealLock.ts
-│   ├── docs/mvp.md
-│   └── README.md          ← you are here
-└── frontend/
-    ├── .env.example
-    ├── package.json
-    ├── vite.config.ts
-    └── src/
-        ├── App.tsx
-        ├── wagmi.ts
-        ├── network.ts
-        ├── contract.ts
-        ├── bytecode.ts
-        ├── types.ts
-        ├── templates.ts
-        ├── storage.ts
-        └── components/
-            ├── WalletPanel.tsx
-            ├── CreateAgreementForm.tsx
-            ├── AgreementOverview.tsx
-            ├── AgreementContextSections.tsx
-            ├── MilestoneList.tsx
-            └── ActionPanel.tsx
+
+## Scope
+
+DealLock is an MVP. It enforces payment flow, roles, milestone order, deadlines, and fund movement. It does not provide arbitration, a marketplace, a backend database, an indexer, ERC-20 payments, reputation, or subjective quality judgement.
+
+## Report
+
+The final project report is available at:
+
+```text
+report/report.pdf
 ```

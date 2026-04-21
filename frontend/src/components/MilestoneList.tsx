@@ -12,12 +12,6 @@ interface Props {
   agreementState?: number;
 }
 
-/**
- * "Next up" = the earliest milestone that a party can act on right now.
- * - Pending (0) during Funded (state 2): provider should submit this one next.
- * - Submitted (1): client should approve this one next.
- * Only highlight one node to keep the signal strong.
- */
 function nextActionableIndex(ms: MilestoneData[], agreementState?: number): number | null {
   if (agreementState !== 2) return null;
   const submitted = ms.findIndex((m) => m.state === 1);
@@ -27,10 +21,10 @@ function nextActionableIndex(ms: MilestoneData[], agreementState?: number): numb
 }
 
 function stepGlyph(state: number): string {
-  if (state === 2) return "✓"; // Released
-  if (state === 1) return "●"; // Submitted
-  if (state === 3) return "↺"; // Refunded
-  return ""; // Pending (show index)
+  if (state === 2) return "✓";
+  if (state === 1) return "●";
+  if (state === 3) return "↺";
+  return "";
 }
 
 export default function MilestoneList({ milestones, milestoneNotes, agreementState }: Props) {

@@ -3,11 +3,7 @@ import react from "@vitejs/plugin-react";
 import http from "node:http";
 import type { IncomingMessage, ServerResponse } from "node:http";
 
-/**
- * Forwards /rpc-hardhat → http://127.0.0.1:8545 (same as the old Vite proxy)
- * but logs at most once when Hardhat is not running, instead of spamming
- * "[vite] http proxy error: ECONNREFUSED" on every JSON-RPC poll.
- */
+// Proxy local Hardhat RPC without repeated ECONNREFUSED logs.
 function hardhatRpcProxyPlugin(): Plugin {
   let warned = false;
 

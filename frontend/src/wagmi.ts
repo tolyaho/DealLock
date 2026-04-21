@@ -10,10 +10,6 @@ function hardhatRpcUrl(): string {
   return "http://127.0.0.1:8545";
 }
 
-/**
- * Sepolia-first: listed first so wagmi treats it as the default chain.
- * Hardhat stays available for local development but is secondary.
- */
 export const config = createConfig({
   chains: [sepolia, hardhat],
   transports: {

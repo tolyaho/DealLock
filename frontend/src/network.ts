@@ -1,7 +1,7 @@
 import { sepolia, hardhat } from "wagmi/chains";
 
-export const SEPOLIA_CHAIN_ID = sepolia.id; // 11155111
-export const HARDHAT_CHAIN_ID = hardhat.id; // 31337
+export const SEPOLIA_CHAIN_ID = sepolia.id;
+export const HARDHAT_CHAIN_ID = hardhat.id;
 
 export const SEPOLIA_EXPLORER = (
   import.meta.env.VITE_SEPOLIA_EXPLORER as string | undefined
@@ -43,10 +43,6 @@ export function explorerContractUrl(chainId: number, address: string): string | 
   return explorerAddressUrl(chainId, address);
 }
 
-/**
- * Asks MetaMask (or compatible wallet) to switch to Sepolia.
- * Falls back to wallet_addEthereumChain if the chain isn't configured.
- */
 export async function switchToSepolia(): Promise<boolean> {
   const provider = ((window as unknown) as Record<string, unknown>).ethereum as
     | { request: (args: { method: string; params?: unknown[] }) => Promise<unknown> }

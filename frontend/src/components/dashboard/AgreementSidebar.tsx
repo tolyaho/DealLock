@@ -76,10 +76,10 @@ export default function AgreementSidebar({
     <aside className={`agreement-sidebar ${collapsed ? "agreement-sidebar--collapsed" : ""}`}>
       <div className="sidebar-header">
         <div className="sidebar-header-row">
-          <h2 className="sidebar-title">My agreements</h2>
+          {!collapsed && <h2 className="sidebar-title">My agreements</h2>}
           <button
             type="button"
-            className="btn-icon-bare"
+            className={`btn-icon-bare sidebar-collapse-btn ${collapsed ? "sidebar-collapse-btn--collapsed" : ""}`}
             aria-label={collapsed ? "Expand sidebar" : "Collapse sidebar"}
             onClick={onToggleCollapse}
             title={collapsed ? "Expand" : "Collapse"}
