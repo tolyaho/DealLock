@@ -1,11 +1,8 @@
-/** Service templates for milestone-based digital freelance agreements (UI + off-chain context only). */
-
 export const SERVICE_TEMPLATE_IDS = ["website", "uiux", "branding", "custom"] as const;
 export type ServiceTemplateId = (typeof SERVICE_TEMPLATE_IDS)[number];
 
 export interface MilestoneTemplateRow {
   description: string;
-  /** Shown as optional off-chain milestone note after deployment. */
   note?: string;
 }
 
@@ -13,7 +10,6 @@ export interface ServiceTemplateDef {
   id: ServiceTemplateId;
   label: string;
   serviceCategory: string;
-  /** Short description of the freelance relationship this template targets. */
   relationshipBlurb: string;
   defaultProjectTitle: string;
   milestones: MilestoneTemplateRow[];

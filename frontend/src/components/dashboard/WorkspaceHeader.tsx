@@ -64,15 +64,6 @@ function computeProgress(
   };
 }
 
-/**
- * Compact, premium hero panel for the active agreement.
- * Hierarchy:
- *   1. Strong project title (dominant)
- *   2. Quiet meta chip row (template · state)
- *   3. Role-accented one-line operational summary
- *   4. Foot row: contract + progress + refresh (one line, consistent edges)
- * A 3px role-colored rail on the left replaces heavy role coloring on the surface.
- */
 export default function WorkspaceHeader({
   contractAddress,
   role,

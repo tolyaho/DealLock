@@ -1,22 +1,18 @@
-/* ============================================================
-   DealLock — Design tokens + primitive styles
-   Type system: Manrope (display) · Inter (UI/body) · JetBrains Mono (technical)
-   ============================================================ */
+
 
 :root {
-  /* ---- Fonts ---- */
+
   --font-display: "Manrope", "Inter", system-ui, -apple-system, sans-serif;
   --font-sans: "Inter", system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-mono: "JetBrains Mono", ui-monospace, SFMono-Regular, Menlo, monospace;
 
-  /* ---- Type scale (functional names, not px-named) ---- */
-  --type-mono: 0.6875rem;        /* 11px technical/mono caption */
-  --type-caption: 0.75rem;       /* 12px eyebrows, meta labels */
-  --type-small: 0.8125rem;       /* 13px secondary body / UI */
-  --type-body: 0.9375rem;        /* 15px primary body */
-  --type-lead: 1rem;             /* 16px hero intro body */
-  --type-card-title: 1.0625rem;  /* 17px card titles */
-  --type-section-title: 1.25rem; /* 20px section titles */
+  --type-mono: 0.6875rem;
+  --type-caption: 0.75rem;
+  --type-small: 0.8125rem;
+  --type-body: 0.9375rem;
+  --type-lead: 1rem;
+  --type-card-title: 1.0625rem;
+  --type-section-title: 1.25rem;
   --type-page-title: clamp(1.5rem, 2.4vw + 1rem, 1.9rem);
   --type-display: clamp(2rem, 2.4vw + 1.4rem, 2.75rem);
   --type-hero: clamp(2.25rem, 4vw + 0.5rem, 3.4rem);
@@ -26,7 +22,6 @@
   --leading-normal: 1.55;
   --leading-relaxed: 1.65;
 
-  /* ---- Radii ---- */
   --radius-xs: 4px;
   --radius-sm: 6px;
   --radius-md: 10px;
@@ -35,7 +30,6 @@
   --radius-2xl: 28px;
   --radius-pill: 999px;
 
-  /* ---- Spacing (same rhythm as before but a touch tighter) ---- */
   --space-3xs: 0.125rem;
   --space-2xs: 0.25rem;
   --space-xs: 0.4rem;
@@ -46,19 +40,16 @@
   --space-2xl: 3rem;
   --space-3xl: 4rem;
 
-  /* ---- Control heights (reliable button/input alignment) ---- */
   --h-xs: 26px;
   --h-sm: 32px;
   --h-md: 36px;
   --h-lg: 44px;
 
-  /* ---- Z layers ---- */
   --z-base: 1;
   --z-sticky: 20;
   --z-popover: 40;
   --z-modal: 60;
 
-  /* ---- Surfaces (dark, layered) ---- */
   --bg-deep: #06070b;
   --bg-base: #090a10;
   --bg-raised: #10121a;
@@ -79,7 +70,6 @@
   --text-faint: #3d3f52;
   --text-inverse: #06070b;
 
-  /* ---- Brand accent ramp ---- */
   --accent-50: #eef0ff;
   --accent-100: #d9deff;
   --accent-300: #9ba3ff;
@@ -92,7 +82,6 @@
   --accent-soft: rgba(99, 102, 241, 0.13);
   --accent-softer: rgba(99, 102, 241, 0.07);
 
-  /* ---- Role accents (client / provider / viewer) ---- */
   --client: #5ec2ff;
   --client-strong: #8ed6ff;
   --client-soft: rgba(94, 194, 255, 0.1);
@@ -107,7 +96,6 @@
   --viewer-soft: rgba(140, 146, 168, 0.08);
   --viewer-ring: rgba(140, 146, 168, 0.18);
 
-  /* ---- Semantic ---- */
   --success: #3ecf8e;
   --success-soft: rgba(62, 207, 142, 0.11);
   --success-ring: rgba(62, 207, 142, 0.25);
@@ -121,7 +109,6 @@
   --info-soft: rgba(110, 168, 255, 0.1);
   --info-ring: rgba(110, 168, 255, 0.24);
 
-  /* ---- Gradients ---- */
   --grad-accent: linear-gradient(135deg, #5b5ef0 0%, #6d5aed 48%, #7c5ce5 100%);
   --grad-accent-soft: linear-gradient(135deg, rgba(99, 102, 241, 0.14), rgba(124, 92, 229, 0.04));
   --grad-client: linear-gradient(135deg, rgba(94, 194, 255, 0.16), rgba(94, 194, 255, 0.02));
@@ -133,7 +120,6 @@
     radial-gradient(ellipse 80% 60% at 85% 20%, rgba(124, 92, 229, 0.06), transparent 60%),
     linear-gradient(180deg, var(--bg-deep) 0%, var(--bg-base) 45%, #05060a 100%);
 
-  /* ---- Shadows / rings ---- */
   --shadow-inset-top: inset 0 1px 0 rgba(255, 255, 255, 0.05);
   --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.3);
   --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.32);
@@ -145,7 +131,6 @@
   --ring-client: 0 0 0 1px var(--client-ring);
   --ring-provider: 0 0 0 1px var(--provider-ring);
 
-  /* ---- Motion ---- */
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
   --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
   --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
@@ -154,7 +139,6 @@
   --dur-slow: 0.45s;
 }
 
-/* ---- Reset ---- */
 *,
 *::before,
 *::after {
@@ -188,7 +172,6 @@ body {
   isolation: isolate;
 }
 
-/* Subtle grain — keeps dark surfaces from feeling flat. */
 body::before {
   content: "";
   position: fixed;
@@ -243,7 +226,6 @@ samp,
   color: white;
 }
 
-/* ---- Type helpers ---- */
 .eyebrow {
   font-family: var(--font-sans);
   font-size: var(--type-caption);
@@ -274,7 +256,6 @@ samp,
   color: transparent;
 }
 
-/* ---- Buttons ---- */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -444,7 +425,6 @@ samp,
   color: var(--text-primary);
 }
 
-/* ---- Surfaces ---- */
 .surface-card,
 .card {
   background: var(--bg-surface);
@@ -495,7 +475,6 @@ samp,
   max-width: 62ch;
 }
 
-/* ---- Inputs ---- */
 .input,
 input:not([type="checkbox"]):not([type="radio"]),
 select,
@@ -562,7 +541,6 @@ textarea::placeholder {
   line-height: var(--leading-snug);
 }
 
-/* ---- Validation / banners / tx ---- */
 .validation-errors {
   margin: var(--space-md) 0;
   padding: var(--space-md);
@@ -640,7 +618,6 @@ textarea::placeholder {
   word-break: break-all;
 }
 
-/* ---- Pills ---- */
 .role-pill {
   display: inline-flex;
   align-items: center;
@@ -753,7 +730,6 @@ textarea::placeholder {
   border-color: var(--danger-ring);
 }
 
-/* ---- Chip (for trust strip, etc.) ---- */
 .chip {
   display: inline-flex;
   align-items: center;
@@ -774,7 +750,6 @@ textarea::placeholder {
   box-shadow: 0 0 0 3px var(--accent-softer);
 }
 
-/* ---- Motion primitives ---- */
 @keyframes fadeRise {
   from {
     opacity: 0;
@@ -832,7 +807,6 @@ textarea::placeholder {
   }
 }
 
-/* ---- Divider ---- */
 .hr-soft {
   height: 1px;
   border: none;
@@ -840,7 +814,6 @@ textarea::placeholder {
   margin: var(--space-lg) 0;
 }
 
-/* ---- Utilities ---- */
 .flex {
   display: flex;
 }

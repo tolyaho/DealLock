@@ -1,13 +1,3 @@
-/**
- * Deploy a sample DealLock agreement to Sepolia from the CLI.
- *
- * Usage:
- *   SEPOLIA_RPC_URL=https://... PRIVATE_KEY=0x... \
- *     npx hardhat run scripts/deploy-sepolia.ts --network sepolia
- *
- * The deployer becomes the client. Adjust PROVIDER, milestone data below.
- */
-
 import hre from "hardhat";
 
 async function main() {
@@ -17,7 +7,6 @@ async function main() {
   console.log("Deploying DealLock from:", deployer.address);
   console.log("Network:", hre.network.name);
 
-  // ---- Sample agreement parameters (edit as needed) ----
   const PROVIDER = process.env.PROVIDER_ADDRESS ?? deployer.address;
 
   const now = Math.floor(Date.now() / 1000);

@@ -2,10 +2,6 @@ import { useState } from "react";
 import { useAccount, useConnect } from "wagmi";
 import { injected } from "wagmi/connectors";
 
-/**
- * Wallet panel — now only renders the "Connect" experience.
- * The connected-state chrome lives in the topbar (`AppShell`) to avoid redundancy.
- */
 export default function WalletPanel() {
   const { isConnected } = useAccount();
   const { connectAsync, error: connectError, isPending: isConnecting } = useConnect();

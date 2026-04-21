@@ -23,7 +23,6 @@ export interface MilestoneData {
   description: string;
   amount: bigint;
   deadline: bigint;
-  /** On-chain proof string from the contract; UI labels this “submission / delivery evidence”. */
   proof: string;
   submittedAt: bigint;
   state: number;
@@ -31,10 +30,7 @@ export interface MilestoneData {
 
 export type Role = "client" | "provider" | "other";
 
-/** Sidebar filter for browser-local agreement history (not global). */
 export type AgreementSidebarFilter = "all" | "client" | "provider" | "other";
-
-/* ---- formatting helpers ---- */
 
 export function formatEth(wei: bigint): string {
   const eth = Number(wei) / 1e18;
@@ -61,7 +57,6 @@ export function milestoneLabel(state: number): MilestoneStateLabel {
   return MILESTONE_STATES[state] ?? ("Unknown" as MilestoneStateLabel);
 }
 
-/** Whether the connected wallet is client, provider, or not a party — purely from addresses. */
 export function deriveRole(
   account: Address | string | undefined,
   clientAddr: Address | string | undefined,

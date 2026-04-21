@@ -1,4 +1,3 @@
-/** Stylized product mockup for the landing hero — not live data. */
 export default function DashboardHeroPreview() {
   return (
     <div className="mockup" aria-hidden>

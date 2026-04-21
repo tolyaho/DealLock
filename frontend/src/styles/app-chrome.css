@@ -1,8 +1,5 @@
-/* ============================================================
-   App shell (topbar), banners, landing page
-   ============================================================ */
 
-/* ---- App shell ---- */
+
 .app-shell {
   min-height: 100vh;
   display: flex;
@@ -41,7 +38,6 @@
   gap: 0.4rem;
 }
 
-/* Brand */
 .app-topbar-brand {
   display: inline-flex;
   align-items: center;
@@ -100,7 +96,6 @@
   margin: 0 0.2rem;
 }
 
-/* Env dot + label */
 .app-topbar-env {
   display: inline-flex;
   align-items: center;
@@ -171,7 +166,6 @@
   z-index: 1;
 }
 
-/* Banners */
 .banner {
   display: flex;
   flex-wrap: wrap;
@@ -235,10 +229,6 @@
   border-radius: var(--radius-sm);
   background: rgba(0, 0, 0, 0.25);
 }
-
-/* ============================================================
-   Landing page
-   ============================================================ */
 
 .landing {
   min-height: 100vh;
@@ -315,7 +305,6 @@
   color: var(--text-primary);
 }
 
-/* ---- Hero ---- */
 .hero {
   position: relative;
   max-width: 1160px;
@@ -406,7 +395,6 @@
   line-height: var(--leading-snug);
 }
 
-/* Product mockup (right side) */
 .hero-visual {
   animation: fadeRise 0.55s var(--ease-out) 0.06s both;
   position: relative;
@@ -422,7 +410,6 @@
   filter: blur(15px);
 }
 
-/* Browser chrome mockup */
 .mockup {
   border-radius: var(--radius-xl);
   border: 1px solid var(--border-default);
@@ -691,7 +678,6 @@
   50% { transform: translateY(-6px); }
 }
 
-/* ---- Trust strip ---- */
 .trust-strip {
   max-width: 1160px;
   margin: 0 auto;
@@ -720,7 +706,6 @@
   margin-bottom: 0.25rem;
 }
 
-/* ---- Landing section ---- */
 .landing-section {
   max-width: 1160px;
   margin: 0 auto;
@@ -762,7 +747,6 @@
   line-height: var(--leading-relaxed);
 }
 
-/* ---- How it works ---- */
 .steps-grid {
   display: grid;
   gap: var(--space-md);
@@ -823,7 +807,6 @@
   line-height: var(--leading-relaxed);
 }
 
-/* ---- Feature grid ---- */
 .feature-grid {
   display: grid;
   gap: var(--space-md);
@@ -880,7 +863,6 @@
   line-height: var(--leading-relaxed);
 }
 
-/* ---- Service templates ---- */
 .service-grid {
   display: grid;
   gap: var(--space-md);
@@ -964,7 +946,6 @@
   margin-top: 0.4rem;
 }
 
-/* ---- Compare cards ---- */
 .compare-grid {
   display: grid;
   gap: var(--space-md);
@@ -1059,7 +1040,6 @@
   opacity: 0.9;
 }
 
-/* ---- CTA strip ---- */
 .cta-strip {
   max-width: 1160px;
   margin: var(--space-2xl) auto;
@@ -1116,7 +1096,6 @@
   position: relative;
 }
 
-/* ---- Footer ---- */
 .landing-footer {
   border-top: 1px solid var(--border-subtle);
   padding: var(--space-xl) var(--space-lg);
@@ -1159,7 +1138,6 @@
   color: var(--text-muted);
 }
 
-/* ---- Empty state ---- */
 .empty-state {
   text-align: center;
   padding: var(--space-xl);
@@ -1193,7 +1171,6 @@
   line-height: var(--leading-relaxed);
 }
 
-/* ---- Mobile topbar adjustments ---- */
 @media (max-width: 720px) {
   .app-topbar-divider,
   .app-topbar-env-label {

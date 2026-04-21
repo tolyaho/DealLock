@@ -1,11 +1,5 @@
-/* ============================================================
-   Dashboard — sidebar, workspace header, overview, milestones,
-   actions, create form, tabs, wallet.
-   ============================================================ */
 
-/* ---- Layout shell ----
-   A single content column controls every section's horizontal edges, so
-   every card in the dashboard shares the same left/right alignment. */
+
 .dashboard-layout {
   display: flex;
   max-width: 1480px;
@@ -29,16 +23,11 @@
   gap: var(--space-lg);
 }
 
-/* Every direct child (card, hero, banner) fills the content column so
-   their left/right edges are identical. */
 .dashboard-body > * {
   width: 100%;
   box-sizing: border-box;
 }
 
-/* ============================================================
-   Agreement Sidebar
-   ============================================================ */
 .agreement-sidebar {
   width: 304px;
   flex-shrink: 0;
@@ -68,11 +57,32 @@
   padding: var(--space-md) var(--space-md) var(--space-sm);
   border-bottom: 1px solid var(--border-subtle);
 }
+.agreement-sidebar--collapsed .sidebar-header {
+  padding: var(--space-sm) 0;
+}
 .sidebar-header-row {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: var(--space-sm);
+}
+.agreement-sidebar--collapsed .sidebar-header-row {
+  justify-content: center;
+}
+.sidebar-collapse-btn {
+  flex: 0 0 auto;
+}
+.sidebar-collapse-btn--collapsed {
+  width: 34px;
+  height: 34px;
+  border-radius: var(--radius-sm);
+  background: var(--bg-surface);
+  border: 1px solid var(--border-default);
+  color: var(--text-secondary);
+}
+.sidebar-collapse-btn--collapsed:hover {
+  color: var(--text-primary);
+  border-color: var(--border-strong);
 }
 .sidebar-title {
   margin: 0;
@@ -102,7 +112,6 @@
   color: var(--text-muted);
 }
 
-/* Filter tabs with counts */
 .sidebar-filter-tabs {
   display: grid;
   grid-template-columns: repeat(2, 1fr);
@@ -153,7 +162,6 @@
   color: var(--accent-300);
 }
 
-/* List */
 .agreement-sidebar-list {
   flex: 1;
   overflow-y: auto;
@@ -185,7 +193,6 @@
   line-height: var(--leading-snug);
 }
 
-/* Agreement row */
 .agreement-row {
   position: relative;
   display: flex;
@@ -359,9 +366,6 @@
   color: var(--danger);
 }
 
-/* ============================================================
-   Welcome hero (no active agreement)
-   ============================================================ */
 .welcome-hero {
   padding: var(--space-xl);
   border-radius: var(--radius-xl);
@@ -495,11 +499,6 @@
   gap: 0.3rem;
 }
 
-/* ============================================================
-   Workspace Hero (active agreement summary)
-   A premium, compact hero panel. A 3px role-colored rail on the
-   left replaces heavy tinting of the whole surface.
-   ============================================================ */
 .workspace-hero {
   position: relative;
   display: flex;
@@ -522,7 +521,6 @@
   border-color: var(--border-strong);
 }
 
-/* Role rail — slim, calm, high-signal */
 .workspace-hero-rail {
   flex-shrink: 0;
   width: 3px;
@@ -547,7 +545,6 @@
   gap: var(--space-md);
 }
 
-/* Top meta row: template + network left, state pill right */
 .workspace-hero-head {
   display: flex;
   align-items: center;
@@ -583,7 +580,6 @@
   flex-shrink: 0;
 }
 
-/* Title — dominant */
 .workspace-hero-title {
   margin: 0;
   font-family: var(--font-display);
@@ -595,7 +591,6 @@
   overflow-wrap: anywhere;
 }
 
-/* Summary line with a single role chip inline */
 .workspace-hero-summary {
   margin: 0;
   display: flex;
@@ -646,7 +641,6 @@
   border-color: var(--viewer-ring);
 }
 
-/* Foot row: contract · progress · refresh on a single divider-topped line */
 .workspace-hero-foot {
   margin-top: var(--space-xs);
   padding-top: var(--space-md);
@@ -733,9 +727,6 @@
   }
 }
 
-/* ============================================================
-   Section heads (for in-dashboard groups) — one consistent pattern
-   ============================================================ */
 .section-header {
   display: flex;
   align-items: baseline;
@@ -759,9 +750,6 @@
   text-align: right;
 }
 
-/* ============================================================
-   Panel tabs (Create / Load in welcome state)
-   ============================================================ */
 .panel-tabs {
   display: inline-flex;
   gap: 3px;
@@ -794,7 +782,6 @@
   box-shadow: var(--shadow-inset-top);
 }
 
-/* Load form */
 .load-contract-row {
   display: flex;
   gap: var(--space-sm);
@@ -830,9 +817,6 @@
   color: var(--text-secondary);
 }
 
-/* ============================================================
-   Wallet Panel (connect hero)
-   ============================================================ */
 .wallet-panel-card {
   margin-bottom: 0;
 }
@@ -876,9 +860,6 @@
   margin-top: var(--space-md);
 }
 
-/* ============================================================
-   Overview (money + parties)
-   ============================================================ */
 .overview-root {
   margin-bottom: 0;
 }
@@ -989,9 +970,6 @@
   color: var(--accent-300);
 }
 
-/* ============================================================
-   Milestones (timeline)
-   ============================================================ */
 .milestone-empty {
   padding: var(--space-xl);
   text-align: center;
@@ -1184,9 +1162,6 @@
   margin-top: 0.35rem;
 }
 
-/* ============================================================
-   Actions
-   ============================================================ */
 .action-stack {
   display: flex;
   flex-direction: column;
@@ -1340,9 +1315,6 @@
   font-weight: 800;
 }
 
-/* ============================================================
-   Create form
-   ============================================================ */
 .form-section {
   margin-bottom: var(--space-xl);
   padding-bottom: var(--space-lg);
@@ -1504,9 +1476,6 @@
   margin-top: var(--space-md);
 }
 
-/* ============================================================
-   Context sections (collapsible)
-   ============================================================ */
 .context-group {
   display: flex;
   flex-direction: column;
@@ -1623,9 +1592,6 @@
   }
 }
 
-/* ============================================================
-   Responsive
-   ============================================================ */
 @media (max-width: 960px) {
   .dashboard-layout {
     flex-direction: column;

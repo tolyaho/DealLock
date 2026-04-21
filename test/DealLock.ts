@@ -3,7 +3,6 @@ import { expect } from "chai";
 import hre from "hardhat";
 import type { Contract, ContractRunner } from "ethers";
 
-/** `connect` is typed as `BaseContract`; keep chained contract calls typed. */
 type DealLockContract = Omit<Contract, "connect"> & {
   connect(runner: null | ContractRunner): DealLockContract;
 };

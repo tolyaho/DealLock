@@ -1,11 +1,3 @@
-/**
- * Browser-only persistence for DealLock (client-side dApp).
- *
- * - Agreement metadata and drafts: keyed by contract address, localStorage only.
- * - Agreement registry: **browser-local history** of agreements you created or loaded in this
- *   profile — not a global registry and not shared across devices.
- */
-
 import { type Address } from "viem";
 import { SERVICE_TEMPLATE_IDS, type ServiceTemplateId } from "./templates.ts";
 import { type AgreementSidebarFilter, type Role, deriveRole } from "./types.ts";
@@ -19,7 +11,6 @@ function parseTemplateId(raw: unknown): ServiceTemplateId {
 
 const META_PREFIX = "deallock_agreement_meta_";
 
-/** Registry blob version — bump if schema changes. */
 const REGISTRY_KEY = "deallock_agreement_registry_v1";
 
 export interface AgreementMetadata {
@@ -31,26 +22,17 @@ export interface AgreementMetadata {
   acceptanceGuidance: string;
   disputeBoundaryNote: string;
   createdAt: string;
-  /** Parallel to on-chain milestone indices; may be shorter if counts mismatch. */
   milestoneNotes: string[];
 }
 
-/** Fields collected in the create form before deployment (no address / timestamp yet). */
 export type AgreementMetadataDraft = Omit<AgreementMetadata, "contractAddress" | "createdAt">;
 
-/**
- * One row in the browser-local agreement list (created or loaded on this device).
- * `agreementState` / party addresses are best-effort caches from the last successful RPC read.
- */
 export interface AgreementRegistryEntry {
   contractAddress: string;
   projectTitle: string | null;
   serviceTemplate: ServiceTemplateId | null;
-  /** From AgreementMetadata.createdAt when the agreement was created in-app; otherwise null. */
   createdAt: string | null;
-  /** ISO time when the address was first added via Load or deploy. */
   firstSeenAt: string;
-  /** ISO time when user last opened this agreement in the UI (sort key). */
   lastAccessedAt: string;
   clientAddress: string | null;
   providerAddress: string | null;
@@ -71,7 +53,6 @@ export function saveAgreementMetadata(meta: AgreementMetadata): void {
   try {
     localStorage.setItem(keyForAddress(meta.contractAddress), JSON.stringify(meta));
   } catch {
-    /* quota or private mode — ignore */
   }
 }
 
@@ -88,8 +69,6 @@ export function loadAgreementMetadata(address: Address | string): AgreementMetad
     return null;
   }
 }
-
-/* ---- Agreement registry (browser-local history only) ---- */
 
 function nowIso(): string {
   return new Date().toISOString();
@@ -129,11 +108,9 @@ function saveAgreementRegistry(entries: AgreementRegistryEntry[]): void {
   try {
     localStorage.setItem(REGISTRY_KEY, JSON.stringify(entries));
   } catch {
-    /* ignore */
   }
 }
 
-/** Upsert by contract address; merges with existing row. */
 export function upsertAgreementRegistry(
   partial: Omit<AgreementRegistryEntry, "firstSeenAt" | "lastAccessedAt"> &
     Partial<Pick<AgreementRegistryEntry, "firstSeenAt" | "lastAccessedAt">>,
@@ -183,7 +160,6 @@ export function removeAgreementFromRegistry(contractAddress: string): AgreementR
   return next;
 }
 
-/** Merge on-chain snapshot into registry row (after successful reads). */
 export function syncRegistryFromChain(args: {
   contractAddress: string;
   clientAddress?: string | null;
@@ -215,7 +191,6 @@ export function loadSidebarFilter(): AgreementSidebarFilter {
     const v = localStorage.getItem(SIDEBAR_FILTER_KEY);
     if (v === "client" || v === "provider" || v === "other" || v === "all") return v;
   } catch {
-    /* ignore */
   }
   return "all";
 }
@@ -224,7 +199,6 @@ export function saveSidebarFilter(f: AgreementSidebarFilter): void {
   try {
     localStorage.setItem(SIDEBAR_FILTER_KEY, f);
   } catch {
-    /* ignore */
   }
 }
 
