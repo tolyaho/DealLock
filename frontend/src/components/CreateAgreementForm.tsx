@@ -1,16 +1,33 @@
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { useAccount, useWalletClient, useChainId } from "wagmi";
-import { type Address, parseEther, isAddress, createWalletClient, custom } from "viem";
+import { type Address, isAddress, createWalletClient, custom, decodeEventLog, type Hex } from "viem";
 import { sepolia, hardhat } from "viem/chains";
-import { DEALLOCK_ABI } from "../contract.ts";
-import { DEALLOCK_BYTECODE } from "../bytecode.ts";
+import { DEALLOCK_V4_ABI } from "../contractV4.ts";
+import { DEALLOCK_V4_BYTECODE } from "../bytecodeV4.ts";
+import {
+  DEALLOCK_FACTORY_ABI,
+  DEALLOCK_FACTORY_V2_ABI,
+  DEALLOCK_FACTORY_V3_ABI,
+  getFactoryAddress,
+  getFactoryV2Address,
+  getFactoryV3Address,
+  isFactoryConfigured,
+  isFactoryV2Configured,
+  isFactoryV3Configured,
+} from "../contractFactory.ts";
 import {
   SERVICE_TEMPLATE_IDS,
   getServiceTemplate,
   type ServiceTemplateId,
 } from "../templates.ts";
 import { type AgreementMetadataDraft } from "../storage.ts";
-import { isSupportedChain, explorerTxUrl, explorerAddressUrl } from "../network.ts";
+import { isSupportedChain, explorerTxUrl, explorerAddressUrl, humanizeContractError } from "../network.ts";
+import { useAccountSession } from "../account/useAccountSession.ts";
+import {
+  assetKey,
+  parseAssetAmount,
+  paymentAssetsForChain,
+} from "../tokens.ts";
 
 interface MilestoneInput {
   description: string;
@@ -41,15 +58,44 @@ type DeployState =
   | { status: "error"; message: string };
 
 interface Props {
-  onDeployed: (address: Address, draft: AgreementMetadataDraft) => void;
+  onDeployed: (
+    address: Address,
+    draft: AgreementMetadataDraft,
+    receipt: {
+      deploymentTxHash: string;
+      deploymentBlockNumber: string;
+      creationSource: "factory" | "direct";
+      factoryVersion?: number;
+      factoryAddress?: string;
+      factoryTxHash?: string;
+      factoryLogIndex?: number;
+      metadataHash?: string;
+      paymentAssetKind?: "native" | "erc20";
+      paymentTokenAddress?: string | null;
+      paymentSymbol?: string;
+      paymentDecimals?: number;
+    },
+  ) => void;
 }
 
 const initialTemplate = getServiceTemplate("website");
+
+function normalizeContactEmail(value: string): string | null {
+  const email = value.trim().toLowerCase();
+  return email || null;
+}
+
+function isValidContactEmail(value: string): boolean {
+  const email = normalizeContactEmail(value);
+  if (!email) return true;
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
 
 export default function CreateAgreementForm({ onDeployed }: Props) {
   const { isConnected } = useAccount();
   const { data: walletClient } = useWalletClient();
   const chainId = useChainId();
+  const { user, sessionStatus } = useAccountSession();
 
   const [serviceTemplateId, setServiceTemplateId] = useState<ServiceTemplateId>("website");
   const [projectTitle, setProjectTitle] = useState(initialTemplate.defaultProjectTitle);
@@ -64,10 +110,27 @@ export default function CreateAgreementForm({ onDeployed }: Props) {
   const [disputeBoundaryNote, setDisputeBoundaryNote] = useState(
     initialTemplate.disputeBoundaryNote,
   );
+  const [clientEmail, setClientEmail] = useState("");
+  const [providerEmail, setProviderEmail] = useState("");
+  const [paymentAssetKey, setPaymentAssetKey] = useState("native");
   const [errors, setErrors] = useState<string[]>([]);
   const [deployState, setDeployState] = useState<DeployState>({ status: "idle" });
 
   const chainOk = isSupportedChain(chainId);
+  const paymentAssets = paymentAssetsForChain(chainId);
+  const selectedPaymentAsset =
+    paymentAssets.find((asset) => assetKey(asset) === paymentAssetKey) ?? paymentAssets[0]!;
+
+  useEffect(() => {
+    if (!paymentAssets.some((asset) => assetKey(asset) === paymentAssetKey)) {
+      setPaymentAssetKey(assetKey(paymentAssets[0]!));
+    }
+  }, [paymentAssetKey, paymentAssets]);
+
+  useEffect(() => {
+    if (sessionStatus !== "signed-in" || !user?.email || !user.emailVerifiedAt || clientEmail) return;
+    setClientEmail(user.email);
+  }, [clientEmail, sessionStatus, user?.email, user?.emailVerifiedAt]);
 
   function applyTemplate(id: ServiceTemplateId) {
     const t = getServiceTemplate(id);
@@ -96,12 +159,23 @@ export default function CreateAgreementForm({ onDeployed }: Props) {
   function validate(): string[] {
     const errs: string[] = [];
 
+    if (selectedPaymentAsset.kind === "erc20" && !factoryV2Configured && !factoryV3Configured) {
+      errs.push("ERC-20 agreements require Factory V2 or Factory V3. Configure a payment-aware factory for this network or select ETH.");
+    }
+
     if (!providerAddr.trim() || !isAddress(providerAddr.trim())) {
       errs.push("Provider must be a valid EVM address.");
     }
 
     if (!projectTitle.trim()) {
       errs.push("Project title is required.");
+    }
+
+    if (!isValidContactEmail(clientEmail)) {
+      errs.push("Client notification email must be a valid email address.");
+    }
+    if (!isValidContactEmail(providerEmail)) {
+      errs.push("Provider notification email must be a valid email address.");
     }
 
     if (milestones.length === 0) {
@@ -116,8 +190,12 @@ export default function CreateAgreementForm({ onDeployed }: Props) {
       const m = milestones[i]!;
       if (!m.description.trim()) errs.push(`Milestone ${i}: description is empty.`);
 
-      const amt = parseFloat(m.amount);
-      if (isNaN(amt) || amt <= 0) errs.push(`Milestone ${i}: amount must be > 0.`);
+      try {
+        const amt = parseAssetAmount(m.amount, selectedPaymentAsset);
+        if (amt <= 0n) errs.push(`Milestone ${i}: amount must be > 0 ${selectedPaymentAsset.symbol}.`);
+      } catch {
+        errs.push(`Milestone ${i}: amount must be a valid ${selectedPaymentAsset.symbol} amount.`);
+      }
 
       if (!m.deadline) {
         errs.push(`Milestone ${i}: deadline is required.`);
@@ -182,32 +260,155 @@ export default function CreateAgreementForm({ onDeployed }: Props) {
 
     try {
       const descriptions = milestones.map((m) => m.description.trim());
-      const amounts = milestones.map((m) => parseEther(m.amount));
+      const amounts = milestones.map((m) => parseAssetAmount(m.amount, selectedPaymentAsset));
       const deadlines = milestones.map((m) =>
         BigInt(Math.floor(new Date(m.deadline).getTime() / 1000)),
       );
-
-      const hash = await signer.deployContract({
-        abi: DEALLOCK_ABI,
-        bytecode: DEALLOCK_BYTECODE,
-        args: [providerAddr.trim() as Address, descriptions, amounts, deadlines],
-      });
-
-      setDeployState({ status: "confirming", hash });
+      const REVIEW_PERIOD_SECONDS = BigInt(3 * 24 * 60 * 60); // 3 days
+      const ZERO_METADATA_HASH = "0x0000000000000000000000000000000000000000000000000000000000000000" as const;
 
       const { getPublicClient } = await import("wagmi/actions");
       const { config } = await import("../wagmi.ts");
       const publicClient = getPublicClient(config);
       if (!publicClient) throw new Error("No public client available");
 
-      const receipt = await publicClient.waitForTransactionReceipt({
-        hash,
-        timeout: 120_000,
-      });
+      const factoryV2Address = getFactoryV2Address(chainId);
+      const factoryV3Address = getFactoryV3Address(chainId);
+      const factoryAddress = getFactoryAddress(chainId);
 
-      if (!receipt.contractAddress) throw new Error("No contract address in receipt");
+      let hash: `0x${string}`;
+      let addr: Address;
+      let creationSource: "factory" | "direct";
+      let factoryVersion: number | undefined;
+      let factoryTxHash: string | undefined;
+      let factoryLogIndex: number | undefined;
 
-      const addr = receipt.contractAddress as Address;
+      let usedFactoryAddress: Address | null = null;
+
+      if (factoryV3Address || factoryV2Address) {
+        const paymentAwareFactoryAddress = factoryV3Address ?? factoryV2Address!;
+        const paymentAwareFactoryAbi = factoryV3Address ? DEALLOCK_FACTORY_V3_ABI : DEALLOCK_FACTORY_V2_ABI;
+        // Deploy through the newest configured payment-aware factory.
+        hash = await signer.writeContract({
+          address: paymentAwareFactoryAddress,
+          abi: paymentAwareFactoryAbi,
+          functionName: "createAgreement",
+          args: [
+            providerAddr.trim() as Address,
+            selectedPaymentAsset.address ?? "0x0000000000000000000000000000000000000000",
+            descriptions,
+            amounts,
+            deadlines,
+            REVIEW_PERIOD_SECONDS,
+            ZERO_METADATA_HASH,
+          ],
+        });
+        usedFactoryAddress = paymentAwareFactoryAddress;
+
+        setDeployState({ status: "confirming", hash });
+
+        const receipt = await publicClient.waitForTransactionReceipt({
+          hash,
+          timeout: 120_000,
+        });
+
+        let parsedAddr: Address | null = null;
+        let parsedLogIndex: number | undefined;
+        for (const log of receipt.logs) {
+          try {
+            const decoded = decodeEventLog({
+              abi: paymentAwareFactoryAbi,
+              data: log.data,
+              topics: log.topics as [Hex, ...Hex[]],
+            });
+            if (decoded.eventName === "AgreementCreated") {
+              parsedAddr = (decoded.args as { agreement: Address }).agreement;
+              parsedLogIndex = log.logIndex;
+              break;
+            }
+          } catch {
+            // skip non-factory logs
+          }
+        }
+
+        if (!parsedAddr) throw new Error("AgreementCreated event not found in receipt");
+        addr = parsedAddr;
+        creationSource = "factory";
+        factoryVersion = factoryV3Address ? 3 : 2;
+        factoryTxHash = hash;
+        factoryLogIndex = parsedLogIndex;
+      } else if (selectedPaymentAsset.kind === "erc20") {
+        throw new Error("ERC-20 agreements require VITE_DEALLOCK_FACTORY_V3_* or VITE_DEALLOCK_FACTORY_V2_* to be configured for this network.");
+      } else if (factoryAddress) {
+        // Deploy native ETH agreement through legacy factory.
+        hash = await signer.writeContract({
+          address: factoryAddress,
+          abi: DEALLOCK_FACTORY_ABI,
+          functionName: "createAgreement",
+          args: [
+            providerAddr.trim() as Address,
+            descriptions,
+            amounts,
+            deadlines,
+            REVIEW_PERIOD_SECONDS,
+            ZERO_METADATA_HASH,
+          ],
+        });
+
+        setDeployState({ status: "confirming", hash });
+
+        const receipt = await publicClient.waitForTransactionReceipt({
+          hash,
+          timeout: 120_000,
+        });
+
+        // Parse AgreementCreated log to extract the deployed agreement address.
+        let parsedAddr: Address | null = null;
+        let parsedLogIndex: number | undefined;
+        for (const log of receipt.logs) {
+          try {
+            const decoded = decodeEventLog({
+              abi: DEALLOCK_FACTORY_ABI,
+              data: log.data,
+              topics: log.topics as [Hex, ...Hex[]],
+            });
+            if (decoded.eventName === "AgreementCreated") {
+              parsedAddr = (decoded.args as { agreement: Address }).agreement;
+              parsedLogIndex = log.logIndex;
+              break;
+            }
+          } catch {
+            // skip non-factory logs
+          }
+        }
+
+        if (!parsedAddr) throw new Error("AgreementCreated event not found in receipt");
+        addr = parsedAddr;
+        creationSource = "factory";
+        factoryVersion = 1;
+        factoryTxHash = hash;
+        factoryLogIndex = parsedLogIndex;
+        usedFactoryAddress = factoryAddress;
+      } else {
+        // Direct V4 deployment (fallback for local dev without factory configured).
+        hash = await signer.deployContract({
+          abi: DEALLOCK_V4_ABI,
+          bytecode: DEALLOCK_V4_BYTECODE,
+          args: [providerAddr.trim() as Address, descriptions, amounts, deadlines, REVIEW_PERIOD_SECONDS],
+        });
+
+        setDeployState({ status: "confirming", hash });
+
+        const receipt = await publicClient.waitForTransactionReceipt({
+          hash,
+          timeout: 120_000,
+        });
+
+        if (!receipt.contractAddress) throw new Error("No contract address in receipt");
+        addr = receipt.contractAddress as Address;
+        creationSource = "direct";
+      }
+
       const t = getServiceTemplate(serviceTemplateId);
       const draft: AgreementMetadataDraft = {
         projectTitle: projectTitle.trim(),
@@ -217,13 +418,35 @@ export default function CreateAgreementForm({ onDeployed }: Props) {
         acceptanceGuidance: acceptanceGuidance.trim(),
         disputeBoundaryNote: disputeBoundaryNote.trim(),
         milestoneNotes: milestones.map((m) => m.note.trim()),
+        clientEmail: normalizeContactEmail(clientEmail),
+        providerEmail: normalizeContactEmail(providerEmail),
+        paymentAssetKind: selectedPaymentAsset.kind,
+        paymentTokenAddress: selectedPaymentAsset.address,
+        paymentSymbol: selectedPaymentAsset.symbol,
+        paymentDecimals: selectedPaymentAsset.decimals,
       };
 
+      // Extract block number from receipt for indexer start block.
+      const receiptForBlock = await publicClient.waitForTransactionReceipt({ hash, timeout: 5_000 }).catch(() => null);
+      const blockNumber = receiptForBlock?.blockNumber?.toString() ?? "0";
+
       setDeployState({ status: "success", address: addr, hash });
-      onDeployed(addr, draft);
+      onDeployed(addr, draft, {
+        deploymentTxHash: hash,
+        deploymentBlockNumber: blockNumber,
+        creationSource,
+        ...(factoryVersion !== undefined ? { factoryVersion } : {}),
+        ...(usedFactoryAddress ? { factoryAddress: usedFactoryAddress } : {}),
+        ...(factoryTxHash ? { factoryTxHash } : {}),
+        ...(factoryLogIndex !== undefined ? { factoryLogIndex } : {}),
+        metadataHash: ZERO_METADATA_HASH,
+        paymentAssetKind: selectedPaymentAsset.kind,
+        paymentTokenAddress: selectedPaymentAsset.address,
+        paymentSymbol: selectedPaymentAsset.symbol,
+        paymentDecimals: selectedPaymentAsset.decimals,
+      });
     } catch (err: unknown) {
-      const msg = err instanceof Error ? err.message : String(err);
-      setDeployState({ status: "error", message: msg.slice(0, 300) });
+      setDeployState({ status: "error", message: humanizeContractError(err) });
     }
   }
 
@@ -239,6 +462,10 @@ export default function CreateAgreementForm({ onDeployed }: Props) {
     document.getElementById("dealock-overview")?.scrollIntoView({ behavior: "smooth", block: "start" });
   }
 
+  const factoryConfigured = isFactoryConfigured(chainId);
+  const factoryV2Configured = isFactoryV2Configured(chainId);
+  const factoryV3Configured = isFactoryV3Configured(chainId);
+
   return (
     <section className="surface-card surface-card--pad" id="dealock-create">
       <div className="surface-card-head">
@@ -248,6 +475,17 @@ export default function CreateAgreementForm({ onDeployed }: Props) {
           address, milestone text, amounts, and deadlines go on-chain. Titles and guidance stay in this
           browser.
         </p>
+        {chainOk && (
+          <p className="hint" style={{ marginTop: "0.25rem" }}>
+            {factoryV3Configured
+              ? "Agreements are deployed through Factory V3 — V6 deadline extensions, ETH, and configured ERC-20 assets supported."
+              : factoryV2Configured
+                ? "Agreements are deployed through Factory V2 — ETH and configured ERC-20 assets supported."
+              : factoryConfigured
+                ? "Native ETH agreements use the DealLock Factory. Configure Factory V3 or V2 for USDC/ERC-20 agreements."
+                : "Direct ETH deployment (no factory configured for this network). Configure Factory V3 or V2 to enable USDC/ERC-20 agreements."}
+          </p>
+        )}
       </div>
 
       {!isConnected && (
@@ -316,6 +554,63 @@ export default function CreateAgreementForm({ onDeployed }: Props) {
           </div>
 
           <div className="form-section">
+            <h3 className="form-section-title">Notification contacts (off-chain)</h3>
+            <div className="form-row form-row--2">
+              <div className="field">
+                <label className="label">Client notification email (optional)</label>
+                <input
+                  type="email"
+                  placeholder="client@example.com"
+                  value={clientEmail}
+                  onChange={(e) => setClientEmail(e.target.value)}
+                  disabled={busy}
+                />
+              </div>
+              <div className="field">
+                <label className="label">Provider notification email (optional)</label>
+                <input
+                  type="email"
+                  placeholder="provider@example.com"
+                  value={providerEmail}
+                  onChange={(e) => setProviderEmail(e.target.value)}
+                  disabled={busy}
+                />
+              </div>
+            </div>
+            <p className="hint">
+              Contact emails are stored off-chain for notifications only. Wallets still control funds and contract actions.
+            </p>
+          </div>
+
+          <div className="form-section">
+            <h3 className="form-section-title">Payment asset</h3>
+            <div className="field">
+              <label className="label">Escrow asset</label>
+              <select
+                value={assetKey(selectedPaymentAsset)}
+                onChange={(e) => setPaymentAssetKey(e.target.value)}
+                disabled={busy}
+              >
+                {paymentAssets.map((asset) => (
+                  <option key={assetKey(asset)} value={assetKey(asset)}>
+                    {asset.symbol} — {asset.name}
+                  </option>
+                ))}
+              </select>
+              <p className="hint">
+                {selectedPaymentAsset.kind === "native"
+                  ? "ETH agreements fund escrow in one transaction with native ETH."
+                  : `${selectedPaymentAsset.symbol} agreements require approve, then fund. You still need ETH for gas.`}
+              </p>
+              {selectedPaymentAsset.kind === "erc20" && !factoryV2Configured && !factoryV3Configured && (
+                <div className="validation-errors">
+                  Configure <code>VITE_DEALLOCK_FACTORY_V3_*</code> or <code>VITE_DEALLOCK_FACTORY_V2_*</code> for this network before deploying ERC-20 agreements.
+                </div>
+              )}
+            </div>
+          </div>
+
+          <div className="form-section">
             <h3 className="form-section-title">Milestones (on-chain)</h3>
           <div className="field">
             {milestones.map((m, i) => (
@@ -347,8 +642,8 @@ export default function CreateAgreementForm({ onDeployed }: Props) {
                   />
                   <input
                     type="number"
-                    placeholder="Amount (ETH)"
-                    step="0.001"
+                    placeholder={`Amount (${selectedPaymentAsset.symbol})`}
+                    step={selectedPaymentAsset.decimals === 6 ? "0.01" : "0.001"}
                     min="0"
                     value={m.amount}
                     onChange={(e) => updateMilestone(i, "amount", e.target.value)}
@@ -427,7 +722,7 @@ export default function CreateAgreementForm({ onDeployed }: Props) {
           )}
 
           <button type="button" className="btn btn-primary btn-lg btn-block deploy-cta" onClick={handleDeploy} disabled={busy}>
-            {busy ? "Deploying…" : "Deploy agreement"}
+            {busy ? "Deploying…" : `Deploy ${selectedPaymentAsset.symbol} agreement`}
           </button>
 
           {deployState.status === "pending" && (

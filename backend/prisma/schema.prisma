@@ -1,0 +1,238 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id              String    @id @default(cuid())
+  email           String?   @unique
+  emailVerifiedAt DateTime?
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+
+  wallets                  Wallet[]
+  agreements               Agreement[]
+  emailVerificationTokens  EmailVerificationToken[]
+  notificationPreference   NotificationPreference?
+  receivedNotificationLogs EmailNotificationLog[]    @relation("NotificationRecipient")
+}
+
+model Wallet {
+  id        String   @id @default(cuid())
+  userId    String
+  address   String   @unique
+  label     String   @default("")
+  isPrimary Boolean  @default(false)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id])
+
+  @@index([userId])
+  @@index([address])
+}
+
+model AuthNonce {
+  id        String    @id @default(cuid())
+  address   String
+  nonce     String
+  purpose   String
+  message   String
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  @@index([address, purpose])
+  @@index([expiresAt])
+  @@index([usedAt])
+}
+
+model Agreement {
+  id                    String    @id @default(cuid())
+  contractAddress       String
+  chainId               Int
+  clientAddress         String
+  providerAddress       String
+  clientEmail           String?
+  providerEmail         String?
+  projectTitle          String    @default("")
+  serviceTemplate       String    @default("custom")
+  metadataJson          String    @default("{}")
+  contractVersion       Int       @default(1)
+  paymentAssetKind      String    @default("native") // native | erc20
+  paymentTokenAddress   String?
+  paymentSymbol         String    @default("ETH")
+  paymentDecimals       Int       @default(18)
+  deploymentTxHash      String?
+  deploymentBlockNumber BigInt?
+  indexingStartBlock    BigInt?
+  lastIndexedBlock      BigInt?
+  lastIndexedAt         DateTime?
+  indexerStatus         String    @default("pending")
+  indexerError          String?
+  creationSource        String    @default("direct") // direct | factory
+  factoryVersion        Int?
+  factoryAddress        String?
+  factoryTxHash         String?
+  factoryLogIndex       Int?
+  metadataHash          String?
+  createdByUserId       String?
+  createdAt             DateTime  @default(now())
+  updatedAt             DateTime  @updatedAt
+  lastAccessedAt        DateTime  @default(now())
+  lastSyncedAt          DateTime  @default(now())
+
+  createdBy        User?                  @relation(fields: [createdByUserId], references: [id])
+  chainEvents      ChainEvent[]
+  notificationLogs EmailNotificationLog[]
+
+  @@unique([chainId, contractAddress])
+  @@index([chainId, clientAddress])
+  @@index([chainId, providerAddress])
+  @@index([createdByUserId])
+  @@index([lastAccessedAt])
+  @@index([contractVersion])
+  @@index([indexerStatus])
+  @@index([lastIndexedBlock])
+}
+
+model EmailVerificationToken {
+  id        String    @id @default(cuid())
+  userId    String
+  email     String
+  tokenHash String    @unique
+  expiresAt DateTime
+  usedAt    DateTime?
+  createdAt DateTime  @default(now())
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId])
+  @@index([email])
+  @@index([expiresAt])
+}
+
+model NotificationPreference {
+  id                  String   @id @default(cuid())
+  userId              String   @unique
+  agreementCreated    Boolean  @default(true)
+  agreementAccepted   Boolean  @default(true)
+  agreementFunded     Boolean  @default(true)
+  milestoneSubmitted  Boolean  @default(true)
+  milestoneReleased   Boolean  @default(true)
+  milestoneRefunded   Boolean  @default(true)
+  adjustmentRequested Boolean  @default(true)
+  adjustmentAccepted  Boolean  @default(true)
+  adjustmentFunded    Boolean  @default(true)
+  adjustmentSubmitted Boolean  @default(true)
+  adjustmentReleased  Boolean  @default(true)
+  adjustmentRefunded  Boolean  @default(true)
+  disputeOpened       Boolean  @default(true)
+  settlementProposed  Boolean  @default(true)
+  settlementAccepted  Boolean  @default(true)
+  reviewClaimed       Boolean  @default(true)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  user User @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model EmailNotificationLog {
+  id              String    @id @default(cuid())
+  agreementId     String?
+  recipientUserId String?
+  chainEventId    String?
+  contractAddress String
+  chainId         Int
+  eventType       String
+  txHash          String?
+  logIndex        Int?
+  recipientEmail  String
+  status          String
+  source          String    @default("app")
+  error           String?
+  createdAt       DateTime  @default(now())
+  sentAt          DateTime?
+
+  agreement     Agreement? @relation(fields: [agreementId], references: [id], onDelete: SetNull)
+  chainEvent    ChainEvent? @relation(fields: [chainEventId], references: [id], onDelete: SetNull)
+  recipientUser User?      @relation("NotificationRecipient", fields: [recipientUserId], references: [id], onDelete: SetNull)
+
+  @@index([contractAddress, chainId])
+  @@index([txHash])
+  @@index([chainEventId])
+  @@index([agreementId])
+  @@index([recipientUserId])
+  @@index([status])
+  @@index([createdAt])
+  @@unique([eventType, txHash, recipientEmail])
+  @@unique([chainEventId, recipientEmail])
+}
+
+model ChainEvent {
+  id                       String    @id @default(cuid())
+  agreementId              String
+  chainId                  Int
+  contractAddress          String
+  contractVersion          Int
+  blockNumber              BigInt
+  blockHash                String?
+  txHash                   String
+  logIndex                 Int
+  eventName                String
+  itemType                 String?
+  itemId                   Int?
+  actorAddress             String?
+  counterpartyAddress      String?
+  amountWei                String?
+  amountRaw                String?
+  paymentTokenAddress      String?
+  paymentSymbol            String?
+  paymentDecimals          Int?
+  payloadJson              Json
+  occurredAt               DateTime
+  createdAt                DateTime  @default(now())
+  notificationsProcessedAt DateTime?
+
+  agreement        Agreement              @relation(fields: [agreementId], references: [id], onDelete: Cascade)
+  notificationLogs EmailNotificationLog[]
+
+  @@unique([chainId, txHash, logIndex])
+  @@index([agreementId, blockNumber])
+  @@index([chainId, contractAddress, blockNumber])
+  @@index([eventName])
+  @@index([occurredAt])
+}
+
+model IndexerRun {
+  id             String    @id @default(cuid())
+  startedAt      DateTime  @default(now())
+  finishedAt     DateTime?
+  status         String
+  chainId        Int?
+  agreementsSeen Int       @default(0)
+  eventsFound    Int       @default(0)
+  error          String?
+}
+
+model FactoryContract {
+  id               String    @id @default(cuid())
+  chainId          Int
+  address          String
+  contractVersion  Int       @default(4)
+  factoryVersion   Int       @default(1)
+  deploymentBlock  BigInt?
+  lastIndexedBlock BigInt?
+  lastIndexedAt    DateTime?
+  indexerStatus    String    @default("active")
+  indexerError     String?
+  createdAt        DateTime  @default(now())
+  updatedAt        DateTime  @updatedAt
+
+  @@unique([chainId, address])
+  @@index([chainId, indexerStatus])
+}

@@ -1,8 +1,9 @@
 import { type Address } from "viem";
 import { useChainId } from "wagmi";
-import { agreementLabel, formatEth, type Role } from "../../types.ts";
+import { agreementLabel, type Role } from "../../types.ts";
 import { chainName, explorerAddressUrl, isSepoliaChain } from "../../network.ts";
 import { templateLabel, type ServiceTemplateId } from "../../templates.ts";
+import { formatAssetAmount, nativePaymentAsset, type PaymentAsset } from "../../tokens.ts";
 import CopyButton from "../ui/CopyButton.tsx";
 
 interface WorkspaceHeaderProps {
@@ -16,6 +17,7 @@ interface WorkspaceHeaderProps {
   refundedAmount?: bigint;
   onRefresh?: () => void;
   refreshing?: boolean;
+  paymentAsset?: PaymentAsset;
 }
 
 function roleLabel(role: Role): string {
@@ -75,8 +77,10 @@ export default function WorkspaceHeader({
   refundedAmount,
   onRefresh,
   refreshing,
+  paymentAsset,
 }: WorkspaceHeaderProps) {
   const chainId = useChainId();
+  const asset = paymentAsset ?? nativePaymentAsset(chainId);
   const explorerUrl = explorerAddressUrl(chainId, contractAddress);
   const stateLabel = agreementState !== undefined ? agreementLabel(agreementState) : null;
   const stateSlug = stateLabel ? stateLabel.toLowerCase() : "";
@@ -147,7 +151,8 @@ export default function WorkspaceHeader({
                 />
               </div>
               <span className="workspace-hero-progress-label mono">
-                {progress.percent.toFixed(0)}% · {formatEth(progress.resolved)}/{formatEth(progress.total)} ETH
+                {progress.percent.toFixed(0)}% · {formatAssetAmount(progress.resolved, asset)}/
+                {formatAssetAmount(progress.total, asset)}
               </span>
             </div>
           )}

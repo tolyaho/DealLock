@@ -8,18 +8,30 @@
     "build": "hardhat build",
     "test:mocha": "hardhat test mocha",
     "test:deallock": "hardhat test test/DealLock.ts",
-    "clean": "hardhat clean"
+    "clean": "hardhat clean",
+    "rc:hardhat": "npx hardhat node",
+    "rc:bootstrap": "npx hardhat run scripts/bootstrap-local-rc.ts --network localhost",
+    "rc:test:contracts": "npx hardhat test",
+    "rc:test:backend": "cd backend && npm test",
+    "rc:test:indexer": "cd backend && npm run test:indexer",
+    "rc:test:frontend": "cd frontend && npm run build",
+    "rc:check": "npx hardhat test && cd backend && npm run build && cd ../frontend && npm run build",
+    "deploy:factory:v3:sepolia": "npx hardhat run scripts/deploy-factory-v3-sepolia.ts --network sepolia",
+    "lint:contracts": "solhint --disc --noPoster --max-warnings 0 \"contracts/**/*.sol\"",
+    "check:bytecode": "node scripts/check-bytecode-size.mjs",
+    "release:check": "node scripts/release-check.mjs"
   },
   "keywords": [],
   "author": "",
   "license": "ISC",
   "type": "module",
-  "private": "true",
+  "private": true,
   "devDependencies": {
     "@nomicfoundation/hardhat-toolbox-mocha-ethers": "^3.0.3",
     "@types/mocha": "^10.0.10",
     "@types/node": "^25.5.0",
     "hardhat": "^3.2.0",
+    "solhint": "^6.2.1",
     "typescript": "^6.0.2"
   }
 }

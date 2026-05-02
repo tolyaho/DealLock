@@ -1,7 +1,8 @@
 import { useChainId } from "wagmi";
 import { type Address } from "viem";
-import { formatEth, shortAddress, type Role } from "../types.ts";
+import { shortAddress, type Role } from "../types.ts";
 import { explorerAddressUrl } from "../network.ts";
+import { formatAssetAmount, nativePaymentAsset, type PaymentAsset } from "../tokens.ts";
 import CopyButton from "./ui/CopyButton.tsx";
 
 interface Props {
@@ -13,6 +14,7 @@ interface Props {
   releasedAmount?: bigint;
   refundedAmount?: bigint;
   balance?: bigint;
+  paymentAsset?: PaymentAsset;
 }
 
 function PartyCard({
@@ -69,8 +71,11 @@ export default function AgreementOverview({
   releasedAmount,
   refundedAmount,
   balance,
+  paymentAsset,
 }: Props) {
   const chainId = useChainId();
+  const asset = paymentAsset ?? nativePaymentAsset(chainId);
+  const formatAmount = (amount: bigint) => formatAssetAmount(amount, asset);
 
   return (
     <section
@@ -103,31 +108,31 @@ export default function AgreementOverview({
         <div className="metric-tile">
           <span className="metric-label">Total</span>
           <span className="metric-value">
-            {totalAmount !== undefined ? `${formatEth(totalAmount)} ETH` : "—"}
+            {totalAmount !== undefined ? formatAmount(totalAmount) : "—"}
           </span>
         </div>
         <div className="metric-tile">
           <span className="metric-label">Funded</span>
           <span className="metric-value">
-            {fundedAmount !== undefined ? `${formatEth(fundedAmount)} ETH` : "—"}
+            {fundedAmount !== undefined ? formatAmount(fundedAmount) : "—"}
           </span>
         </div>
         <div className="metric-tile">
           <span className="metric-label">Released</span>
           <span className="metric-value">
-            {releasedAmount !== undefined ? `${formatEth(releasedAmount)} ETH` : "—"}
+            {releasedAmount !== undefined ? formatAmount(releasedAmount) : "—"}
           </span>
         </div>
         <div className="metric-tile">
           <span className="metric-label">Refunded</span>
           <span className="metric-value">
-            {refundedAmount !== undefined ? `${formatEth(refundedAmount)} ETH` : "—"}
+            {refundedAmount !== undefined ? formatAmount(refundedAmount) : "—"}
           </span>
         </div>
         <div className="metric-tile metric-tile--wide">
           <span className="metric-label">In escrow right now</span>
           <span className="metric-value">
-            {balance !== undefined ? `${formatEth(balance)} ETH` : "—"}
+            {balance !== undefined ? formatAmount(balance) : "—"}
           </span>
         </div>
       </div>

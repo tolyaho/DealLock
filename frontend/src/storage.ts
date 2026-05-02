@@ -23,6 +23,12 @@ export interface AgreementMetadata {
   disputeBoundaryNote: string;
   createdAt: string;
   milestoneNotes: string[];
+  clientEmail: string | null;
+  providerEmail: string | null;
+  paymentAssetKind?: "native" | "erc20";
+  paymentTokenAddress?: string | null;
+  paymentSymbol?: string;
+  paymentDecimals?: number;
 }
 
 export type AgreementMetadataDraft = Omit<AgreementMetadata, "contractAddress" | "createdAt">;
@@ -63,6 +69,13 @@ export function loadAgreementMetadata(address: Address | string): AgreementMetad
     const parsed = JSON.parse(raw) as AgreementMetadata;
     if (!parsed || typeof parsed.contractAddress !== "string") return null;
     if (!Array.isArray(parsed.milestoneNotes)) parsed.milestoneNotes = [];
+    parsed.clientEmail = typeof parsed.clientEmail === "string" ? parsed.clientEmail : null;
+    parsed.providerEmail = typeof parsed.providerEmail === "string" ? parsed.providerEmail : null;
+    parsed.paymentAssetKind = parsed.paymentAssetKind === "erc20" ? "erc20" : "native";
+    parsed.paymentTokenAddress =
+      typeof parsed.paymentTokenAddress === "string" ? parsed.paymentTokenAddress.toLowerCase() : null;
+    parsed.paymentSymbol = typeof parsed.paymentSymbol === "string" ? parsed.paymentSymbol : "ETH";
+    parsed.paymentDecimals = typeof parsed.paymentDecimals === "number" ? parsed.paymentDecimals : 18;
     parsed.serviceTemplate = parseTemplateId(parsed.serviceTemplate);
     return parsed;
   } catch {

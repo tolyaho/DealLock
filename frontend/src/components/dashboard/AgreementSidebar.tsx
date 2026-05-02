@@ -5,9 +5,11 @@ import {
   removeAgreementFromRegistry,
   registryRoleForWallet,
   sortRegistryEntries,
+  type AgreementRegistryEntry,
 } from "../../storage.ts";
 import { agreementLabel, shortAddress, type AgreementSidebarFilter, type Role } from "../../types.ts";
 import { templateLabel } from "../../templates.ts";
+import type { SessionStatus } from "../../account/AccountProvider.tsx";
 
 interface AgreementSidebarProps {
   wallet: Address | undefined;
@@ -20,6 +22,9 @@ interface AgreementSidebarProps {
   collapsed: boolean;
   onToggleCollapse: () => void;
   onRemovedFromRegistry: (contractAddress: string) => void;
+  /** When provided, replaces the localStorage registry (backend-sourced entries). */
+  entries?: AgreementRegistryEntry[];
+  sessionStatus?: SessionStatus;
 }
 
 function stateRowClass(state: number | null): string {
@@ -43,8 +48,13 @@ export default function AgreementSidebar({
   collapsed,
   onToggleCollapse,
   onRemovedFromRegistry,
+  entries: externalEntries,
+  sessionStatus,
 }: AgreementSidebarProps) {
-  const raw = useMemo(() => sortRegistryEntries(loadAgreementRegistry()), []);
+  const raw = useMemo(
+    () => sortRegistryEntries(externalEntries ?? loadAgreementRegistry()),
+    [externalEntries],
+  );
 
   const counts = useMemo(() => {
     let client = 0;
@@ -72,6 +82,11 @@ export default function AgreementSidebar({
     ["other", "Viewer", counts.other],
   ];
 
+  const hint =
+    sessionStatus === "signed-in"
+      ? "Synced across your linked wallets."
+      : "Stored only in this browser — sign in to sync.";
+
   return (
     <aside className={`agreement-sidebar ${collapsed ? "agreement-sidebar--collapsed" : ""}`}>
       <div className="sidebar-header">
@@ -88,9 +103,7 @@ export default function AgreementSidebar({
           </button>
         </div>
         <div className="sidebar-header-body">
-          <p className="sidebar-hint">
-            Stored only in this browser — not synced across devices.
-          </p>
+          <p className="sidebar-hint">{hint}</p>
           <div className="sidebar-actions">
             <button type="button" className="btn btn-primary btn-sm btn-block" onClick={onNewAgreement}>
               + New agreement
@@ -128,7 +141,7 @@ export default function AgreementSidebar({
                 </p>
                 <p className="sidebar-empty-text">
                   {raw.length === 0
-                    ? "Deploy one with “New agreement”, or load an existing contract."
+                    ? 'Deploy one with “New agreement”, or load an existing contract.'
                     : "Try another filter above."}
                 </p>
               </div>

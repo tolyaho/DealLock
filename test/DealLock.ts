@@ -7,7 +7,7 @@ type DealLockContract = Omit<Contract, "connect"> & {
   connect(runner: null | ContractRunner): DealLockContract;
 };
 
-const { ethers, networkHelpers } = await hre.network.connect();
+const { ethers, networkHelpers } = await hre.network.create();
 
 describe("DealLock", function () {
   async function deployDealLockFixture() {
