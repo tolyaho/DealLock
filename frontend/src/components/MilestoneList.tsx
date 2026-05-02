@@ -1,15 +1,31 @@
 import {
   type MilestoneData,
+  type DisputeData,
+  type SettlementProposalData,
+  type DeadlineExtensionRequestData,
   milestoneLabel,
-  formatEth,
   formatTimestamp,
 } from "../types.ts";
+import { formatAssetAmount, type PaymentAsset } from "../tokens.ts";
 import CopyButton from "./ui/CopyButton.tsx";
 
 interface Props {
   milestones: MilestoneData[];
   milestoneNotes?: string[];
   agreementState?: number;
+  /** V3+: grace period in seconds (24n). 0n or undefined for V1/V2. */
+  gracePeriodSeconds?: bigint;
+  /** V4: review period in seconds. */
+  reviewPeriodSeconds?: bigint;
+  /** V4: per-milestone review deadline. */
+  milestoneReviewDeadlines?: bigint[];
+  /** V4: per-milestone dispute info. */
+  milestoneDisputes?: DisputeData[];
+  /** V4: per-milestone settlement proposals. */
+  milestoneSettlements?: SettlementProposalData[];
+  /** V6: per-milestone deadline extension requests. */
+  milestoneExtensions?: DeadlineExtensionRequestData[];
+  paymentAsset: PaymentAsset;
 }
 
 function nextActionableIndex(ms: MilestoneData[], agreementState?: number): number | null {
@@ -21,13 +37,29 @@ function nextActionableIndex(ms: MilestoneData[], agreementState?: number): numb
 }
 
 function stepGlyph(state: number): string {
-  if (state === 2) return "✓";
+  if (state === 2 || state === 5) return "✓";
   if (state === 1) return "●";
   if (state === 3) return "↺";
+  if (state === 4) return "!";
+  if (state === 6) return "?";
   return "";
 }
 
-export default function MilestoneList({ milestones, milestoneNotes, agreementState }: Props) {
+export default function MilestoneList({
+  milestones,
+  milestoneNotes,
+  agreementState,
+  gracePeriodSeconds,
+  reviewPeriodSeconds,
+  milestoneReviewDeadlines = [],
+  milestoneDisputes = [],
+  milestoneSettlements = [],
+  milestoneExtensions = [],
+  paymentAsset,
+}: Props) {
+  const grace = gracePeriodSeconds ?? 0n;
+  const review = reviewPeriodSeconds ?? 0n;
+  const formatAmount = (amount: bigint) => formatAssetAmount(amount, paymentAsset);
   if (milestones.length === 0) {
     return (
       <section className="surface-card surface-card--pad anim-fade-rise" id="dealock-milestones">
@@ -60,6 +92,12 @@ export default function MilestoneList({ milestones, milestoneNotes, agreementSta
           const stateStr = milestoneLabel(m.state);
           const slug = stateStr.toLowerCase();
           const note = milestoneNotes?.[m.id]?.trim();
+          const dispute = milestoneDisputes[m.id];
+          const proposal = milestoneSettlements[m.id];
+          const extension = milestoneExtensions[m.id];
+          const reviewDeadline =
+            milestoneReviewDeadlines[m.id] ??
+            (review > 0n && m.submittedAt > 0n ? m.submittedAt + review : 0n);
           const isLast = idx === milestones.length - 1;
           const isNext = nextIdx === idx;
           const glyph = stepGlyph(m.state);
@@ -86,7 +124,7 @@ export default function MilestoneList({ milestones, milestoneNotes, agreementSta
                 <dl className="milestone-node-grid">
                   <div>
                     <dt>Amount</dt>
-                    <dd className="mono">{formatEth(m.amount)} ETH</dd>
+                    <dd className="mono">{formatAmount(m.amount)}</dd>
                   </div>
                   <div>
                     <dt>Deadline</dt>
@@ -96,6 +134,24 @@ export default function MilestoneList({ milestones, milestoneNotes, agreementSta
                     <dt>Submitted</dt>
                     <dd>{formatTimestamp(m.submittedAt)}</dd>
                   </div>
+                  {grace > 0n && m.state === 0 && (
+                    <div>
+                      <dt>Refund opens</dt>
+                      <dd>{formatTimestamp(m.deadline + grace)}</dd>
+                    </div>
+                  )}
+                  {grace > 0n && m.state === 0 && (
+                    <div>
+                      <dt>Submit until</dt>
+                      <dd>{formatTimestamp(m.deadline + grace)}</dd>
+                    </div>
+                  )}
+                  {reviewDeadline > 0n && (
+                    <div>
+                      <dt>Review deadline</dt>
+                      <dd>{formatTimestamp(reviewDeadline)}</dd>
+                    </div>
+                  )}
                 </dl>
                 {note && (
                   <div className="milestone-note">
@@ -110,6 +166,34 @@ export default function MilestoneList({ milestones, milestoneNotes, agreementSta
                     <div className="milestone-proof-row">
                       <CopyButton text={m.proof} label="Copy evidence" className="btn-xs" />
                     </div>
+                  </div>
+                )}
+                {dispute?.exists && (
+                  <div className="milestone-note">
+                    <span className="milestone-note-label">Dispute</span>
+                    <p>{dispute.reason}</p>
+                    <p>Opened {formatTimestamp(dispute.openedAt)}</p>
+                  </div>
+                )}
+                {proposal?.exists && (
+                  <div className="milestone-note">
+                    <span className="milestone-note-label">Settlement proposal</span>
+                    <p>
+                      Provider: {formatAmount(proposal.providerAmount)} · Client:{" "}
+                      {formatAmount(m.amount - proposal.providerAmount)}
+                    </p>
+                    {proposal.note && <p>{proposal.note}</p>}
+                  </div>
+                )}
+                {extension?.active && (
+                  <div className="milestone-note">
+                    <span className="milestone-note-label">Deadline extension request</span>
+                    <p>
+                      Proposed deadline: {formatTimestamp(extension.proposedDeadline)} · requested{" "}
+                      {formatTimestamp(extension.requestedAt)}
+                    </p>
+                    {extension.reason && <p>{extension.reason}</p>}
+                    <p>Ignoring this request does not block refund after the current grace window.</p>
                   </div>
                 )}
               </div>

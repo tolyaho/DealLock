@@ -4,6 +4,7 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import { WagmiProvider } from "wagmi";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { config } from "./wagmi.ts";
+import { AccountProvider } from "./account/AccountProvider.tsx";
 import LandingPage from "./pages/LandingPage.tsx";
 import DashboardPage from "./pages/DashboardPage.tsx";
 import "./index.css";
@@ -14,12 +15,14 @@ createRoot(document.getElementById("root")!).render(
   <StrictMode>
     <WagmiProvider config={config}>
       <QueryClientProvider client={queryClient}>
-        <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<LandingPage />} />
-            <Route path="/app" element={<DashboardPage />} />
-          </Routes>
-        </BrowserRouter>
+        <AccountProvider>
+          <BrowserRouter>
+            <Routes>
+              <Route path="/" element={<LandingPage />} />
+              <Route path="/app" element={<DashboardPage />} />
+            </Routes>
+          </BrowserRouter>
+        </AccountProvider>
       </QueryClientProvider>
     </WagmiProvider>
   </StrictMode>,

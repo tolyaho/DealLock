@@ -1,9 +1,32 @@
 import { type ReactNode, useState } from "react";
 import { Link } from "react-router-dom";
-import { useAccount, useConnect, useDisconnect, useChainId } from "wagmi";
+import { useAccount, useConnect, useDisconnect, useChainId, useSignMessage } from "wagmi";
 import { injected } from "wagmi/connectors";
 import { shortAddress } from "../../types.ts";
 import { chainName, isSupportedChain, isSepoliaChain, switchToSepolia } from "../../network.ts";
+import { useAccountSession } from "../../account/useAccountSession.ts";
+import { ApiError } from "../../api/client.ts";
+import LinkedWalletsPanel from "../dashboard/LinkedWalletsPanel.tsx";
+import EmailSettingsPanel from "../dashboard/EmailSettingsPanel.tsx";
+
+/** Testnet beta banner — always visible at the top of the app. */
+function BetaBanner() {
+  return (
+    <div
+      style={{
+        background: "var(--color-warning-bg, #fffbeb)",
+        borderBottom: "1px solid var(--color-warning-border, #fcd34d)",
+        padding: "6px 16px",
+        fontSize: "0.78rem",
+        color: "var(--color-warning-text, #92400e)",
+        textAlign: "center",
+      }}
+    >
+      <strong>Testnet Beta</strong> — DealLock runs on Sepolia testnet. Use test ETH only. Not
+      production-ready.
+    </div>
+  );
+}
 
 interface AppShellProps {
   children: ReactNode;
@@ -14,7 +37,16 @@ export default function AppShell({ children }: AppShellProps) {
   const { connect } = useConnect();
   const { disconnect } = useDisconnect();
   const chainId = useChainId();
+  const { signMessageAsync } = useSignMessage();
   const [switching, setSwitching] = useState(false);
+  const [signingIn, setSigningIn] = useState(false);
+  const [signInError, setSignInError] = useState<string | null>(null);
+  const [walletsOpen, setWalletsOpen] = useState(false);
+  const [emailOpen, setEmailOpen] = useState(() =>
+    new URLSearchParams(window.location.search).has("verifyEmail"),
+  );
+
+  const { sessionStatus, wallets, signIn, signOut } = useAccountSession();
 
   const sepolia = isSepoliaChain(chainId);
   const supported = isSupportedChain(chainId);
@@ -25,8 +57,34 @@ export default function AppShell({ children }: AppShellProps) {
     setSwitching(false);
   }
 
+  async function handleSignIn() {
+    if (!address) return;
+    setSigningIn(true);
+    setSignInError(null);
+    try {
+      await signIn(address, chainId, (msg) => signMessageAsync({ message: msg }));
+    } catch (err) {
+      setSignInError(
+        err instanceof ApiError
+          ? err.message
+          : err instanceof Error
+            ? err.message
+            : "Sign-in failed",
+      );
+    } finally {
+      setSigningIn(false);
+    }
+  }
+
+  async function handleSignOut() {
+    setWalletsOpen(false);
+    setEmailOpen(false);
+    await signOut();
+  }
+
   return (
     <div className="app-shell">
+      <BetaBanner />
       <header className="app-topbar">
         <div className="app-topbar-inner">
           <div className="app-topbar-left">
@@ -59,6 +117,68 @@ export default function AppShell({ children }: AppShellProps) {
                 {switching ? "Switching…" : "Use Sepolia"}
               </button>
             )}
+
+            {/* Session controls */}
+            {isConnected && address && sessionStatus === "signed-out" && (
+              <button
+                type="button"
+                className="btn btn-secondary btn-sm"
+                onClick={handleSignIn}
+                disabled={signingIn}
+                title="Sign in to sync agreements across wallets and devices"
+              >
+                {signingIn ? "Signing…" : "Sign in"}
+              </button>
+            )}
+
+            {sessionStatus === "signed-in" && (
+              <div className="session-status" style={{ position: "relative" }}>
+                <button
+                  type="button"
+                  className="btn btn-ghost btn-sm session-status-btn"
+                  onClick={() => {
+                    setWalletsOpen((o) => !o);
+                    setEmailOpen(false);
+                  }}
+                  title="Manage linked wallets"
+                >
+                  <span className="session-dot session-dot--active" aria-hidden />
+                  <span>
+                    {wallets.length} wallet{wallets.length !== 1 ? "s" : ""}
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-ghost btn-sm session-status-btn"
+                  onClick={() => {
+                    setEmailOpen((o) => !o);
+                    setWalletsOpen(false);
+                  }}
+                  title="Manage email and notifications"
+                >
+                  Email
+                </button>
+                <button
+                  type="button"
+                  className="btn btn-ghost btn-xs"
+                  onClick={handleSignOut}
+                  title="Sign out of DealLock account"
+                >
+                  Sign out
+                </button>
+                {walletsOpen && (
+                  <div className="linked-wallets-dropdown">
+                    <LinkedWalletsPanel onClose={() => setWalletsOpen(false)} />
+                  </div>
+                )}
+                {emailOpen && (
+                  <div className="linked-wallets-dropdown email-settings-dropdown">
+                    <EmailSettingsPanel onClose={() => setEmailOpen(false)} />
+                  </div>
+                )}
+              </div>
+            )}
+
             {isConnected && address ? (
               <div className="app-topbar-wallet" title={address}>
                 <span className="app-topbar-wallet-avatar" aria-hidden>
@@ -86,6 +206,11 @@ export default function AppShell({ children }: AppShellProps) {
             )}
           </div>
         </div>
+        {signInError && (
+          <div className="topbar-error" role="alert">
+            {signInError}
+          </div>
+        )}
       </header>
 
       <main className="app-content">{children}</main>

@@ -43,6 +43,47 @@ export function explorerContractUrl(chainId: number, address: string): string | 
   return explorerAddressUrl(chainId, address);
 }
 
+/**
+ * Converts raw wallet/contract errors into concise user-readable messages.
+ * Handles the most common failure modes: user rejection, gas shortfall,
+ * ERC-20 allowance, wrong network, contract reverts, and RPC failures.
+ */
+export function humanizeContractError(err: unknown): string {
+  const raw = err instanceof Error ? err.message : String(err);
+  const lower = raw.toLowerCase();
+
+  if (lower.includes("user rejected") || lower.includes("userejectedrequesterror") || lower.includes("eth_requestaccounts") && lower.includes("denied")) {
+    return "Transaction rejected. You cancelled the request in your wallet.";
+  }
+  if (lower.includes("insufficient funds for gas") || lower.includes("insufficient balance for gas") || (lower.includes("insufficient funds") && !lower.includes("allowance"))) {
+    return "Insufficient ETH for gas. Add ETH to your wallet and try again.";
+  }
+  if (lower.includes("insufficient allowance") || lower.includes("erc20: insufficient allowance")) {
+    return "Insufficient token allowance. Approve the required amount first, then fund.";
+  }
+  if (lower.includes("wrong network") || lower.includes("chain mismatch")) {
+    return "Wrong network. Switch your wallet to Sepolia (or Hardhat for local dev).";
+  }
+  if (lower.includes("factory v2") || lower.includes("vite_deallock_factory_v2")) {
+    return raw.slice(0, 300);
+  }
+  if (lower.includes("erc-20 agreements require")) {
+    return raw.slice(0, 300);
+  }
+  // Extract revert reason when present.
+  const revertMatch = raw.match(/execution reverted:?\s*(?:Error\()?["']?([^"'\n]+?)["']?\)?(?:\s|$)/i);
+  if (revertMatch) {
+    return `Transaction reverted: ${revertMatch[1]!.trim()}`;
+  }
+  if (lower.includes("execution reverted")) {
+    return "Transaction reverted by the contract. Check the contract state and try again.";
+  }
+  if (lower.includes("could not connect") || lower.includes("econnrefused") || lower.includes("failed to fetch") || lower.includes("network error")) {
+    return "Network error. Check your RPC connection and try again.";
+  }
+  return raw.slice(0, 300);
+}
+
 export async function switchToSepolia(): Promise<boolean> {
   const provider = ((window as unknown) as Record<string, unknown>).ethereum as
     | { request: (args: { method: string; params?: unknown[] }) => Promise<unknown> }

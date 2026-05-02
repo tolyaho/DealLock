@@ -13,6 +13,7 @@ export default defineConfig({
         enabled: true,
         runs: 200,
       },
+      viaIR: true,
     },
   },
   paths: {
@@ -27,11 +28,17 @@ export default defineConfig({
     },
   },
   networks: {
+    default: {
+      type: "edr-simulated",
+    },
     ...(SEPOLIA_RPC_URL && PRIVATE_KEY
       ? {
           sepolia: {
+            type: "http",
+            chainType: "l1",
             url: SEPOLIA_RPC_URL,
             accounts: [PRIVATE_KEY],
+            chainId: 11155111,
           },
         }
       : {}),

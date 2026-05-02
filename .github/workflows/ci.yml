@@ -1,0 +1,143 @@
+name: CI
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  contracts:
+    name: Contracts
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm run lint:contracts
+      - run: npx hardhat compile
+      - run: npx hardhat test
+
+  backend:
+    name: Backend
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: deallock
+          POSTGRES_PASSWORD: deallock
+          POSTGRES_DB: deallock_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U deallock -d deallock_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://deallock:deallock@127.0.0.1:5432/deallock_test?schema=public
+      DATABASE_URL_TEST: postgresql://deallock:deallock@127.0.0.1:5432/deallock_test?schema=public
+      SESSION_STORE: postgres
+      EMAIL_PROVIDER: console
+      APP_URL: http://localhost:5173
+      FRONTEND_ORIGIN: http://localhost:5173
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: backend/package-lock.json
+      - run: npm ci
+        working-directory: backend
+      - run: npm run db:generate
+        working-directory: backend
+      - run: npm run db:test:reset
+        working-directory: backend
+      - run: npm run db:deploy
+        working-directory: backend
+      - run: npm run build
+        working-directory: backend
+      - run: npm test
+        working-directory: backend
+
+  indexer-integration:
+    name: Indexer Integration
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16-alpine
+        env:
+          POSTGRES_USER: deallock
+          POSTGRES_PASSWORD: deallock
+          POSTGRES_DB: deallock_test
+        ports:
+          - 5432:5432
+        options: >-
+          --health-cmd "pg_isready -U deallock -d deallock_test"
+          --health-interval 5s
+          --health-timeout 5s
+          --health-retries 10
+    env:
+      DATABASE_URL: postgresql://deallock:deallock@127.0.0.1:5432/deallock_test?schema=public
+      DATABASE_URL_TEST: postgresql://deallock:deallock@127.0.0.1:5432/deallock_test?schema=public
+      HARDHAT_RPC_URL: http://127.0.0.1:8545
+      SESSION_STORE: memory
+      EMAIL_PROVIDER: console
+      APP_URL: http://localhost:5173
+      FRONTEND_ORIGIN: http://localhost:5173
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+      - run: npm ci
+      - run: npm ci
+        working-directory: backend
+      - run: npx hardhat compile
+      - name: Start Hardhat node
+        run: |
+          npx hardhat node > /tmp/deallock-hardhat.log 2>&1 &
+          echo $! > /tmp/deallock-hardhat.pid
+      - name: Wait for Hardhat RPC
+        run: |
+          for i in {1..30}; do
+            if curl -s -X POST -H 'Content-Type: application/json' \
+              --data '{"jsonrpc":"2.0","method":"eth_chainId","params":[],"id":1}' \
+              "$HARDHAT_RPC_URL" | grep -q result; then
+              exit 0
+            fi
+            sleep 1
+          done
+          cat /tmp/deallock-hardhat.log
+          exit 1
+      - run: npm run db:generate
+        working-directory: backend
+      - run: npm run test:indexer
+        working-directory: backend
+      - name: Stop Hardhat node
+        if: always()
+        run: |
+          if [ -f /tmp/deallock-hardhat.pid ]; then
+            kill "$(cat /tmp/deallock-hardhat.pid)" || true
+          fi
+
+  frontend:
+    name: Frontend
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: frontend/package-lock.json
+      - run: npm ci
+        working-directory: frontend
+      - run: npm run build
+        working-directory: frontend

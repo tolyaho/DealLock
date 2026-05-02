@@ -166,6 +166,191 @@
   z-index: 1;
 }
 
+.session-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.3rem;
+}
+.linked-wallets-dropdown {
+  position: absolute;
+  right: 0;
+  top: calc(100% + 0.5rem);
+  width: min(420px, calc(100vw - 2rem));
+  z-index: var(--z-popover);
+}
+.email-settings-dropdown {
+  width: min(560px, calc(100vw - 2rem));
+}
+.linked-wallets-panel,
+.email-settings-panel {
+  padding: var(--space-md);
+  border: 1px solid var(--border-default);
+  border-radius: var(--radius-lg);
+  background: var(--bg-elevated);
+  box-shadow: var(--shadow-lg);
+}
+.linked-wallets-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-sm);
+}
+.linked-wallets-title {
+  margin: 0;
+  font-family: var(--font-display);
+  font-size: var(--type-card-title);
+  font-weight: 700;
+}
+.linked-wallets-close {
+  font-size: 1.1rem;
+}
+.linked-wallets-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+.linked-wallet-row {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  padding: var(--space-sm);
+  border-radius: var(--radius-md);
+  background: var(--bg-raised);
+  border: 1px solid var(--border-subtle);
+}
+.linked-wallet-info,
+.linked-wallet-addr,
+.linked-wallet-label {
+  min-width: 0;
+}
+.linked-wallet-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+.linked-wallet-addr {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+  flex-wrap: wrap;
+}
+.linked-wallet-primary-badge,
+.email-badge {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  padding: 0.15rem 0.45rem;
+  border-radius: var(--radius-pill);
+  border: 1px solid var(--border-default);
+  color: var(--text-muted);
+  font-size: 10px;
+  font-weight: 800;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.email-badge--ok {
+  color: var(--success);
+  border-color: var(--success-ring);
+  background: var(--success-soft);
+}
+.linked-wallet-label {
+  color: var(--text-secondary);
+  font-size: var(--type-small);
+  display: flex;
+  align-items: center;
+  gap: 0.35rem;
+}
+.linked-wallet-edit-row,
+.email-form-row {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+.linked-wallets-footer,
+.email-settings-section {
+  margin-top: var(--space-md);
+  padding-top: var(--space-md);
+  border-top: 1px solid var(--border-subtle);
+}
+.linked-wallets-hint,
+.linked-wallets-error {
+  margin: var(--space-xs) 0 0;
+  font-size: var(--type-caption);
+  line-height: var(--leading-snug);
+}
+.linked-wallets-hint {
+  color: var(--text-muted);
+}
+.linked-wallets-error {
+  color: #ffd6d6;
+}
+.email-status-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+  padding: 0.35rem 0;
+  font-size: var(--type-small);
+}
+.email-status-label {
+  color: var(--text-tertiary);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: var(--type-caption);
+}
+.email-status-value {
+  color: var(--text-primary);
+  word-break: break-all;
+}
+.email-remove-btn {
+  margin-top: var(--space-xs);
+}
+.email-settings-subtitle {
+  margin: 0 0 var(--space-sm);
+  font-size: var(--type-small);
+  font-weight: 700;
+  color: var(--text-primary);
+}
+.email-preference-groups {
+  display: grid;
+  gap: var(--space-sm);
+  grid-template-columns: 1fr;
+  margin-bottom: var(--space-md);
+}
+@media (min-width: 540px) {
+  .email-preference-groups {
+    grid-template-columns: 1fr 1fr;
+  }
+}
+.email-preference-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+.email-preference-group h5 {
+  margin: 0 0 0.2rem;
+  font-size: var(--type-caption);
+  color: var(--accent-300);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+.email-preference-row {
+  display: flex;
+  align-items: center;
+  gap: 0.45rem;
+  color: var(--text-secondary);
+  font-size: var(--type-small);
+}
+.email-settings-message {
+  color: var(--success);
+}
+
 .banner {
   display: flex;
   flex-wrap: wrap;
