@@ -30,7 +30,7 @@ import { syncAgreement } from "./syncAgreement.js";
 import type { IndexerConfig } from "./config.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const ARTIFACTS_ROOT = resolve(__dirname, "../../../../artifacts/contracts");
+const ARTIFACTS_ROOT = resolve(__dirname, "../../../artifacts/contracts");
 
 // Hardhat default private keys (well-known test accounts, never use in production).
 const DEPLOYER_KEY = "0xac0974bec39a17e36ba4a6b4d238ff944bacb478cbed5efcae784d7bf4f2ff80" as const;
@@ -144,7 +144,7 @@ before(async () => {
   if (!factoryReceipt.contractAddress) throw new Error("DealLockFactoryV2 deploy failed");
   factoryAddress = factoryReceipt.contractAddress.toLowerCase();
 
-  // Deploy DealLockFactoryV3 with its stateless V6 deployer.
+  // Deploy DealLockFactoryV3 with its chunked V6 deployer.
   const v6AgreementArtifact = loadArtifact("DealLockMultiAssetV2.sol/DealLockMultiAssetV2.json");
   const v6DeployerArtifact = loadArtifact("DealLockMultiAssetV2Deployer.sol/DealLockMultiAssetV2Deployer.json");
   const v6DeployerHash = await walletClient.deployContract({
