@@ -999,7 +999,7 @@ export default function DashboardPage() {
               <WelcomeHero chainOk={chainOk} isConnected={isConnected} />
             )}
             {isConnected && !chainOk && (
-              <div className="banner banner-warn">
+              <div className="banner banner-warn" role="status" aria-live="polite">
                 <div className="banner-content">
                   <strong>Wrong network.</strong> You are on {chainName(chainId)}. This demo targets{" "}
                   <strong>Sepolia</strong> (11155111).
@@ -1018,7 +1018,7 @@ export default function DashboardPage() {
             )}
 
             {contractAddress && isConnected && chainOk && readClientError && (
-              <div className="banner banner-error">
+              <div className="banner banner-error" role="alert">
                 <strong>Cannot read this agreement.</strong>{" "}
                 {zeroDataContractRead
                   ? "No DealLock contract data at this address on the current network."
@@ -1083,17 +1083,15 @@ export default function DashboardPage() {
               <div className="banner banner-info">
                 {isFactoryConfigured(chainId) ? (
                   <>
-                    <strong>Legacy factory mode.</strong> Factory V3/V2 is not configured for{" "}
-                    <strong>{chainName(chainId)}</strong>. Native ETH agreements can use legacy
-                    Factory V1, but ERC-20 agreements require <code>VITE_DEALLOCK_FACTORY_V3_*</code> or{" "}
-                    <code>VITE_DEALLOCK_FACTORY_V2_*</code>.
+                    <strong>ETH-only setup.</strong> This build can create native ETH agreements on{" "}
+                    <strong>{chainName(chainId)}</strong>. Token agreements such as USDC are not
+                    enabled on this network.
                   </>
                 ) : (
                   <>
-                    <strong>Direct ETH deployment mode.</strong> Factory V3/V2 is not configured for{" "}
-                    <strong>{chainName(chainId)}</strong>. Native ETH agreements can use the direct
-                    V4 fallback; ERC-20 agreements require <code>VITE_DEALLOCK_FACTORY_V3_*</code> or{" "}
-                    <code>VITE_DEALLOCK_FACTORY_V2_*</code>.
+                    <strong>ETH-only setup.</strong> This build can create native ETH agreements on{" "}
+                    <strong>{chainName(chainId)}</strong>. Token agreements such as USDC are not
+                    enabled on this network.
                   </>
                 )}
               </div>
@@ -1112,12 +1110,16 @@ export default function DashboardPage() {
                 <div className="welcome-tiles">
                   <button
                     type="button"
-                    className={`welcome-tile ${mode === "create" ? "welcome-tile--active" : ""}`}
+                    className={`welcome-tile welcome-tile--primary ${mode === "create" ? "welcome-tile--active" : ""}`}
                     onClick={() => setMode("create")}
                   >
                     <span className="welcome-tile-icon" aria-hidden>◈</span>
                     <h3>Create agreement</h3>
-                    <p>Deploy a new milestone escrow; your wallet becomes the client.</p>
+                    <p>
+                      Set milestones, amounts, deadlines, and the provider's wallet. Deploy a
+                      single contract per agreement — your wallet is the client.
+                    </p>
+                    <span className="welcome-tile-foot">Start from scratch or use a template →</span>
                   </button>
                   <button
                     type="button"
@@ -1125,35 +1127,122 @@ export default function DashboardPage() {
                     onClick={() => setMode("load")}
                   >
                     <span className="welcome-tile-icon" aria-hidden>↗</span>
-                    <h3>Load by address</h3>
-                    <p>Paste any DealLock contract — it will be saved to this browser.</p>
+                    <h3>Open by address</h3>
+                    <p>
+                      Paste a DealLock contract address. Useful when a client or provider shared
+                      an agreement with you — it will be saved to this browser.
+                    </p>
+                    <span className="welcome-tile-foot">Paste any DealLock contract address →</span>
                   </button>
                 </div>
+
+                {/* Onboarding guide: shown when no agreement is selected */}
+                {chainOk && (
+                  <section className="dashboard-onboarding surface-card surface-card--pad anim-fade-rise" aria-label="How DealLock works">
+                    <div className="dashboard-onboarding-header">
+                      <h2 className="section-header-title">How DealLock works</h2>
+                      <p className="surface-card-desc">
+                        Five steps from first deal to payout, with contract state as the authority.
+                      </p>
+                    </div>
+                    <ol className="dashboard-onboarding-steps">
+                      <li className="dashboard-onboarding-step">
+                        <span className="dashboard-onboarding-num" aria-hidden>1</span>
+                        <div>
+                          <strong>Create the agreement</strong>
+                          <p>
+                            Define milestones, amounts, deadlines, and the provider's wallet. One
+                            agreement equals one deployed contract.
+                          </p>
+                        </div>
+                      </li>
+                      <li className="dashboard-onboarding-step">
+                        <span className="dashboard-onboarding-num" aria-hidden>2</span>
+                        <div>
+                          <strong>Lock funds</strong>
+                          <p>
+                            After the provider accepts, the client funds the contract. ETH funds in
+                            one step; tokens such as USDC use approve, then fund.
+                          </p>
+                        </div>
+                      </li>
+                      <li className="dashboard-onboarding-step">
+                        <span className="dashboard-onboarding-num" aria-hidden>3</span>
+                        <div>
+                          <strong>Provider submits work</strong>
+                          <p>
+                            The provider attaches proof to the active milestone, such as a link,
+                            commit, handoff document, or CID.
+                          </p>
+                        </div>
+                      </li>
+                      <li className="dashboard-onboarding-step">
+                        <span className="dashboard-onboarding-num" aria-hidden>4</span>
+                        <div>
+                          <strong>Client reviews</strong>
+                          <p>
+                            The client approves to release payment, requests fixes inside scope, or
+                            disputes to pause funds for settlement.
+                          </p>
+                        </div>
+                      </li>
+                      <li className="dashboard-onboarding-step">
+                        <span className="dashboard-onboarding-num" aria-hidden>5</span>
+                        <div>
+                          <strong>Funds resolve</strong>
+                          <p>
+                            Contract state decides the outcome: released to the provider, refunded
+                            after expiry, or split by an accepted settlement.
+                          </p>
+                        </div>
+                      </li>
+                    </ol>
+                    <div className="dashboard-onboarding-trust" aria-label="Trust indicators">
+                      <span>No platform custody</span>
+                      <span aria-hidden>·</span>
+                      <span>Wallet-authorized actions only</span>
+                      <span aria-hidden>·</span>
+                      <span>Funds stay in the agreement contract</span>
+                      <span aria-hidden>·</span>
+                      <span>Email is notifications only</span>
+                      <span aria-hidden>·</span>
+                      <span>No platform fees</span>
+                    </div>
+                  </section>
+                )}
 
                 {mode === "create" && <CreateAgreementForm onDeployed={handleDeployed} />}
 
                 {mode === "load" && (
                   <section className="surface-card surface-card--pad anim-fade-rise">
                     <div className="surface-card-head">
-                      <h2 className="surface-card-title">Load agreement</h2>
+                      <h2 className="surface-card-title">Open agreement</h2>
                       <p className="surface-card-desc">
                         Paste a DealLock contract address. It will appear under{" "}
                         <strong>My agreements</strong> in the sidebar.
                       </p>
                     </div>
                     <div className="load-contract-row">
+                      <label className="sr-only" htmlFor="load-contract-address">
+                        DealLock contract address
+                      </label>
                       <input
+                        id="load-contract-address"
                         type="text"
                         className="input input-mono"
                         placeholder="0x…"
+                        aria-describedby="load-contract-address-help"
                         value={inputAddr}
                         onChange={(e) => setInputAddr(e.target.value)}
                         onKeyDown={(e) => e.key === "Enter" && handleSetAddress()}
                       />
                       <button type="button" className="btn btn-primary" onClick={handleSetAddress}>
-                        Load
+                        Open
                       </button>
                     </div>
+                    <p className="hint" id="load-contract-address-help">
+                      Enter a deployed DealLock agreement contract address.
+                    </p>
                   </section>
                 )}
               </>
@@ -1164,8 +1253,8 @@ export default function DashboardPage() {
                 {activeBackendAgreement && (
                   <p className="hint" style={{ paddingLeft: "0.25rem", marginBottom: 0 }}>
                     {activeBackendAgreement.creationSource === "factory"
-                      ? "Created via DealLock Factory"
-                      : "Direct legacy deployment"}
+                      ? "Created from the DealLock agreement flow"
+                      : "Opened from a deployed agreement address"}
                   </p>
                 )}
 

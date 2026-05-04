@@ -23,6 +23,7 @@ export default function CopyButton({ text, className = "", label = "Copy" }: Cop
       type="button"
       className={`btn-copy ${className}`.trim()}
       title={label}
+      aria-live="polite"
       onClick={handleCopy}
     >
       {done ? "Copied" : label}

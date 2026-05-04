@@ -577,8 +577,8 @@ export default function ActionPanel({
     if (agreementState === 1 && isProvider)
       return "Waiting for the client to fund. Submissions open when escrow is funded.";
     if (agreementState === 2 && isClient && submittedToApprove.length === 0 && !anyV2AdjAction)
-      return "Waiting for the provider to submit the next milestone.";
-    if (agreementState === 3) return "All milestones released — this agreement is complete.";
+      return "Waiting for the provider to submit proof for the next active milestone.";
+    if (agreementState === 3) return "All milestones released - this agreement is complete.";
     if (agreementState === 4) return "Agreement cancelled.";
     return null;
   })();
@@ -947,7 +947,15 @@ export default function ActionPanel({
     <section className="surface-card surface-card--pad anim-fade-rise" id="dealock-actions">
       <div className="section-header">
         <h2 className="section-header-title">Actions</h2>
-        <span className="section-header-desc">What you can do next</span>
+        <span className="section-header-desc">Wallet-authorized actions available now</span>
+      </div>
+
+      <div className="action-onboarding-hint" aria-label="Agreement action guide">
+        <span>Create</span>
+        <span>Lock funds</span>
+        <span>Submit work</span>
+        <span>Review</span>
+        <span>Release / refund / settle</span>
       </div>
 
       {!chainOk && (
@@ -976,7 +984,7 @@ export default function ActionPanel({
 
       {chainOk && role !== "other" && !anyAction && waitingMessage && (
         <div className="action-waiting">
-          <span className="action-waiting-icon" aria-hidden>⏳</span>
+          <span className="action-waiting-icon" aria-hidden>NEXT</span>
           <span>{waitingMessage}</span>
         </div>
       )}
@@ -984,8 +992,8 @@ export default function ActionPanel({
       {/* V1/V2 legacy note */}
       {chainOk && role !== "other" && !isV2 && !isV3 && !isV4 && agreementState === 2 && (
         <div className="banner banner-info" style={{ marginBottom: "1rem" }}>
-          Paid adjustments are available only for V2 and newer agreements. This agreement was
-          deployed with the original V1 contract.
+          This agreement supports the core milestone flow. Paid adjustments are not available for
+          this older agreement.
         </div>
       )}
 
@@ -998,7 +1006,7 @@ export default function ActionPanel({
               <div className="action-group-head">
                 <span className="action-group-step">Step 1 · Provider</span>
                 <h3>Accept agreement</h3>
-                <p>Confirm you accept the milestone terms before the client can fund.</p>
+                <p>Review the milestones, deadlines, and payment asset. Your wallet signature lets the client lock funds.</p>
               </div>
               <button
                 type="button"
@@ -1021,7 +1029,7 @@ export default function ActionPanel({
               <div className="action-group-head">
                 <span className="action-group-step">Step 2 · Client</span>
                 <h3>Fund escrow</h3>
-                <p>Send the exact on-chain total so milestones can begin.</p>
+                <p>Lock the full agreement amount in the smart contract. Funds stay there until a milestone is released, refunded, or settled.</p>
               </div>
               <button
                 type="button"
@@ -1052,9 +1060,9 @@ export default function ActionPanel({
                     Approve {asset.symbol}
                   </button>
                   <span className="hint">
-                    Approval does not transfer funds. Funding pulls {formatAmount(totalAmount!)} into escrow. ETH is still needed for gas.
+                    Token funding has two wallet steps: approve {asset.symbol}, then fund escrow. Approval does not move funds; it only allows the funding transaction. ETH is still needed for gas.
                   </span>
-                  {balance < totalAmount! && <span className="validation-errors">Insufficient {asset.symbol} balance.</span>}
+                  {balance < totalAmount! && <span className="validation-errors" role="alert">Insufficient {asset.symbol} balance.</span>}
                 </div>
               )}
             </div>
@@ -1065,8 +1073,7 @@ export default function ActionPanel({
               <div className="action-group-head">
                 <span className="action-group-step">Active · Provider</span>
                 <h3>Submit milestone evidence</h3>
-                <p>Drop in a repo URL, commit SHA, IPFS CID, or any stable pointer. It will be
-                   stored on-chain as the delivery reference.</p>
+                <p>Submit proof for the active milestone: a URL, commit SHA, IPFS CID, handoff doc, or other stable reference the client can review.</p>
               </div>
               <div className="action-input-row">
                 <label className="input-label">
@@ -1110,7 +1117,7 @@ export default function ActionPanel({
           {showProviderMilestoneExtension && (
             <div className="action-group action-group--provider">
               <div className="action-group-head">
-                <span className="action-group-step">V6 · Provider</span>
+                <span className="action-group-step">Provider · Deadline</span>
                 <h3>Request milestone deadline extension</h3>
                 <p>Ask the client to move a pending milestone deadline. The request is public on-chain and does not block refund unless the client accepts it.</p>
               </div>
@@ -1175,7 +1182,7 @@ export default function ActionPanel({
           {showClientMilestoneExtension && (
             <div className="action-group action-group--client">
               <div className="action-group-head">
-                <span className="action-group-step">V6 · Client</span>
+                <span className="action-group-step">Client · Deadline</span>
                 <h3>Milestone deadline extension requests</h3>
                 <p>Accepting updates the milestone deadline. Rejecting or ignoring does not block refund after the current deadline plus grace window.</p>
               </div>
@@ -1228,7 +1235,7 @@ export default function ActionPanel({
               <div className="action-group-head">
                 <span className="action-group-step">Active · Client</span>
                 <h3>Approve milestones</h3>
-                <p>Release escrow for each milestone after verifying the delivery reference.</p>
+                <p>Approve only after checking the submitted proof. Approval releases this milestone amount to the provider.</p>
               </div>
               <div className="action-chip-row">
                 {submittedToApprove.map((m) => (
@@ -1259,8 +1266,8 @@ export default function ActionPanel({
                 <h3>Refund expired milestones</h3>
                 <p>If a milestone is still pending after its deadline, reclaim that tranche.
                   {(isV3 || isV4) && (isV6
-                    ? " V6 keeps a 30-minute deadline grace window for late submission or client-approved extension requests."
-                    : " V3-V5 use a short grace period before refund opens.")}
+                    ? " A short grace window gives the provider a final chance to submit or request an accepted extension."
+                    : " A short grace window may apply before refund opens.")}
                 </p>
               </div>
               {inGracePeriodMilestones.length > 0 && (
@@ -1297,7 +1304,7 @@ export default function ActionPanel({
               <div className="action-group-head">
                 <span className="action-group-step">Provider · Adjustments</span>
                 <h3>Accept paid adjustments</h3>
-                <p>Accept a proposed adjustment to let the client fund it.</p>
+                <p>Accept extra paid scope only if the description, amount, and deadline are clear. The client funds it after you accept.</p>
               </div>
               <div className="action-chip-row">
                 {proposedAdjs.map((a) => (
@@ -1326,7 +1333,7 @@ export default function ActionPanel({
               <div className="action-group-head">
                 <span className="action-group-step">Client · Adjustments</span>
                 <h3>Fund accepted adjustments</h3>
-                <p>Escrow the extra payment so the provider can begin work.</p>
+                <p>Lock the extra payment in the agreement contract so the provider can begin the added scope.</p>
               </div>
               <div className="action-chip-row">
                 {acceptedAdjs.map((a) => (
@@ -1367,9 +1374,7 @@ export default function ActionPanel({
               <div className="action-group-head">
                 <span className="action-group-step">Provider · Adjustments</span>
                 <h3>Submit adjustment proof</h3>
-                <p>Provide a stable public reference — URL, commit SHA, or IPFS CID.
-                   Proof is stored on-chain and is publicly visible; do not include private
-                   credentials or confidential data.</p>
+                <p>Submit a stable proof link for the added scope. It is public on-chain, so do not include private credentials or confidential data.</p>
               </div>
               <div className="action-input-row">
                 <label className="input-label">
@@ -1411,7 +1416,7 @@ export default function ActionPanel({
           {showProviderAdjExtension && (
             <div className="action-group action-group--provider">
               <div className="action-group-head">
-                <span className="action-group-step">V6 · Provider</span>
+                <span className="action-group-step">Provider · Deadline</span>
                 <h3>Request adjustment deadline extension</h3>
                 <p>Ask the client to move a funded adjustment deadline. The request itself does not block refund after the current grace window.</p>
               </div>
@@ -1476,7 +1481,7 @@ export default function ActionPanel({
           {showClientAdjExtension && (
             <div className="action-group action-group--client">
               <div className="action-group-head">
-                <span className="action-group-step">V6 · Client</span>
+                <span className="action-group-step">Client · Deadline</span>
                 <h3>Adjustment deadline extension requests</h3>
                 <p>Accepting updates the adjustment deadline. Rejecting or ignoring keeps refund timing based on the current deadline.</p>
               </div>
@@ -1560,8 +1565,8 @@ export default function ActionPanel({
                 <h3>Refund expired adjustments</h3>
                 <p>Reclaim funded adjustment payment if the provider missed the deadline.
                   {(isV3 || isV4) && (isV6
-                    ? " V6 keeps a 30-minute deadline grace window for late submission or client-approved extension requests."
-                    : " V3-V5 use a short grace period before refund opens.")}
+                    ? " A short grace window gives the provider a final chance to submit or request an accepted extension."
+                    : " A short grace window may apply before refund opens.")}
                 </p>
               </div>
               {inGracePeriodAdjs.length > 0 && (
@@ -1626,8 +1631,7 @@ export default function ActionPanel({
               <div className="action-group-head">
                 <span className="action-group-step">Client · Change Order</span>
                 <h3>Request paid adjustment</h3>
-                <p>Propose extra paid work attached to an existing milestone. Provider must
-                   accept before you fund it.</p>
+                <p>Use an adjustment for new paid scope that was not in the original milestones. The provider accepts before the client funds it.</p>
               </div>
 
               {!showAdjForm ? (
@@ -1679,7 +1683,7 @@ export default function ActionPanel({
                     </label>
                   </div>
                   {adjFormErrors.length > 0 && (
-                    <div className="validation-errors">
+                    <div className="validation-errors" role="alert">
                       {adjFormErrors.map((e, i) => <div key={i}>{e}</div>)}
                     </div>
                   )}
@@ -1706,7 +1710,7 @@ export default function ActionPanel({
               <div className="action-group-head">
                 <span className="action-group-step">Client · Review</span>
                 <h3>Request fixes</h3>
-                <p>Ask the provider to fix the submitted work within the original scope. This is the cooperative path; direct dispute remains available if funds need to be locked for settlement.</p>
+                <p>Use this when the work is close but needs changes inside the agreed scope. The milestone goes back to the provider instead of immediately entering dispute.</p>
               </div>
               {!showRevisionForm ? (
                 <button type="button" className="btn btn-secondary btn-sm" onClick={() => {
@@ -1752,7 +1756,7 @@ export default function ActionPanel({
               <div className="action-group-head">
                 <span className="action-group-step">Provider · Revision</span>
                 <h3>Respond to revision request</h3>
-                <p>Accept the revision to return the milestone to pending with the client-selected deadline. Request more time if needed. Reject to escalate to a dispute.</p>
+                <p>Accept to continue fixing the milestone, request more time if the deadline is too tight, or reject if you believe it should move to dispute.</p>
               </div>
               {revisionRequestedMilestones.map((m) => {
                 const revision = milestoneRevisions[m.id];
@@ -1762,7 +1766,7 @@ export default function ActionPanel({
                     <div className="action-group-head">
                       <span className="action-group-step">Milestone #{m.id} — Revision round {String(revision.revisionRound)}</span>
                       <h3>{m.description}</h3>
-                      <p>Reason: {revision.reason} · Fix deadline: {formatTimestamp(revision.revisionDeadline)}</p>
+                      <p>What to fix: {revision.reason} · Fix deadline: {formatTimestamp(revision.revisionDeadline)}</p>
                       {revision.providerDeadlineRequestExists && (
                         <p>Your requested deadline: {formatTimestamp(revision.providerRequestedDeadline)} · {revision.providerDeadlineReason}</p>
                       )}
@@ -1847,7 +1851,7 @@ export default function ActionPanel({
               <div className="action-group-head">
                 <span className="action-group-step">Client · Revision</span>
                 <h3>Revision request active</h3>
-                <p>You can update the fix deadline. If the provider ignores the request for 3 days, you can escalate it to a dispute.</p>
+                <p>The milestone is paused for fixes. You can update the deadline, and if the provider does not respond in time, you can escalate to dispute.</p>
               </div>
               {revisionRequestedMilestones.map((m) => {
                 const revision = milestoneRevisions[m.id];
@@ -1929,7 +1933,7 @@ export default function ActionPanel({
               <div className="action-group-head">
                 <span className="action-group-step">Client · Review</span>
                 <h3>Dispute submitted milestone</h3>
-                <p>Open a dispute during the {reviewPeriodLabel} review period to lock funds for mutual settlement. For ordinary fixes on V6 agreements, use Request fixes first.</p>
+                <p>Use dispute when the milestone should be paused for negotiation. It locks the funds until both parties accept a settlement split.</p>
               </div>
               <div className="action-chip-row">
                 {submittedMilestonesInReview.map((m) => (
@@ -2026,7 +2030,7 @@ export default function ActionPanel({
               <div className="action-group-head">
                 <span className="action-group-step">Settlement · Milestones</span>
                 <h3>Resolve disputed milestones</h3>
-                <p>Settlement divides the locked milestone amount. The provider receives the provider share; the rest returns to the client.</p>
+                <p>Settlement is how a paused dispute ends. One party proposes how much goes to the provider; the remainder returns to the client. Funds move only after the other party accepts.</p>
               </div>
 
               <div className="action-stack">
@@ -2270,7 +2274,7 @@ export default function ActionPanel({
               <div className="action-group-head">
                 <span className="action-group-step">Settlement · Adjustments</span>
                 <h3>Resolve disputed adjustments</h3>
-                <p>Settlement divides the locked adjustment amount. Both parties must agree before funds move.</p>
+                <p>Settlement is how a paused adjustment dispute ends. One party proposes the provider share, and funds move only after the other party accepts.</p>
               </div>
 
               <div className="action-stack">
@@ -2413,31 +2417,31 @@ export default function ActionPanel({
       )}
 
       {txState.status === "pending" && (
-        <div className="tx-status tx-pending">Waiting for wallet signature · {txState.label}</div>
+        <div className="tx-status tx-pending" role="status" aria-live="polite">Waiting for wallet signature - {txState.label}</div>
       )}
       {txState.status === "confirming" && (
-        <div className="tx-status tx-pending">
-          <span>Confirming on-chain · {txState.label}</span>
+        <div className="tx-status tx-pending" role="status" aria-live="polite">
+          <span>Confirming on-chain - {txState.label}</span>
           <TxLink hash={txState.hash} chainId={chainId} />
         </div>
       )}
       {txState.status === "success" && (
-        <div className="tx-status tx-success">
+        <div className="tx-status tx-success" role="status" aria-live="polite">
           <strong>Confirmed</strong>
           <TxLink hash={txState.hash} chainId={chainId} />
         </div>
       )}
       {txState.status === "error" && (
-        <div className="tx-status tx-error">{txState.message}</div>
+        <div className="tx-status tx-error" role="alert">{txState.message}</div>
       )}
       {notificationState.status === "pending" && (
-        <div className="tx-status tx-pending">Sending notification email…</div>
+        <div className="tx-status tx-pending" role="status" aria-live="polite">Sending notification email...</div>
       )}
       {notificationState.status === "attempted" && (
-        <div className="tx-status tx-success">Transaction confirmed. Notification email attempted.</div>
+        <div className="tx-status tx-success" role="status" aria-live="polite">Wallet transaction confirmed. Notification email attempted.</div>
       )}
       {notificationState.status === "failed" && (
-        <div className="tx-status tx-error">Transaction confirmed. Notification email failed.</div>
+        <div className="tx-status tx-error" role="alert">Transaction confirmed. Notification email failed; contract state still updated.</div>
       )}
     </section>
   );

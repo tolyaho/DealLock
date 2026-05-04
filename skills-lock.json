@@ -1,0 +1,59 @@
+{
+  "version": 1,
+  "skills": {
+    "crypto-frontend-design": {
+      "source": "btc-vision/opnet-frontend-skills",
+      "sourceType": "github",
+      "skillPath": "SKILL.md",
+      "computedHash": "c4cbd8525cde8d5828ec6a879e31df0b561ad818eaee5bf3dbcfe6934399dc75"
+    },
+    "elegant": {
+      "source": "bergside/awesome-design-skills",
+      "sourceType": "github",
+      "skillPath": "skills/elegant/SKILL.md",
+      "computedHash": "ac5a5a8b9f17cedcc36feb2d805dba8162ca5f9b73013999e23c97284126713f"
+    },
+    "enterprise": {
+      "source": "bergside/awesome-design-skills",
+      "sourceType": "github",
+      "skillPath": "skills/enterprise/SKILL.md",
+      "computedHash": "c6d9684aec99b00c30a35826b5d0a66a8b0f5a8d6c6f3eac08a3a34c6bebb2d9"
+    },
+    "frontend-accessibility-best-practices": {
+      "source": "sergiodxa/agent-skills",
+      "sourceType": "github",
+      "skillPath": "skills/frontend-accessibility-best-practices/SKILL.md",
+      "computedHash": "d9160dfd924c53bb033f4fac882a7cb0c2d2a9cd34e19473a6e4f6d09b0917de"
+    },
+    "glassmorphism": {
+      "source": "bergside/awesome-design-skills",
+      "sourceType": "github",
+      "skillPath": "skills/glassmorphism/SKILL.md",
+      "computedHash": "c252e09e7d990eeaced228aafa1384532ff0f02e955010dfc26a46c5f3d35862"
+    },
+    "modern-frontend-design": {
+      "source": "deveshpunjabi/modern-frontend-skill",
+      "sourceType": "github",
+      "skillPath": "skills/modern-frontend-design/SKILL.md",
+      "computedHash": "dab7809c8049a652e6c910561a825a82ba79cd6ca6b9fd35e71b2cd8fd0b9a22"
+    },
+    "onboarding-optimization": {
+      "source": "Eronred/aso-skills",
+      "sourceType": "github",
+      "skillPath": "skills/onboarding-optimization/SKILL.md",
+      "computedHash": "ad4ecee81dec8ecce4a83759e7a5a1f19d8f6a393500d27a231525e735311747"
+    },
+    "openspec-apply-change": {
+      "source": "doitsu2014/crypto-pocket-butler",
+      "sourceType": "github",
+      "skillPath": ".claude/skills/openspec-apply-change/SKILL.md",
+      "computedHash": "c443a33ff2e7a3d2cb542fb991580c3925e61ae581d85b5ccf358f1718ce791f"
+    },
+    "sage": {
+      "source": "telagod/code-abyss",
+      "sourceType": "github",
+      "skillPath": "skills/SKILL.md",
+      "computedHash": "368f990de02864f905b9189c40d8ee562a2cd2b07aade66ec9c437f21905165c"
+    }
+  }
+}

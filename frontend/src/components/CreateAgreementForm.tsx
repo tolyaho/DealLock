@@ -80,6 +80,12 @@ interface Props {
 
 const initialTemplate = getServiceTemplate("website");
 
+const CREATE_FLOW_STEPS = [
+  { label: "1. Deal", detail: "Pick a template, parties, and milestones." },
+  { label: "2. Fund", detail: "Client locks ETH or token funds after provider accepts." },
+  { label: "3. Review", detail: "Provider submits proof; client decides the next state." },
+];
+
 function normalizeContactEmail(value: string): string | null {
   const email = value.trim().toLowerCase();
   return email || null;
@@ -160,7 +166,7 @@ export default function CreateAgreementForm({ onDeployed }: Props) {
     const errs: string[] = [];
 
     if (selectedPaymentAsset.kind === "erc20" && !factoryV2Configured && !factoryV3Configured) {
-      errs.push("ERC-20 agreements require Factory V2 or Factory V3. Configure a payment-aware factory for this network or select ETH.");
+      errs.push("Token agreements are not enabled on this network in this build. Select ETH to continue.");
     }
 
     if (!providerAddr.trim() || !isAddress(providerAddr.trim())) {
@@ -338,7 +344,7 @@ export default function CreateAgreementForm({ onDeployed }: Props) {
         factoryTxHash = hash;
         factoryLogIndex = parsedLogIndex;
       } else if (selectedPaymentAsset.kind === "erc20") {
-        throw new Error("ERC-20 agreements require VITE_DEALLOCK_FACTORY_V3_* or VITE_DEALLOCK_FACTORY_V2_* to be configured for this network.");
+        throw new Error("Token agreements are not enabled on this network in this build. Select ETH to continue.");
       } else if (factoryAddress) {
         // Deploy native ETH agreement through legacy factory.
         hash = await signer.writeContract({
@@ -471,21 +477,29 @@ export default function CreateAgreementForm({ onDeployed }: Props) {
       <div className="surface-card-head">
         <h2 className="surface-card-title">Create agreement</h2>
         <p className="surface-card-desc">
-          Deploy milestone escrow for <strong>digital freelance deliverables</strong>. Only provider
-          address, milestone text, amounts, and deadlines go on-chain. Titles and guidance stay in this
-          browser.
+          Set up milestone escrow for <strong>digital freelance deliverables</strong>. Start with
+          who is paid, what is delivered, when it is due, and which asset funds the contract.
         </p>
         {chainOk && (
           <p className="hint" style={{ marginTop: "0.25rem" }}>
             {factoryV3Configured
-              ? "Agreements are deployed through Factory V3 — V6 deadline extensions, ETH, and configured ERC-20 assets supported."
+              ? "This network supports ETH and configured token agreements. Token payments use approve, then fund."
               : factoryV2Configured
-                ? "Agreements are deployed through Factory V2 — ETH and configured ERC-20 assets supported."
+                ? "This network supports ETH and configured token agreements. Token payments use approve, then fund."
               : factoryConfigured
-                ? "Native ETH agreements use the DealLock Factory. Configure Factory V3 or V2 for USDC/ERC-20 agreements."
-                : "Direct ETH deployment (no factory configured for this network). Configure Factory V3 or V2 to enable USDC/ERC-20 agreements."}
+                ? "ETH agreements are available on this network. Token agreements are not enabled in this build."
+                : "ETH agreements are available on this network. Token agreements are not enabled in this build."}
           </p>
         )}
+      </div>
+
+      <div className="creation-roadmap" aria-label="Create agreement onboarding steps">
+        {CREATE_FLOW_STEPS.map((step) => (
+          <div className="creation-roadmap-step" key={step.label}>
+            <strong>{step.label}</strong>
+            <span>{step.detail}</span>
+          </div>
+        ))}
       </div>
 
       {!isConnected && (
@@ -512,6 +526,10 @@ export default function CreateAgreementForm({ onDeployed }: Props) {
         <>
           <div className="form-section">
             <h3 className="form-section-title">Template & project</h3>
+          <p className="form-section-intro">
+            Templates give first-time users a safe starting structure. Edit every milestone before
+            deploying; the provider wallet is the only wallet that can submit work.
+          </p>
           <div className="field">
             <label className="label">Service template</label>
             <select
@@ -584,6 +602,10 @@ export default function CreateAgreementForm({ onDeployed }: Props) {
 
           <div className="form-section">
             <h3 className="form-section-title">Payment asset</h3>
+            <p className="form-section-intro">
+              Choose the asset once. ETH funding is one wallet transaction. ERC-20 tokens such as
+              USDC require two wallet steps: approve the token amount, then fund the agreement.
+            </p>
             <div className="field">
               <label className="label">Escrow asset</label>
               <select
@@ -599,12 +621,12 @@ export default function CreateAgreementForm({ onDeployed }: Props) {
               </select>
               <p className="hint">
                 {selectedPaymentAsset.kind === "native"
-                  ? "ETH agreements fund escrow in one transaction with native ETH."
-                  : `${selectedPaymentAsset.symbol} agreements require approve, then fund. You still need ETH for gas.`}
+                  ? "ETH: one funding transaction locks the balance in the agreement contract."
+                  : `${selectedPaymentAsset.symbol}: first approve the token amount, then fund. Keep a little ETH for gas.`}
               </p>
               {selectedPaymentAsset.kind === "erc20" && !factoryV2Configured && !factoryV3Configured && (
-                <div className="validation-errors">
-                  Configure <code>VITE_DEALLOCK_FACTORY_V3_*</code> or <code>VITE_DEALLOCK_FACTORY_V2_*</code> for this network before deploying ERC-20 agreements.
+                <div className="validation-errors" role="alert">
+                  Token agreements are not enabled on this network in this build. Choose ETH to continue.
                 </div>
               )}
             </div>
@@ -612,6 +634,10 @@ export default function CreateAgreementForm({ onDeployed }: Props) {
 
           <div className="form-section">
             <h3 className="form-section-title">Milestones (on-chain)</h3>
+          <p className="form-section-intro">
+            Each milestone should be small enough to review clearly. The amount stays locked until
+            that milestone is approved, refunded after expiry, or resolved by settlement.
+          </p>
           <div className="field">
             {milestones.map((m, i) => (
               <div key={i} className="milestone-editor-card">
@@ -681,6 +707,10 @@ export default function CreateAgreementForm({ onDeployed }: Props) {
 
           <div className="form-section">
             <h3 className="form-section-title">Off-chain guidance</h3>
+          <p className="form-section-intro">
+            Use these notes to explain what good proof looks like. They help both sides understand
+            the process, but wallet signatures and contract state still control funds.
+          </p>
           <div className="field">
             <label className="label">Evidence guidance</label>
             <textarea
@@ -714,7 +744,7 @@ export default function CreateAgreementForm({ onDeployed }: Props) {
           </div>
 
           {errors.length > 0 && (
-            <div className="validation-errors">
+            <div className="validation-errors" role="alert">
               {errors.map((e, idx) => (
                 <div key={idx}>{e}</div>
               ))}
@@ -726,11 +756,11 @@ export default function CreateAgreementForm({ onDeployed }: Props) {
           </button>
 
           {deployState.status === "pending" && (
-            <div className="tx-status tx-pending">Waiting for wallet signature…</div>
+            <div className="tx-status tx-pending" role="status" aria-live="polite">Waiting for wallet signature...</div>
           )}
           {deployState.status === "confirming" && (
-            <div className="tx-status tx-pending">
-              <span>Transaction submitted — waiting for confirmation…</span>
+            <div className="tx-status tx-pending" role="status" aria-live="polite">
+              <span>Transaction submitted - waiting for confirmation...</span>
               {(() => {
                 const url = explorerTxUrl(chainId, deployState.hash);
                 return url ? (
@@ -744,7 +774,7 @@ export default function CreateAgreementForm({ onDeployed }: Props) {
             </div>
           )}
           {deployState.status === "success" && (
-            <div className="deploy-success">
+            <div className="deploy-success" role="status" aria-live="polite">
               <div className="deploy-success-badge">Deployed</div>
               <h3 className="deploy-success-title">Agreement is live on-chain</h3>
               <p className="deploy-success-text">
@@ -783,7 +813,7 @@ export default function CreateAgreementForm({ onDeployed }: Props) {
             </div>
           )}
           {deployState.status === "error" && (
-            <div className="tx-status tx-error">{deployState.message}</div>
+            <div className="tx-status tx-error" role="alert">{deployState.message}</div>
           )}
         </>
       )}

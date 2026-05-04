@@ -117,13 +117,12 @@ export default function AgreementSidebar({
 
       {!collapsed && (
         <>
-          <div className="sidebar-filter-tabs" role="tablist" aria-label="Filter by role">
+          <div className="sidebar-filter-tabs" role="group" aria-label="Filter agreements by role">
             {filters.map(([key, label, count]) => (
               <button
                 key={key}
                 type="button"
-                role="tab"
-                aria-selected={filter === key}
+                aria-pressed={filter === key}
                 className={`sidebar-filter-tab ${filter === key ? "sidebar-filter-tab--active" : ""}`}
                 onClick={() => onFilterChange(key)}
               >
