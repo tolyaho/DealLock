@@ -84,7 +84,7 @@ export default function AgreementOverview({
     >
       <div className="section-header">
         <h2 className="section-header-title">Overview</h2>
-        <span className="section-header-desc">Parties and money in escrow</span>
+        <span className="section-header-desc">Parties, balance, and contract authority</span>
       </div>
 
       <div className="overview-parties">
@@ -135,6 +135,17 @@ export default function AgreementOverview({
             {balance !== undefined ? formatAmount(balance) : "—"}
           </span>
         </div>
+      </div>
+      <div className="overview-trust-strip" aria-label="Trust indicators">
+        <span className="overview-trust-item">No platform custody</span>
+        <span className="overview-trust-sep" aria-hidden>·</span>
+        <span className="overview-trust-item">Wallet-authorized actions only</span>
+        <span className="overview-trust-sep" aria-hidden>·</span>
+        <span className="overview-trust-item">Funds locked in contract</span>
+        <span className="overview-trust-sep" aria-hidden>·</span>
+        <span className="overview-trust-item">Blockchain state is source of truth</span>
+        <span className="overview-trust-sep" aria-hidden>·</span>
+        <span className="overview-trust-item">No platform fees</span>
       </div>
     </section>
   );

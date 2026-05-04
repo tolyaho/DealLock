@@ -56,7 +56,7 @@ export default function WalletPanel() {
           Create agreements, fund escrow, and sign milestones. Uses Sepolia test ETH only — your
           keys stay in the wallet, nothing leaves your browser except RPC calls you approve.
         </p>
-        <button className="btn btn-primary btn-lg" onClick={handleConnectWallet} disabled={isConnecting}>
+        <button type="button" className="btn btn-primary btn-lg" onClick={handleConnectWallet} disabled={isConnecting}>
           {isConnecting ? "Connecting…" : "Connect wallet"}
         </button>
         <div className="wallet-empty-trust">
@@ -71,7 +71,7 @@ export default function WalletPanel() {
           </span>
         </div>
         {(manualConnectError || connectError) && (
-          <div className="banner banner-error banner--inline">
+          <div className="banner banner-error banner--inline" role="alert">
             <strong>Connection failed.</strong>{" "}
             {(manualConnectError ?? connectError?.message ?? "Unknown error").slice(0, 260)}
           </div>

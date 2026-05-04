@@ -100,6 +100,7 @@ export default function LinkedWalletsPanel({ onClose }: { onClose: () => void })
                 <div className="linked-wallet-edit-row">
                   <input
                     className="input input-sm"
+                    aria-label={`Wallet label for ${shortAddress(w.address)}`}
                     value={editLabel}
                     onChange={(e) => setEditLabel(e.target.value)}
                     onKeyDown={(e) => e.key === "Enter" && saveLabel(w.address)}
@@ -128,6 +129,7 @@ export default function LinkedWalletsPanel({ onClose }: { onClose: () => void })
                     type="button"
                     className="btn-icon-bare linked-wallet-rename"
                     title="Rename"
+                    aria-label={`Rename wallet ${shortAddress(w.address)}`}
                     onClick={() => startEdit(w.address, w.label)}
                   >
                     ✎
@@ -149,7 +151,7 @@ export default function LinkedWalletsPanel({ onClose }: { onClose: () => void })
         ))}
       </ul>
 
-      {removeError && <p className="linked-wallets-error">{removeError}</p>}
+      {removeError && <p className="linked-wallets-error" role="alert">{removeError}</p>}
 
       {address && !currentWalletAlreadyLinked && (
         <div className="linked-wallets-footer">
@@ -165,7 +167,7 @@ export default function LinkedWalletsPanel({ onClose }: { onClose: () => void })
           >
             {linking ? "Signing…" : `Link ${shortAddress(address)}`}
           </button>
-          {linkError && <p className="linked-wallets-error">{linkError}</p>}
+          {linkError && <p className="linked-wallets-error" role="alert">{linkError}</p>}
         </div>
       )}
 

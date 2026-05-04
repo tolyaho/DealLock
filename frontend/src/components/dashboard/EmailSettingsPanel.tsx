@@ -265,8 +265,8 @@ export default function EmailSettingsPanel({ onClose }: { onClose: () => void })
         </button>
       </div>
 
-      {message && <p className="linked-wallets-hint email-settings-message">{message}</p>}
-      {error && <p className="linked-wallets-error">{error}</p>}
+      {message && <p className="linked-wallets-hint email-settings-message" role="status" aria-live="polite">{message}</p>}
+      {error && <p className="linked-wallets-error" role="alert">{error}</p>}
     </div>
   );
 }

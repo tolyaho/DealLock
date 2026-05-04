@@ -12,18 +12,11 @@ import EmailSettingsPanel from "../dashboard/EmailSettingsPanel.tsx";
 /** Testnet beta banner — always visible at the top of the app. */
 function BetaBanner() {
   return (
-    <div
-      style={{
-        background: "var(--color-warning-bg, #fffbeb)",
-        borderBottom: "1px solid var(--color-warning-border, #fcd34d)",
-        padding: "6px 16px",
-        fontSize: "0.78rem",
-        color: "var(--color-warning-text, #92400e)",
-        textAlign: "center",
-      }}
-    >
-      <strong>Testnet Beta</strong> — DealLock runs on Sepolia testnet. Use test ETH only. Not
-      production-ready.
+    <div className="beta-banner" role="banner" aria-label="Beta notice">
+      <span className="beta-banner-dot" aria-hidden />
+      <strong>Testnet Beta</strong>
+      <span className="beta-banner-sep" aria-hidden>·</span>
+      DealLock runs on Sepolia testnet. Use test ETH only. Not audited for production.
     </div>
   );
 }

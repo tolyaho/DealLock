@@ -145,8 +145,8 @@ export default function AgreementContactsPanel({
       <p className="hint">
         These emails are not stored on-chain and do not authorize contract actions.
       </p>
-      {message && <div className="tx-status tx-success">{message}</div>}
-      {error && <div className="tx-status tx-error">{error}</div>}
+      {message && <div className="tx-status tx-success" role="status" aria-live="polite">{message}</div>}
+      {error && <div className="tx-status tx-error" role="alert">{error}</div>}
     </section>
   );
 }
