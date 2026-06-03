@@ -1,29 +1,28 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
-import { WagmiProvider } from "wagmi";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { config } from "./wagmi.ts";
-import { AccountProvider } from "./account/AccountProvider.tsx";
-import LandingPage from "./pages/LandingPage.tsx";
-import DashboardPage from "./pages/DashboardPage.tsx";
-import "./index.css";
-
-const queryClient = new QueryClient();
+import "@fontsource-variable/inter-tight";
+import "./styles.css";
+import Hero from "./components/landing/Hero";
+import WorkflowStory from "./components/landing/workflow/WorkflowStory";
+import SecuritySection from "./components/landing/security/SecuritySection";
+import FAQSection from "./components/landing/faq/FAQSection";
+import ParallaxLayers from "./components/landing/ParallaxLayers";
 
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    <WagmiProvider config={config}>
-      <QueryClientProvider client={queryClient}>
-        <AccountProvider>
-          <BrowserRouter>
-            <Routes>
-              <Route path="/" element={<LandingPage />} />
-              <Route path="/app" element={<DashboardPage />} />
-            </Routes>
-          </BrowserRouter>
-        </AccountProvider>
-      </QueryClientProvider>
-    </WagmiProvider>
+    {/* One continuous matte-wall surface behind every section — the hero and the    */}
+    {/* workflow are panels on the same wall, not separately-painted blocks. The     */}
+    {/* texture layer (brushed grain) spans the whole page so the material never     */}
+    {/* resets at the section seam. */}
+    <div className="dl-page">
+      <div className="dl-page__texture" aria-hidden="true" />
+      <Hero />
+      <WorkflowStory />
+      <SecuritySection />
+      <FAQSection />
+      {/* Scroll-linked drift on the background light blooms (depth cue). Renders     */}
+      {/* nothing; mounted last so every [data-parallax] layer exists when it wires up. */}
+      <ParallaxLayers />
+    </div>
   </StrictMode>,
 );
