@@ -2,10 +2,31 @@
 /* Scoped to .dl-root to prevent leakage into third-party widgets              */
 
 .dl-root {
-  /* Font stacks */
-  --dl-display: 'Newsreader', 'Iowan Old Style', 'Charter', Georgia, 'Times New Roman', serif;
-  --dl-mono:    'IBM Plex Mono', 'Geist Mono', 'JetBrains Mono', ui-monospace, 'Courier New', monospace, monospace;
-  --dl-sans:    'Geist', 'Inter Tight Variable', 'Inter Tight', 'Inter', system-ui, -apple-system, sans-serif;
+  /* ── Typography system — ONE source of truth ────────────────────────────────
+   * Reference these tokens; never hardcode a font-family in a rule or component.
+   * Marketing (this landing) = 3 faces · App/dashboard = 2 faces:
+   *   --font-logo              Stardos Stencil  — DealLock wordmark ONLY
+   *   --font-marketing-display Chakra Petch     — hero headline + section titles
+   *   --font-marketing-ui      IBM Plex Mono    — nav, body, chips, labels
+   *   --font-code              IBM Plex Mono    — code panels / Solidity snippets
+   *   --font-app-title         Instrument Serif — dashboard page titles
+   *   --font-app-ui            Inter            — all dashboard functional UI + numbers
+   * Faces load via the Google Fonts <link> in index.html. */
+  --font-logo:              "Stardos Stencil", Georgia, serif;
+  --font-marketing-display: "Chakra Petch", "IBM Plex Mono", ui-monospace, monospace;
+  --font-marketing-ui:      "IBM Plex Mono", ui-monospace, "Courier New", monospace, monospace;
+  --font-code:              "IBM Plex Mono", "JetBrains Mono", ui-monospace, monospace;
+  --font-app-title:         "Instrument Serif", Georgia, serif;
+  --font-app-ui:            "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+
+  /* Back-compat aliases: existing rules reference --dl-display/--dl-mono/--dl-sans,
+   * so map them onto the canonical tokens — every rule resolves the right face from
+   * one place. (--dl-mono keeps the trailing `monospace, monospace`: dropping the
+   * second keyword re-triggers WebKit's fixed-pitch size shrink, making Safari render
+   * body text smaller than Chrome. Leave it.) */
+  --dl-display: var(--font-marketing-display);
+  --dl-mono:    var(--font-marketing-ui);
+  --dl-sans:    var(--font-app-ui);
 
   /* Canvas */
   --dl-canvas:      #f8f9f6;
@@ -43,6 +64,14 @@
   /* section content. Acts as the spec's --header-height; pairs with --dl-shell-max    */
   /* (page-max-width) and --dl-shell-pad (page-padding-x) for one shared layout grid.  */
   --dl-nav-height: 96px;
+
+  /* Public header/layout names (spec). Aliased to the shell tokens above so the fixed  */
+  /* header lands on the EXACT same max-width + horizontal inset as the hero and every  */
+  /* section — its left/right edges line up with hero content. Don't give these their   */
+  /* own values: that would unalign the header from the hero grid.                      */
+  --header-height:   var(--dl-nav-height);
+  --page-max-width:  var(--dl-shell-max);
+  --page-padding-x:  var(--dl-shell-pad);
 
   /* Major-section separation — the uniform vertical rhythm between full sections      */
   /* (Security↘FAQ, page foot). One token so the gaps stay consistent; scales with     */
@@ -162,9 +191,10 @@ body {
   min-height: 100dvh;
   background: var(--dl-canvas);
   color: var(--dl-ink);
-  /* Default to the clean sans — mono is now opt-in for code (security panel) and the   */
-  /* faux on-chain DATA (contract card amounts/addresses), where tabular mono reads as   */
-  /* real data. Prose/labels across the page use --dl-sans for premium fintech clarity. */
+  /* Marketing UI/body default = IBM Plex Mono (--font-marketing-ui). The whole landing  */
+  /* — prose, nav, chips, labels, FAQ, security copy and the faux on-chain data — runs   */
+  /* on mono for the technical DealLock feel; Chakra Petch (--dl-display) is reserved     */
+  /* for the hero headline + section titles, and Stardos Stencil for the wordmark only.  */
   font-family: var(--dl-mono);
   font-size: 15px;
   line-height: 1.55;
@@ -195,189 +225,179 @@ a {
   position: relative;
   background:
     radial-gradient(ellipse 100% 70% at 56% 38%, #fbfcfb 0%, rgba(251, 252, 251, 0) 65%),
-    linear-gradient(168deg, #f6f7f5 0%, #eef1ef 50%, #e6eaea 100%);
+    /* base floor tuned to flow into the shared .dl-page wall below (its top ≈ #f4f5f2), */
+    /* so the hero→workflow boundary reads as one surface, not a step. The hero's shine  */
+    /* comes from the blooms/conic/sheen overlays on top, not this base tone.            */
+    linear-gradient(168deg, #f7f8f6 0%, #f1f3ef 52%, #ecedea 100%);
   overflow: hidden;
 }
 
-/* ── Circular logo mark (left, fixed) — glass + chrome treatment ────────────── */
+/* ── Site header — fixed, grid-aligned to the page container ─────────────────── */
+/* A real fixed header: DealLock wordmark (left) · liquid-glass nav rail (center) ·  */
+/* Launch App (right), on the SAME max-width + inset grid as the hero and sections   */
+/* (--page-max-width / --page-padding-x), so its edges line up with page content.    */
+/* The header is click-through; only the wordmark, rail and button capture pointer   */
+/* events, so the empty grid gutters never block the hero beneath. Overlap is solved  */
+/* by reserved space (hero/section padding-top = --header-height), never by z-index.  */
 
-.dl-nav-logo {
+.site-header {
+  --nav-ease: cubic-bezier(0.22, 1, 0.36, 1);
   position: fixed;
-  top: 20px;
-  left: 32px;
-  z-index: 200;
-  width: 60px;
-  height: 60px;
-  border-radius: 50%;
-  background:
-    radial-gradient(circle at 32% 24%, rgba(255, 255, 255, 0.30) 0%, rgba(255, 255, 255, 0.06) 38%, rgba(255, 255, 255, 0) 62%),
-    radial-gradient(circle at 70% 80%, rgba(140, 150, 156, 0.22) 0%, rgba(140, 150, 156, 0) 52%),
-    linear-gradient(155deg, #20242a 0%, #0c0e11 100%);
-  color: rgba(244, 245, 243, 0.96);
-  border: 1px solid rgba(255, 255, 255, 0.12);
-  font-family: var(--dl-mono);
-  font-size: 11px;
-  font-weight: 500;
-  letter-spacing: 0.16em;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--header-height);
+  z-index: 100;
   display: flex;
   align-items: center;
-  justify-content: center;
-  cursor: pointer;
-  transition: transform 200ms ease, box-shadow 200ms ease;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.24),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.42),
-    0 0 0 1px rgba(190, 198, 202, 0.20),
-    0 10px 28px rgba(17, 19, 21, 0.22),
-    0 2px 6px rgba(17, 19, 21, 0.12);
+  pointer-events: none;
 }
 
-.dl-nav-logo:hover {
-  transform: translateY(-1px);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.28),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.44),
-    0 0 0 1px rgba(210, 218, 220, 0.28),
-    0 14px 36px rgba(17, 19, 21, 0.26),
-    0 3px 8px rgba(17, 19, 21, 0.14);
-}
-
-.dl-nav-logo:focus-visible {
-  outline: 2px solid var(--dl-ink);
-  outline-offset: 3px;
-}
-
-/* ── Slim frosted-glass nav rail (center, fixed) ─────────────────────────────── */
-
-.dl-nav-rail {
-  position: fixed;
-  top: 20px;
-  left: 50%;
-  transform: translateX(-50%);
-  z-index: 200;
-  display: flex;
+.site-header-inner {
+  width: 100%;
+  max-width: var(--page-max-width);
+  margin-inline: auto;
+  padding-inline: var(--page-padding-x);
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.40) 0%, rgba(238, 242, 242, 0.22) 100%);
-  border: 1px solid rgba(255, 255, 255, 0.72);
-  border-radius: 18px;
-  backdrop-filter: blur(28px) saturate(1.34) contrast(1.05);
-  -webkit-backdrop-filter: blur(28px) saturate(1.34) contrast(1.05);
-  padding: 9px 14px 9px 42px;
-  height: 60px;
+  gap: 24px;
+}
+
+/* Only the real controls take pointer events — the gutters stay click-through. */
+.site-header-inner > * { pointer-events: auto; }
+
+/* Left — DealLock wordmark (Stardos Stencil), aligned to the hero's left content edge. */
+.deallock-wordmark {
+  grid-column: 1;
+  justify-self: start;
+  font-family: var(--font-logo);
+  font-weight: 700;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: -0.035em;
+  color: var(--dl-ink);
+  text-decoration: none;
   white-space: nowrap;
-  overflow: hidden;
-  isolation: isolate;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.95),
-    inset 0 -1px 0 rgba(17, 19, 21, 0.06),
-    inset 1px 0 0 rgba(255, 255, 255, 0.52),
-    inset -1px 0 0 rgba(17, 19, 21, 0.05),
-    0 22px 56px rgba(17, 19, 21, 0.12),
-    0 6px 18px rgba(17, 19, 21, 0.07),
-    0 1px 2px rgba(17, 19, 21, 0.04),
-    0 0 0 1px rgba(17, 19, 21, 0.03);
+  text-rendering: geometricPrecision;
+  -webkit-font-smoothing: antialiased;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.72);
+  transition: color 160ms ease, opacity 160ms ease;
 }
 
-.dl-nav-rail::before {
+.deallock-wordmark:hover { color: rgba(17, 19, 21, 0.78); }
+
+/* Center — nav rail. Backgroundless at the top of the page; morphs into an Apple-like */
+/* liquid-glass pill on scroll (.nav-scrolled). The matte wall stays visible through   */
+/* it — translucent, never an opaque white plastic pill.                               */
+.nav-rail {
+  grid-column: 2;
+  justify-self: center;
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  align-items: center;
+  padding: 12px 26px;
+  border-radius: 999px;
+  background: transparent;
+  border: 1px solid transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  transition:
+    background 320ms var(--nav-ease),
+    border-color 320ms var(--nav-ease),
+    box-shadow 320ms var(--nav-ease),
+    backdrop-filter 320ms var(--nav-ease),
+    -webkit-backdrop-filter 320ms var(--nav-ease);
+}
+
+/* Glass highlights — invisible at the top, faded in with the scrolled glass.          */
+/* ::before = thin top highlight · ::after = soft diagonal reflection streak.          */
+.nav-rail::before,
+.nav-rail::after {
   content: "";
   position: absolute;
   inset: 0;
   border-radius: inherit;
-  background:
-    linear-gradient(116deg,
-      rgba(255, 255, 255, 0) 0%,
-      rgba(255, 255, 255, 0.20) 16%,
-      rgba(255, 255, 255, 0.46) 28%,
-      rgba(255, 255, 255, 0.24) 38%,
-      rgba(255, 255, 255, 0) 54%,
-      rgba(190, 200, 204, 0.08) 70%,
-      rgba(255, 255, 255, 0.18) 86%,
-      rgba(255, 255, 255, 0) 100%);
   pointer-events: none;
+  opacity: 0;
   z-index: 0;
+  transition: opacity 320ms var(--nav-ease);
 }
 
-.dl-nav-rail::after {
-  content: "";
-  position: absolute;
-  left: 6%;
-  right: 6%;
-  bottom: 0;
-  height: 1px;
-  background: linear-gradient(90deg,
-    rgba(17, 19, 21, 0) 0%,
-    rgba(17, 19, 21, 0.10) 28%,
-    rgba(17, 19, 21, 0.16) 50%,
-    rgba(17, 19, 21, 0.10) 72%,
-    rgba(17, 19, 21, 0) 100%);
-  pointer-events: none;
-  z-index: 0;
+.nav-rail::before {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.52) 0%, rgba(255, 255, 255, 0) 46%);
 }
 
-.dl-nav-links {
-  display: flex;
-  align-items: center;
-  list-style: none;
-  gap: 44px;
+.nav-rail::after {
+  background: linear-gradient(116deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.34) 24%,
+    rgba(255, 255, 255, 0) 50%,
+    rgba(255, 255, 255, 0.12) 70%,
+    rgba(255, 255, 255, 0) 100%);
+}
+
+.nav-links {
   position: relative;
   z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: clamp(20px, 2.4vw, 38px);
+  list-style: none;
+  margin: 0;
+  padding: 0;
 }
 
-.dl-nav-link {
-  font-family: var(--dl-mono);
+.nav-link {
+  font-family: var(--font-marketing-ui);
   font-size: 12.5px;
   font-weight: 500;
-  letter-spacing: 0.012em;
-  color: rgba(17, 19, 21, 0.72);
-  padding: 8px 4px;
-  border-radius: 8px;
-  transition: color 160ms ease;
-  cursor: pointer;
-  display: block;
+  letter-spacing: 0.02em;
+  color: rgba(17, 19, 21, 0.70);
+  text-decoration: none;
+  padding: 6px 2px;
   position: relative;
+  cursor: pointer;
+  transition: color 180ms ease;
 }
 
-.dl-nav-link::after {
+.nav-link::after {
   content: "";
   position: absolute;
-  left: 4px;
-  right: 4px;
-  bottom: 4px;
+  left: 2px;
+  right: 2px;
+  bottom: 0;
   height: 1px;
-  background: rgba(17, 19, 21, 0.48);
+  background: rgba(17, 19, 21, 0.42);
   transform: scaleX(0);
   transform-origin: center;
-  transition: transform 220ms ease;
+  transition: transform 220ms var(--nav-ease);
 }
 
-.dl-nav-link:hover {
-  color: var(--dl-ink);
-}
+.nav-link:hover { color: var(--dl-ink); }
+.nav-link:hover::after { transform: scaleX(1); }
 
-.dl-nav-link:hover::after {
-  transform: scaleX(1);
-}
-
-.dl-nav-cta {
-  font-family: var(--dl-mono);
+/* Right — Launch App, dark metallic pill, aligned to the hero's right content edge. */
+.launch-button {
+  grid-column: 3;
+  justify-self: end;
+  font-family: var(--font-marketing-ui);
   font-size: 13px;
   font-weight: 600;
-  letter-spacing: 0.005em;
+  letter-spacing: 0.01em;
   color: rgba(255, 255, 255, 0.97);
-  background:
-    linear-gradient(180deg, #22262b 0%, #0b0d10 100%);
+  background: linear-gradient(180deg, #22262b 0%, #0b0d10 100%);
   border: 1px solid rgba(17, 19, 21, 0.92);
-  border-radius: 11px;
-  padding: 0 20px;
+  border-radius: 999px;
+  padding: 0 22px;
   height: 42px;
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
   cursor: pointer;
   transition: transform 160ms ease, box-shadow 160ms ease;
-  margin-left: 22px;
-  display: flex;
-  align-items: center;
-  position: relative;
-  z-index: 1;
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.18),
     inset 0 -1px 0 rgba(0, 0, 0, 0.34),
@@ -385,7 +405,7 @@ a {
     0 1px 3px rgba(17, 19, 21, 0.10);
 }
 
-.dl-nav-cta:hover {
+.launch-button:hover {
   transform: translateY(-1px);
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.22),
@@ -394,9 +414,37 @@ a {
     0 2px 5px rgba(17, 19, 21, 0.12);
 }
 
-.dl-nav-cta:focus-visible {
+.launch-button:focus-visible {
   outline: 2px solid var(--dl-ink);
   outline-offset: 2px;
+}
+
+/* Scrolled state — the rail fades into liquid glass (translucent white/silver, blur + */
+/* saturation, soft highlights, very soft shadow). Driven by JS adding .nav-scrolled. */
+.site-header.nav-scrolled .nav-rail {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.34), rgba(255, 255, 255, 0.14)),
+    linear-gradient(110deg, rgba(255, 255, 255, 0.34) 0%, transparent 38%, rgba(255, 255, 255, 0.12) 54%, transparent 74%);
+  border-color: rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(28px) saturate(1.45) contrast(1.04);
+  -webkit-backdrop-filter: blur(28px) saturate(1.45) contrast(1.04);
+  box-shadow:
+    0 18px 50px rgba(30, 32, 30, 0.10),
+    inset 0 1px 0 rgba(255, 255, 255, 0.68),
+    inset 0 -1px 0 rgba(80, 82, 78, 0.08);
+}
+
+.site-header.nav-scrolled .nav-rail::before { opacity: 0.9; }
+.site-header.nav-scrolled .nav-rail::after  { opacity: 0.5; }
+
+/* Collapse the center nav when space gets tight — wordmark + Launch App always stay.  */
+@media (max-width: 920px) {
+  .nav-rail { display: none; }
+}
+
+@media (max-width: 639px) {
+  .deallock-wordmark { font-size: 21px; }
+  .launch-button { height: 38px; padding: 0 16px; font-size: 12px; }
 }
 
 /* ── Hero v2 stage — Resend-style two-column composition ─────────────────────── */
@@ -648,29 +696,6 @@ a {
 /* ── Responsive — mobile ─────────────────────────────────────────────────────── */
 
 @media (max-width: 639px) {
-  .dl-nav-logo {
-    top: 18px;
-    left: 20px;
-    width: 48px;
-    height: 48px;
-  }
-
-  .dl-nav-rail {
-    top: 18px;
-    right: 20px;
-    left: auto;
-    transform: none;
-    padding: 6px 8px 6px 16px;
-  }
-
-  .dl-nav-links {
-    display: none;
-  }
-
-  .dl-nav-cta {
-    margin-left: 0;
-  }
-
   .dl-hero-v2__stage {
     padding: 110px 20px 100px;
     gap: 40px;
@@ -825,10 +850,10 @@ a {
   .dl-spline-vault__canvas { animation: none; }
 
   /* Still switch between the two navbar states, just without the cross-fade. */
-  .dl-nav-rail,
-  .dl-nav-rail::before,
-  .dl-nav-rail::after,
-  .dl-nav-cta {
+  .nav-rail,
+  .nav-rail::before,
+  .nav-rail::after,
+  .launch-button {
     transition: none;
   }
 }
@@ -2300,14 +2325,19 @@ a {
   padding: clamp(44px, 6vh, 72px) 0 var(--dl-section-gap);
 }
 
-/* Section backdrop — a faint top sheen over the shared wall; otherwise transparent  */
-/* so the matte page surface reads straight through the section.                     */
+/* Section backdrop — a quiet PANEL JOINT at the top edge over the shared wall: a soft */
+/* ambient-occlusion band (the panel above settling onto this one) with a catch-light  */
+/* sheen just beneath it, then transparent so the matte page surface reads straight     */
+/* through. Same joint language as the hero→workflow seam, so every boundary reads as   */
+/* one continuous wall with subtle panel joints rather than separate blocks.            */
 .dl-sec__bg {
   position: absolute;
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  background: radial-gradient(92% 52% at 50% 0%, rgba(255, 255, 255, 0.42) 0%, rgba(255, 255, 255, 0) 56%);
+  background:
+    linear-gradient(180deg, rgba(40, 42, 39, 0.05) 0%, rgba(40, 42, 39, 0) 120px),
+    radial-gradient(92% 52% at 50% 0%, rgba(255, 255, 255, 0.42) 0%, rgba(255, 255, 255, 0) 56%);
 }
 
 .dl-sec__inner {
@@ -3010,14 +3040,17 @@ a {
   padding: clamp(26px, 3.4vh, 48px) 0 var(--dl-section-gap);
 }
 
-/* Faint top sheen over the shared wall; otherwise transparent so the matte page    */
-/* surface reads through (same approach as .dl-sec__bg).                            */
+/* Panel joint at the top edge over the shared wall — soft ambient-occlusion band +   */
+/* catch-light sheen, then transparent so the matte page surface reads through (same   */
+/* joint language as .dl-sec__bg and the hero→workflow seam).                          */
 .dl-faq__bg {
   position: absolute;
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  background: radial-gradient(92% 50% at 50% 0%, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0) 56%);
+  background:
+    linear-gradient(180deg, rgba(40, 42, 39, 0.045) 0%, rgba(40, 42, 39, 0) 120px),
+    radial-gradient(92% 50% at 50% 0%, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0) 56%);
 }
 
 .dl-faq__inner {
@@ -3347,6 +3380,48 @@ a {
 /* Unique selectors, appended — they were lost from the reconstruction's middle.    */
 /* ══════════════════════════════════════════════════════════════════════════════ */
 
+/* ── Landing surface — ONE continuous matte-silver wall ─────────────────────────── */
+/* Every section below the hero is transparent, so THIS surface is the shared         */
+/* material: its tone, brushed grain, panel seams and light run unbroken from the      */
+/* hero seam to the page foot instead of resetting per block. The hero paints its own  */
+/* brighter "shiny" wall on top for screen one; below it, this surface shows through.  */
+/* Silver family only — light falls from the upper right and the wall deepens by a     */
+/* hair toward the foot, so the page reads as one tall architectural panel, not a      */
+/* flat fill. (Giving .dl-page a containing block ALSO fixes the grain/dither layers,  */
+/* which were absolutely positioned against a static parent and so only ever covered   */
+/* the first screen — now they span the whole page.)                                   */
+.dl-page {
+  position: relative;
+  isolation: isolate;
+  min-height: 100dvh;
+  background:
+    /* soft key light, upper right (strongest at the top, fades over the first panels) */
+    radial-gradient(135% 78% at 86% -6%, rgba(255, 255, 255, 0.62) 0%, rgba(255, 255, 255, 0) 38%),
+    /* faint cool fill, lower left, to round the surface + darken the foot a touch      */
+    radial-gradient(98% 62% at 6% 104%, rgba(196, 200, 194, 0.22) 0%, rgba(196, 200, 194, 0) 46%),
+    /* large architectural panel seams — a few WIDE, soft recesses (not a grid). They   */
+    /* live in the surface itself, so they sit BEHIND every content panel and can never */
+    /* read as a line over text; the centre one is a catch-light, the flanks are soft   */
+    /* recesses framing the content column. Aligned ~to the hero's own seam positions    */
+    /* (14% / 50% / ~82%) so the structure carries across the hero→workflow boundary.    */
+    linear-gradient(90deg,
+      rgba(40, 42, 39, 0) 10.5%,
+      rgba(40, 42, 39, 0.030) 14%,
+      rgba(40, 42, 39, 0) 17.5%,
+      rgba(255, 255, 255, 0) 50%,
+      rgba(255, 255, 255, 0.20) 53.5%,
+      rgba(255, 255, 255, 0) 57%,
+      rgba(40, 42, 39, 0) 78.5%,
+      rgba(40, 42, 39, 0.032) 82%,
+      rgba(40, 42, 39, 0) 85.5%),
+    /* the wall: a gentle top→foot tonal descent through the silver family */
+    linear-gradient(180deg,
+      #f4f5f2 0%,
+      #eef0eb 30%,
+      #e8e9e3 64%,
+      #e1e2dc 100%);
+}
+
 /* Fine fractal-noise dither over the wall (kills gradient banding; neutral grain). */
 .dl-page::before {
   content: "";
@@ -3486,78 +3561,10 @@ a {
   to   { transform: translate3d(285%, 0, 0) rotate(2deg); }
 }
 
-/* Fixed header shell — logo (left) · centered nav · CTA (right). */
-.dl-hero-header {
-  --dl-nav-ease: cubic-bezier(0.22, 1, 0.36, 1);
-  position: fixed;
-  inset: 0 0 auto 0;
-  z-index: 200;
-  max-width: var(--dl-shell-max);
-  margin-inline: auto;
-  padding: 22px var(--dl-shell-pad) 0;
-  display: grid;
-  grid-template-columns: 1fr auto 1fr;
-  align-items: center;
-  gap: 24px;
-  pointer-events: none;
-}
+/* (Header styles live in the "Site header" section near the top of this file.) */
 
-.dl-hero-header > * {
-  pointer-events: auto;
-}
-
-.dl-hero-header--scrolled .dl-nav-rail {
-  background-color: rgba(255, 255, 255, 0.32);
-  border-color: rgba(255, 255, 255, 0.55);
-  backdrop-filter: blur(28px) saturate(1.7);
-  -webkit-backdrop-filter: blur(28px) saturate(1.7);
-  box-shadow:
-    0 18px 50px rgba(30, 32, 30, 0.10),
-    0 2px 6px rgba(17, 19, 21, 0.04),
-    inset 0 1px 0 rgba(255, 255, 255, 0.65),
-    inset 0 -1px 0 rgba(80, 82, 78, 0.08);
-}
-
-.dl-hero-header--scrolled .dl-nav-rail::before { opacity: 1; }
-.dl-hero-header--scrolled .dl-nav-rail::after { opacity: 0.52; }
-
-.dl-hero-header--scrolled .dl-nav-cta {
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.20),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.42),
-    inset 0 0 16px rgba(255, 255, 255, 0.04),
-    0 8px 24px rgba(17, 19, 21, 0.18),
-    0 1px 4px rgba(17, 19, 21, 0.10);
-}
-
-/* DealLock wordmark (stencil, flows left in the header). */
-.deal-logo {
-  position: relative;
-  z-index: 1;
-  grid-column: 1;
-  justify-self: start;
-  height: 60px;
-  font-family: "Stardos Stencil", serif;
-  font-size: 34px;
-  font-weight: 700;
-  line-height: 1;
-  letter-spacing: -0.035em;
-  color: var(--dl-ink);
-  text-decoration: none;
-  white-space: nowrap;
-  text-rendering: geometricPrecision;
-  -webkit-font-smoothing: antialiased;
-  display: flex;
-  align-items: center;
-  justify-content: flex-start;
-  cursor: pointer;
-  text-shadow:
-    0 1px 0 rgba(255, 255, 255, 0.72),
-    0 12px 32px rgba(17, 19, 21, 0.10);
-  transition: color 160ms ease, opacity 160ms ease;
-}
-
-.deal-logo:hover { color: rgba(17, 19, 21, 0.78); }
+/* Engraved "DL" monogram inside the hero vault SVG — mono, from the shared token. */
+.dl-vault-monogram { font-family: var(--font-marketing-ui); }
 
 /* Progressive blur fading into the section below (6 layered masks). */
 .dl-hero-blur {
@@ -3585,20 +3592,6 @@ a {
   background: linear-gradient(180deg, rgba(233, 234, 229, 0) 0%, rgba(233, 234, 229, 0) 54%, rgba(230, 231, 226, 0.42) 100%);
 }
 
-/* Hero responsive retunes for the recovered blocks. */
-@media (max-width: 920px) {
-  .dl-hero-header { padding-top: 18px; }
-  .deal-logo { height: 56px; font-size: 26px; }
-}
-
 @media (prefers-reduced-motion: reduce) {
   .dl-wall-bg__sheen { animation: none; transform: translate3d(120%, 0, 0) rotate(2deg); }
-}
-
-/* nav CTA placement (lost in reconstruction) — flush right in the header grid. */
-.dl-nav-cta {
-  grid-column: 3;
-  justify-self: end;
-  position: relative;
-  z-index: 1;
 }

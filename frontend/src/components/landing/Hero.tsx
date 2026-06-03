@@ -1,61 +1,11 @@
-import { useEffect, useState } from "react";
 import HeroVaultSpline from "./HeroVaultSpline";
 import HeroBackground from "./HeroBackground";
 
 export default function Hero() {
-  // Navbar has two visual states. At the hero top it is minimal/transparent —
-  // just the logo, links, and CTA floating on the matte wall. Once the user
-  // scrolls past 32px the frosted-glass pill (.dl-nav-rail glass + CTA shadow)
-  // fades in via the .dl-hero-header--scrolled class. Scroll reads are rAF-
-  // throttled and state only flips on the boundary, so it stays cheap.
-  const [isScrolled, setIsScrolled] = useState(false);
-
-  useEffect(() => {
-    let frame = 0;
-    const update = () => {
-      frame = 0;
-      setIsScrolled((prev) => {
-        const next = window.scrollY > 32;
-        return prev === next ? prev : next;
-      });
-    };
-    const onScroll = () => {
-      if (frame) return;
-      frame = window.requestAnimationFrame(update);
-    };
-    update(); // sync initial state (covers a reload while already scrolled)
-    window.addEventListener("scroll", onScroll, { passive: true });
-    return () => {
-      window.removeEventListener("scroll", onScroll);
-      if (frame) window.cancelAnimationFrame(frame);
-    };
-  }, []);
-
   return (
     <div className="dl-hero-v2">
 
       <HeroBackground />
-
-      <header className={`dl-hero-header${isScrolled ? " dl-hero-header--scrolled" : ""}`}>
-        <a href="/" className="deal-logo" aria-label="DealLock home">DealLock</a>
-
-        <nav className="dl-nav-rail" aria-label="Main navigation">
-          <ul className="dl-nav-links" role="list">
-            {[
-              { label: "Product", href: "#" },
-              { label: "Workflow", href: "#workflow" },
-              { label: "Security", href: "#security" },
-              { label: "FAQ", href: "#faq" },
-            ].map(({ label, href }) => (
-              <li key={label}>
-                <a href={href} className="dl-nav-link">{label}</a>
-              </li>
-            ))}
-          </ul>
-        </nav>
-
-        <button className="dl-nav-cta">Request Access</button>
-      </header>
 
       <main className="dl-hero-v2__stage" aria-label="DealLock — milestone escrow protocol">
 
