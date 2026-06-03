@@ -256,7 +256,7 @@ export default function VaultObject() {
         <text
           x="220" y="367"
           textAnchor="middle"
-          fontFamily="'IBM Plex Mono', ui-monospace, monospace"
+          className="dl-vault-monogram"
           fontSize="11"
           fontWeight="500"
           letterSpacing="0.12em"

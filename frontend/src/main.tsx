@@ -1,7 +1,7 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
-import "@fontsource-variable/inter-tight";
 import "./styles.css";
+import SiteHeader from "./components/landing/SiteHeader";
 import Hero from "./components/landing/Hero";
 import WorkflowStory from "./components/landing/workflow/WorkflowStory";
 import SecuritySection from "./components/landing/security/SecuritySection";
@@ -16,6 +16,7 @@ createRoot(document.getElementById("root")!).render(
     {/* resets at the section seam. */}
     <div className="dl-page">
       <div className="dl-page__texture" aria-hidden="true" />
+      <SiteHeader />
       <Hero />
       <WorkflowStory />
       <SecuritySection />
