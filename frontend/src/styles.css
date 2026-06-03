@@ -3594,3 +3594,11 @@ a {
 @media (prefers-reduced-motion: reduce) {
   .dl-wall-bg__sheen { animation: none; transform: translate3d(120%, 0, 0) rotate(2deg); }
 }
+
+/* nav CTA placement (lost in reconstruction) — flush right in the header grid. */
+.dl-nav-cta {
+  grid-column: 3;
+  justify-self: end;
+  position: relative;
+  z-index: 1;
+}
