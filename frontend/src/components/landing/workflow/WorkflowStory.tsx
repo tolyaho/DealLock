@@ -28,6 +28,7 @@ import WorkflowActionCard, { type CardPosition } from "./WorkflowActionCard";
 import WorkflowContractStage from "./WorkflowContractStage";
 import TypewriterText from "./TypewriterText";
 import MetalOrbitLines from "../MetalOrbitLines";
+import MetalSheen from "../MetalSheen";
 
 // Position is the card's DISTANCE from the active step, not its absolute index — so
 // only the active card (+ its immediate neighbours) is ever placed/visible. This is
@@ -141,6 +142,10 @@ export default function WorkflowStory() {
 
       <div className="dl-workflow__scroll" ref={trackRef}>
         <div className="dl-workflow__sticky">
+          {/* Pinned metallic background for the focal stage: specular reflection sweeps */}
+          {/* (strongest variant) under the orbital guide. Both are decorative layers    */}
+          {/* (z-index below the scene) — they never touch the contract or the cards.    */}
+          <MetalSheen className="dl-sheen--workflow" />
           {/* Decorative orbital guide pinned behind the contract — implies "flow"     */}
           {/* without becoming an infographic. Background layer only (z-index below).   */}
           <MetalOrbitLines className="dl-orbit--workflow" />
