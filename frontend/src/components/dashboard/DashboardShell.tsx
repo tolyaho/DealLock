@@ -8,7 +8,7 @@
  * is handled by the flex layout + the content's own padding — never z-index.
  */
 import { useEffect, useState } from "react";
-import { NavLink, Outlet, useLocation } from "react-router-dom";
+import { Link, NavLink, Outlet, useLocation } from "react-router-dom";
 import "../../styles/dashboard.css";
 import { WorkspaceProvider } from "./WorkspaceContext";
 import WorkspaceToggle from "./WorkspaceToggle";
@@ -114,6 +114,8 @@ export default function DashboardShell() {
                 >
                   <IconMenu />
                 </button>
+                {/* Stardos Stencil wordmark — the same brand mark as the landing. */}
+                <Link to="/app/home" className="dl-dash__wordmark">DealLock</Link>
               </div>
 
               <WorkspaceToggle />

@@ -61,9 +61,13 @@
   --dash-shadow-md: 0 2px 6px rgba(24, 24, 20, 0.05), 0 14px 34px rgba(24, 24, 20, 0.07);
   --dash-shadow-rail: 0 1px 2px rgba(24, 24, 20, 0.06), 0 18px 50px rgba(24, 24, 20, 0.10);
 
-  /* ---- type ------------------------------------------------------------- */
-  --dash-serif: "Instrument Serif", "Cormorant Garamond", Georgia, serif;
-  --dash-sans: "Inter", "SF Pro Text", "Helvetica Neue", Arial, sans-serif;
+  /* ---- type — shares the LANDING's faces so it reads as one product ------ */
+  /* (--font-* are defined under .dl-root on <html>, so available here.)       */
+  --dash-display: var(--font-marketing-display); /* Chakra Petch — page titles  */
+  --dash-mono: var(--font-marketing-ui);         /* IBM Plex Mono — labels/data  */
+  --dash-logo: var(--font-logo);                 /* Stardos Stencil — wordmark   */
+  --dash-sans: var(--font-app-ui);               /* Inter — prose, forms, buttons*/
+  --dash-serif: var(--font-app-title);           /* kept as a fallback alias     */
 
   /* ---- layout ----------------------------------------------------------- */
   --dash-rail: 76px;
@@ -85,10 +89,11 @@
   inset: 0;
   display: flex;
   padding: clamp(12px, 1.4vw, 22px);
+  /* Deeper silver wall so the shell reads as a lit satin panel resting on it. */
   background:
-    radial-gradient(120% 80% at 88% -8%, rgba(255, 255, 255, 0.85) 0%, rgba(255, 255, 255, 0) 42%),
-    radial-gradient(90% 60% at 4% 108%, rgba(180, 182, 174, 0.18) 0%, rgba(180, 182, 174, 0) 50%),
-    linear-gradient(176deg, #efefec 0%, #e7e7e3 60%, #e0e0dc 100%);
+    radial-gradient(120% 80% at 88% -10%, rgba(255, 255, 255, 0.92) 0%, rgba(255, 255, 255, 0) 44%),
+    radial-gradient(92% 62% at 2% 110%, rgba(160, 162, 154, 0.26) 0%, rgba(160, 162, 154, 0) 52%),
+    linear-gradient(166deg, #e6e6e2 0%, #dadad5 56%, #cdcec8 100%);
 }
 
 .dl-dash__shell {
@@ -97,19 +102,45 @@
   flex: 1;
   min-height: 0;
   border-radius: var(--dash-r-shell);
-  background: var(--dash-shell);
+  /* The shell IS the brushed-silver surface; cards float on it as white objects.
+   * A studio key light upper-right + a top→foot satin descent give it depth.    */
+  background:
+    radial-gradient(130% 92% at 85% -12%, rgba(255, 255, 255, 0.85) 0%, rgba(255, 255, 255, 0) 42%),
+    linear-gradient(167deg, #f8f8f5 0%, #f1f1ed 44%, #e8e8e3 78%, #e1e1db 100%);
   border: 1px solid var(--dash-line);
   box-shadow: var(--dash-shadow-rail);
   overflow: hidden;
 }
 
-/* faint satin sweep on the panel itself — premium metal, very restrained */
+/* Large specular sweep across the panel — the visible "shine". Screen-blended so
+ * it only lightens; cards (opaque, painted above) keep full contrast.            */
 .dl-dash__shell::before {
   content: "";
   position: absolute;
   inset: 0;
   pointer-events: none;
-  background: linear-gradient(118deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.5) 30%, rgba(255, 255, 255, 0) 64%);
+  background: linear-gradient(122deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.62) 24%,
+    rgba(255, 255, 255, 0) 50%,
+    rgba(255, 255, 255, 0.3) 74%,
+    rgba(255, 255, 255, 0) 100%);
+  mix-blend-mode: screen;
+  opacity: 0.62;
+  z-index: 0;
+}
+
+/* Brushed-aluminium grain — fine ~96deg grooves make the surface anisotropic
+ * (satin metal) rather than flat paper. Multiply-blended, very low alpha.        */
+.dl-dash__shell::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image:
+    repeating-linear-gradient(96deg, rgba(118, 120, 114, 0.05) 0px, rgba(118, 120, 114, 0.05) 1px, transparent 2px, transparent 5px);
+  background-size: 7px 100%;
+  mix-blend-mode: multiply;
   opacity: 0.5;
   z-index: 0;
 }
@@ -236,6 +267,17 @@
 
 /* hidden on desktop; raised specificity so it beats .dl-iconbtn's display */
 .dl-iconbtn.dl-dash__menu { display: none; }
+
+/* Stardos Stencil wordmark — same brand mark as the landing's header. */
+.dl-dash__wordmark {
+  font-family: var(--dash-logo);
+  font-size: 19px;
+  letter-spacing: 0.03em;
+  color: var(--dash-ink);
+  text-decoration: none;
+  line-height: 1;
+}
+.dl-dash__wordmark:hover { color: var(--dash-ink-soft); }
 
 .dl-dash__content {
   flex: 1;
@@ -845,6 +887,7 @@
   .dl-dash.is-drawer-open .dl-dash__rail { transform: translateX(0); }
   .dl-dash.is-drawer-open .dl-dash__scrim { opacity: 1; pointer-events: auto; }
   .dl-iconbtn.dl-dash__menu { display: grid; }
+  .dl-dash__wordmark { display: none; } /* hamburger owns the top-left slot */
   .dl-actionbar { left: 0; }
   .dl-navbtn__tip { display: none; }
 }
@@ -867,3 +910,47 @@
 @media (prefers-reduced-motion: reduce) {
   .dl-dash *, .dl-dash *::before, .dl-dash *::after { transition: none !important; }
 }
+
+/* ============================================================================
+ * Typography alignment with the landing (single product voice)
+ * ----------------------------------------------------------------------------
+ * Page titles  → Chakra Petch  (--dash-display) — the landing's display face.
+ * Data/labels  → IBM Plex Mono (--dash-mono)    — the landing's technical voice
+ *                (numbers, money, status, table headers, ids, timestamps).
+ * Prose/forms/buttons stay Inter for density. IBM Plex Mono ships only 400/500,
+ * so mono elements cap at weight 500 to avoid synthetic bold.
+ * ========================================================================== */
+.dl-pagehead__title {
+  font-family: var(--dash-display);
+  font-weight: 600;
+  font-size: clamp(31px, 3.6vw, 42px);
+  letter-spacing: -0.005em;
+  line-height: 1.06;
+}
+.dl-label,
+.dl-pagehead__eyebrow,
+.dl-card__title ~ .dl-label,
+.dl-stat__value,
+.dl-stat__value-sm,
+.dl-stat__unit,
+.dl-vault__amount,
+.dl-row__amount,
+.dl-table__num,
+.dl-table thead th,
+.dl-table__name-sub,
+.dl-pill,
+.dl-tl__time,
+.dl-step__cap,
+.dl-metachip {
+  font-family: var(--dash-mono);
+}
+/* keep mono at loaded weights (400/500) */
+.dl-label,
+.dl-pagehead__eyebrow,
+.dl-table thead th { font-weight: 500; }
+.dl-stat__value,
+.dl-stat__value-sm,
+.dl-vault__amount,
+.dl-row__amount,
+.dl-table__num { font-weight: 500; }
+
