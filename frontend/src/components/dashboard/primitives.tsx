@@ -119,6 +119,8 @@ export function SectionCard({
   flush,
   inset,
   id,
+  onActivate,
+  ariaLabel,
 }: {
   label?: string;
   title?: string;
@@ -128,12 +130,35 @@ export function SectionCard({
   flush?: boolean;
   inset?: boolean;
   id?: string;
+  /** Makes the whole card a button (hover lift + keyboard activatable). */
+  onActivate?: () => void;
+  ariaLabel?: string;
 }) {
-  const cls = ["dl-card", flush && "dl-card--flush", inset && "dl-card--inset", className]
+  const cls = [
+    "dl-card",
+    flush && "dl-card--flush",
+    inset && "dl-card--inset",
+    onActivate && "dl-card--interactive",
+    className,
+  ]
     .filter(Boolean)
     .join(" ");
+  const interactive = onActivate
+    ? {
+        role: "button" as const,
+        tabIndex: 0,
+        "aria-label": ariaLabel,
+        onClick: onActivate,
+        onKeyDown: (e: React.KeyboardEvent) => {
+          if (e.key === "Enter" || e.key === " ") {
+            e.preventDefault();
+            onActivate();
+          }
+        },
+      }
+    : {};
   return (
-    <section className={cls} id={id}>
+    <section className={cls} id={id} {...interactive}>
       {/* scroll-margin keeps anchored sections clear of the top edge */}
       {(label || title || action) && (
         <div className="dl-card__head">
