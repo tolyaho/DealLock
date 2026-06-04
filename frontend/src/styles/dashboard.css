@@ -78,9 +78,15 @@
   --dash-serif: var(--font-app-title);           /* kept as a fallback alias     */
 
   /* ---- layout ----------------------------------------------------------- */
+  /* Spacing rhythm (keep edits on these tiers):
+   *   intra-card        8 / 12 / 16px   (label↔value, content↔trailing CTA)
+   *   inter-block       --dash-gap (20) (grid gap, stacked cards, section→section)
+   *   page gutter       --dash-pad      (content↔viewport edge)
+   *   header → body     --dash-head-gap (page title block → first content row) */
   --dash-rail: 76px;
   --dash-gap: 20px;
   --dash-pad: clamp(20px, 2.6vw, 40px);
+  --dash-head-gap: clamp(18px, 2.6vh, 30px);
 
   font-family: var(--dash-sans);
   color: var(--dash-ink);
@@ -389,7 +395,7 @@
   align-items: flex-end;
   justify-content: space-between;
   gap: 24px;
-  margin-bottom: clamp(18px, 2.6vh, 30px);
+  margin-bottom: var(--dash-head-gap);
 }
 .dl-pagehead__eyebrow {
   font-size: 11px;
