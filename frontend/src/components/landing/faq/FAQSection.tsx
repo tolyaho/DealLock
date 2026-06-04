@@ -16,6 +16,7 @@ import { FAQ_SUBTEXT, FAQ_TITLE } from "./faqData";
 import FAQAccordion from "./FAQAccordion";
 import FAQTrustVisual from "./FAQTrustVisual";
 import { useInView } from "../security/useInView";
+import MetalOrbitLines from "../MetalOrbitLines";
 
 export default function FAQSection() {
   const { ref, inView } = useInView<HTMLElement>({ threshold: 0.12 });
@@ -27,7 +28,10 @@ export default function FAQSection() {
       className={`dl-faq${inView ? " is-in" : ""}`}
       aria-labelledby="dl-faq-title"
     >
-      <div className="dl-faq__bg" aria-hidden="true" data-parallax="0.04" />
+      <div className="dl-faq__bg" aria-hidden="true" data-parallax="0.04">
+        {/* Orbital guide low in the final section — a calm spatial close to the page. */}
+        <MetalOrbitLines className="dl-orbit--faq" />
+      </div>
 
       <div className="dl-faq__inner">
         <div className="dl-faq__layout">
