@@ -719,6 +719,47 @@ a {
   }
 }
 
+/* ── Hero height-compact mode (short / non-fullscreen / zoomed desktop) ──────────── */
+/* Scoped to the two-column desktop layout (min-width:961px) so it never fights the   */
+/* single-column stack (which simply scrolls). When the viewport is short the full    */
+/* cinematic hero can't fit one screen, so we adapt — NOT preserve it: smaller head-  */
+/* line, tighter top safe-gap + bottom pad, and trimmed copy rhythm so the copy       */
+/* column stays short. The vault is capped by height separately (max-width min()).    */
+@media (min-width: 961px) and (max-height: 820px) {
+  .dl-hero-v2__stage {
+    /* Keep the full header safe zone, just shrink the buffer below it + the foot. */
+    padding-top: calc(var(--dl-nav-height) + clamp(14px, 2.2vh, 30px));
+    padding-bottom: clamp(28px, 4.5vh, 64px);
+    gap: clamp(40px, 4.5vw, 80px);
+  }
+
+  .dl-hero-h1 {
+    font-size: clamp(38px, 4.4vw, 58px);
+    margin-bottom: clamp(18px, 2.6vh, 26px);
+  }
+
+  .dl-hero-sub {
+    margin-bottom: clamp(22px, 3.4vh, 36px);
+  }
+
+  .dl-hero-cta-row {
+    margin-bottom: clamp(24px, 3.8vh, 40px);
+  }
+}
+
+/* Very short (e.g. 1280×700, dev tools open): pull the headline down once more and   */
+/* drop the scroll cue, which would otherwise sit on top of the chips / vault foot.   */
+@media (min-width: 961px) and (max-height: 680px) {
+  .dl-hero-h1 {
+    font-size: clamp(34px, 3.8vw, 48px);
+    line-height: 1.02;
+  }
+
+  .dl-scroll-cue {
+    display: none;
+  }
+}
+
 /* ── Spline circular glass vault — hero right visual ─────────────────────────── */
 /* The COMPLETE Spline figure is shown as designed: the circular glass vault AND   */
 /* its own metal/glass plate/frame, which are part of the 3D scene (not CSS). The  */
@@ -742,7 +783,14 @@ a {
   /* children = the niche and the vault share one center with EVEN padding on all   */
   /* four sides by construction — the recess is sized around the vault, not nudged. */
   width: 100%;
-  max-width: 560px;
+  /* Cap by the HEIGHT available below the fixed header, not just by width. Because  */
+  /* the wrap is aspect-ratio 1/1, its rendered height equals its width — so a pure  */
+  /* width cap (560px) let the vault stand ~560px tall and overflow short viewports  */
+  /* (laptop / non-fullscreen / 110% zoom). The min() also feeds the height-derived  */
+  /* term in, so on a short window the square shrinks instead of being cropped; the  */
+  /* max() floors it so it never collapses. Full 560 holds until ~850px tall, then   */
+  /* the vault scales down gracefully. (Tablet/mobile ≤960px override this below.)   */
+  max-width: min(560px, max(300px, calc(100svh - var(--dl-nav-height) - 190px)));
   aspect-ratio: 1 / 1;
   min-width: 0;
   margin: 0;
@@ -2175,8 +2223,21 @@ a {
     pointer-events: none;
   }
 
+  /* Compact the active card so its text can't define (and overflow) the layout. A     */
+  /* bare max-height did NOT clip — the body just spilled past the card edge. Trim the  */
+  /* padding and CLAMP the body copy to 3 lines (ellipsis) so the card height is        */
+  /* bounded by construction; the title + first lines carry the meaning, and the typed  */
+  /* narration below the contract still gives the full sentence.                        */
   .dl-wf-card {
-    max-height: 180px;
+    padding: 14px 16px;
+  }
+
+  .dl-wf-card__text {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
   }
 }
 
@@ -2196,6 +2257,13 @@ a {
   /* so the contract never collides with it.                                           */
   .dl-workflow__narration {
     display: none;
+  }
+
+  /* Trim the body to 2 lines here — at this height even 3 lines + the contract is too  */
+  /* much; title + 2 lines keeps the active card readable without crowding the card.    */
+  .dl-wf-card__text {
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
   }
 }
 
