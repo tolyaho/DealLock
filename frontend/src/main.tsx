@@ -1,29 +1,53 @@
 import { StrictMode } from "react";
 import { createRoot } from "react-dom/client";
+import { BrowserRouter, Navigate, Route, Routes } from "react-router-dom";
 import "./styles.css";
-import SiteHeader from "./components/landing/SiteHeader";
-import Hero from "./components/landing/Hero";
-import WorkflowStory from "./components/landing/workflow/WorkflowStory";
-import SecuritySection from "./components/landing/security/SecuritySection";
-import FAQSection from "./components/landing/faq/FAQSection";
-import ParallaxLayers from "./components/landing/ParallaxLayers";
 
+import LandingPage from "./pages/LandingPage";
+import DashboardShell from "./components/dashboard/DashboardShell";
+import HomePage from "./pages/dashboard/HomePage";
+import AgreementsPage from "./pages/dashboard/AgreementsPage";
+import AgreementDetailPage from "./pages/dashboard/AgreementDetailPage";
+import MilestoneReviewPage from "./pages/dashboard/MilestoneReviewPage";
+import ProviderPage from "./pages/dashboard/ProviderPage";
+import ActivityPage from "./pages/dashboard/ActivityPage";
+import MessagesPage from "./pages/dashboard/MessagesPage";
+import CounterpartiesPage from "./pages/dashboard/CounterpartiesPage";
+import StatisticsPage from "./pages/dashboard/StatisticsPage";
+import SettingsPage from "./pages/dashboard/SettingsPage";
+import WalletPage from "./pages/dashboard/WalletPage";
+
+/*
+ * Two surfaces, one app:
+ *   /      — the marketing landing (unchanged)
+ *   /app/* — the authenticated dashboard, inside the shared DashboardShell
+ */
 createRoot(document.getElementById("root")!).render(
   <StrictMode>
-    {/* One continuous matte-wall surface behind every section — the hero and the    */}
-    {/* workflow are panels on the same wall, not separately-painted blocks. The     */}
-    {/* texture layer (brushed grain) spans the whole page so the material never     */}
-    {/* resets at the section seam. */}
-    <div className="dl-page">
-      <div className="dl-page__texture" aria-hidden="true" />
-      <SiteHeader />
-      <Hero />
-      <WorkflowStory />
-      <SecuritySection />
-      <FAQSection />
-      {/* Scroll-linked drift on the background light blooms (depth cue). Renders     */}
-      {/* nothing; mounted last so every [data-parallax] layer exists when it wires up. */}
-      <ParallaxLayers />
-    </div>
+    <BrowserRouter>
+      <Routes>
+        <Route path="/" element={<LandingPage />} />
+
+        <Route path="/app" element={<DashboardShell />}>
+          <Route index element={<Navigate to="/app/home" replace />} />
+          <Route path="home" element={<HomePage />} />
+          <Route path="agreements" element={<AgreementsPage />} />
+          <Route path="agreements/:id" element={<AgreementDetailPage />} />
+          <Route
+            path="agreements/:id/milestones/:milestoneId/review"
+            element={<MilestoneReviewPage />}
+          />
+          <Route path="provider" element={<ProviderPage />} />
+          <Route path="activity" element={<ActivityPage />} />
+          <Route path="messages" element={<MessagesPage />} />
+          <Route path="counterparties" element={<CounterpartiesPage />} />
+          <Route path="statistics" element={<StatisticsPage />} />
+          <Route path="settings" element={<SettingsPage />} />
+          <Route path="wallet" element={<WalletPage />} />
+        </Route>
+
+        <Route path="*" element={<Navigate to="/" replace />} />
+      </Routes>
+    </BrowserRouter>
   </StrictMode>,
 );

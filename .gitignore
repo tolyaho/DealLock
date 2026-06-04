@@ -35,6 +35,9 @@ pnpm-debug.log*
 .idea/
 .vscode/
 
+# Local UI verification screenshots
+frontend/.screenshots/
+
 # Local coursework notes
 notes/
 
