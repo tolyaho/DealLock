@@ -55,10 +55,18 @@ export default function WorkflowStory() {
   const trackRef = useRef<HTMLDivElement | null>(null);
   const cardRefs = useRef<(HTMLElement | null)[]>([]);
 
+  // Per-step desktop dwell weights (stable identity so the scroll effect doesn't
+  // re-subscribe every render). Even by default; the fund-lock step holds longer.
+  const stepWeights = useMemo(
+    () => WORKFLOW_STEPS.map((step) => step.scrollWeight ?? 1),
+    [],
+  );
+
   const { activeStep } = useWorkflowStep({
     trackRef,
     cardRefs,
     stepCount: STEP_COUNT,
+    stepWeights,
   });
 
   // Latch the header reveal the first time it scrolls meaningfully into view, then

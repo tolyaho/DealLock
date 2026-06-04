@@ -54,6 +54,12 @@ export interface WorkflowStep {
   /* Index into PROGRESS_LABELS that this step has reached (0–4). Steps 1 & 2 both */
   /* sit at "Created" — the escrow timeline only advances once funds move.          */
   progressIndex: number;
+  /* Desktop pacing weight — how much of the pinned scroll track this step holds    */
+  /* before the next one takes over, relative to the others (default 1 = even). The  */
+  /* raw bands are mathematically even, but the fund-lock step (the pivotal "money   */
+  /* is now locked" beat) reads as too quick a hand-off into "Provider submits", so   */
+  /* it gets extra dwell. Only affects WHEN activeStep flips on desktop, not layout. */
+  scrollWeight?: number;
 }
 
 export const WORKFLOW_STEPS: WorkflowStep[] = [
@@ -95,6 +101,10 @@ export const WORKFLOW_STEPS: WorkflowStep[] = [
     activeRow: "amount",
     typewriter: "Client locks 2.5 ETH into escrow.",
     progressIndex: 1,
+    /* Hold the "funds are now locked" beat ~30% longer before handing off to the    */
+    /* provider-submits step, so box 3 → box 4 no longer reads as the quickest        */
+    /* transition. Tune this one number to dial the dwell.                            */
+    scrollWeight: 1.3,
   },
   {
     id: "submit",
