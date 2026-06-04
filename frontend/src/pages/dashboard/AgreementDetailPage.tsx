@@ -101,12 +101,13 @@ export default function AgreementDetailPage() {
   return (
     <>
       <PageContent actionBar>
-        <Link to="/app/agreements" className="dl-viewall" style={{ marginBottom: 18 }}>
+        <Link to="/app/agreements" className="dl-viewall" style={{ marginBottom: 16 }}>
           <IconArrowLeft /> Back to agreements
         </Link>
 
-        {/* Header: title + parties on the left, escrow vault on the right */}
-        <div className="dl-grid dl-grid--hero" style={{ marginBottom: 24 }}>
+        {/* Header: title + parties on the left, escrow vault on the right.
+            marginBottom matches every page's title→body gap via the shared token. */}
+        <div className="dl-grid dl-grid--hero" style={{ marginBottom: "var(--dash-head-gap)" }}>
           <div>
             <div className="dl-pagehead__eyebrow">{role === "client" ? "Client agreement" : "Provider contract"}</div>
             <h1 className="dl-pagehead__title">{a.title}</h1>

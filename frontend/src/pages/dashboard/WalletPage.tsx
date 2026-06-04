@@ -55,7 +55,7 @@ export default function WalletPage() {
         <SectionCard label="Withdrawable from escrow">
           <div className="dl-stat__value">{formatMoney({ amount: 14800, asset: "USDC" })}</div>
           <p className="dl-stat__meta">Released milestone funds available to withdraw.</p>
-          <div style={{ marginTop: "auto", paddingTop: 18 }}>
+          <div style={{ marginTop: "auto", paddingTop: 16 }}>
             <Button variant="primary" icon={<IconLock />} comingSoon block>Withdraw to wallet</Button>
           </div>
         </SectionCard>
@@ -74,7 +74,7 @@ export default function WalletPage() {
             </div>
           ))}
         </div>
-        <p className="dl-stat__meta" style={{ marginTop: 14 }}>
+        <p className="dl-stat__meta" style={{ marginTop: 16 }}>
           Only assets configured in the escrow registry are available. Arbitrary token addresses are not supported.
         </p>
       </SectionCard>

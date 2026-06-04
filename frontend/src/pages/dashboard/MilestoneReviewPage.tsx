@@ -96,7 +96,7 @@ export default function MilestoneReviewPage() {
           <IconArrowLeft /> Back to {agreement.title}
         </Link>
 
-        <div className="dl-pagehead" style={{ marginBottom: 22 }}>
+        <div className="dl-pagehead">
           <div>
             <div className="dl-pagehead__eyebrow">Milestone {milestone.order} · {agreement.title}</div>
             <h1 className="dl-pagehead__title">{milestone.title}</h1>

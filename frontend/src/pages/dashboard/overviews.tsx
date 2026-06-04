@@ -88,7 +88,7 @@ export function ClientOverview() {
             <div>
               <div className="dl-vault__amount">{formatMoney({ amount: locked, asset: "USDC" })}</div>
               <p className="dl-stat__meta">Secured across your active agreements.</p>
-              <div style={{ marginTop: 18 }}>
+              <div style={{ marginTop: 16 }}>
                 <Link to="/app/agreements" className="dl-viewall">
                   View agreements <IconArrowRight />
                 </Link>

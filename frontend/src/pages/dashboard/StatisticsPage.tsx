@@ -97,7 +97,7 @@ export default function StatisticsPage() {
         </SectionCard>
 
         <SectionCard label="Agreement status">
-          <div style={{ display: "flex", alignItems: "center", gap: 22 }}>
+          <div style={{ display: "flex", alignItems: "center", gap: 24 }}>
             <div
               aria-hidden="true"
               style={{
