@@ -2405,7 +2405,10 @@ a {
   pointer-events: none;
   background:
     linear-gradient(180deg, rgba(40, 42, 39, 0.05) 0%, rgba(40, 42, 39, 0) 120px),
-    radial-gradient(92% 52% at 50% 0%, rgba(255, 255, 255, 0.42) 0%, rgba(255, 255, 255, 0) 56%);
+    radial-gradient(92% 52% at 50% 0%, rgba(255, 255, 255, 0.42) 0%, rgba(255, 255, 255, 0) 56%),
+    /* central content spotlight — a big soft white glow lifting the code panel + proof */
+    /* cards off the wall (premium "lit product" feel), fading well before the edges.    */
+    radial-gradient(78% 66% at 50% 46%, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0) 62%);
 }
 
 .dl-sec__inner {
@@ -3118,7 +3121,10 @@ a {
   pointer-events: none;
   background:
     linear-gradient(180deg, rgba(40, 42, 39, 0.045) 0%, rgba(40, 42, 39, 0) 120px),
-    radial-gradient(92% 50% at 50% 0%, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0) 56%);
+    radial-gradient(92% 50% at 50% 0%, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0) 56%),
+    /* central content spotlight — lifts the intro + accordion off the wall, matching   */
+    /* the Security section so the two read as one continuous lit environment.          */
+    radial-gradient(80% 64% at 50% 44%, rgba(255, 255, 255, 0.46) 0%, rgba(255, 255, 255, 0) 62%);
 }
 
 .dl-faq__inner {
@@ -3482,6 +3488,15 @@ a {
       rgba(40, 42, 39, 0) 78.5%,
       rgba(40, 42, 39, 0.032) 82%,
       rgba(40, 42, 39, 0) 85.5%),
+    /* edge vignette — a faint inward falloff on the LEFT/RIGHT margins. The page is    */
+    /* viewport-wide, so these x-edges are the viewport edges at every scroll position: */
+    /* this frames the content column with continuous soft depth (not darkness) across  */
+    /* all sections, the way a lit gallery wall falls off toward its corners.           */
+    linear-gradient(90deg,
+      rgba(40, 42, 39, 0.05) 0%,
+      rgba(40, 42, 39, 0) 11%,
+      rgba(40, 42, 39, 0) 89%,
+      rgba(40, 42, 39, 0.05) 100%),
     /* the wall: a gentle top→foot tonal descent through the silver family */
     linear-gradient(180deg,
       #f4f5f2 0%,
@@ -3504,6 +3519,25 @@ a {
   opacity: 0.05;
 }
 
+/* Faint architectural DOT MICRO-GRID — a single ink dot every 26px, so low-contrast  */
+/* it only resolves on a close look (a technical-precision cue, never wallpaper). It   */
+/* spans the whole page behind content (z-index 0), and is masked to FADE OUT at the   */
+/* left/right margins so it concentrates behind the content column and never fights    */
+/* the edge vignette. Static (no animation), GPU-cheap, hidden under the hero's own    */
+/* shiny wall — it reads in the workflow / security / FAQ panels.                      */
+.dl-page::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image: radial-gradient(circle, rgba(46, 50, 46, 0.16) 0.7px, transparent 0.8px);
+  background-size: 26px 26px;
+  opacity: 0.5;
+  -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 16%, #000 84%, transparent 100%);
+  mask-image: linear-gradient(90deg, transparent 0%, #000 16%, #000 84%, transparent 100%);
+}
+
 /* Brushed grain across the whole page (matte microcement, uniform tile). */
 .dl-page__texture {
   position: absolute;
@@ -3517,6 +3551,78 @@ a {
     radial-gradient(circle at 72% 66%, rgba(255, 255, 255, 0.5) 0 0.46px, transparent 0.94px),
     linear-gradient(92deg, rgba(94, 100, 94, 0.022), rgba(255, 255, 255, 0.026) 47%, rgba(94, 100, 94, 0.018));
   background-size: 4px 4px, 5px 5px, 100% 100%;
+}
+
+/* ── Metallic orbital guide layer (MetalOrbitLines.tsx) ──────────────────────────── */
+/* A reusable decorative background: faint elliptical "orbital" arcs + glowing anchor  */
+/* dots drawn low in a section, behind the content. Pure surface — pointer-events off,  */
+/* masked so the arcs dissolve at the top edge (their strokes already fade left/right    */
+/* via the SVG gradient). Silver/graphite with one restrained lavender accent; size +    */
+/* placement come from the per-section modifier.                                         */
+.dl-orbit {
+  position: absolute;
+  pointer-events: none;
+  opacity: 0.72;
+  /* Dissolve the top of the box so the arcs fade INTO the wall instead of hard-edging.  */
+  -webkit-mask-image: radial-gradient(125% 118% at 50% 100%, #000 0%, #000 56%, transparent 88%);
+  mask-image: radial-gradient(125% 118% at 50% 100%, #000 0%, #000 56%, transparent 88%);
+}
+
+.dl-orbit__svg {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+/* Pinned behind the contract: centred in the sticky scene, ringing its lower half.    */
+/* z-index:-1 keeps it under the scene content (and above the sticky's focal bloom).    */
+.dl-orbit--workflow {
+  left: 50%;
+  bottom: 5%;
+  width: min(900px, 78vw);
+  height: min(440px, 56vh);
+  transform: translateX(-50%);
+  z-index: -1;
+  opacity: 0.6;
+}
+
+/* Low in the FAQ section — the page's calm closing beat. Lives inside .dl-faq__bg      */
+/* (already behind .dl-faq__inner), so it needs no extra z-index.                       */
+.dl-orbit--faq {
+  left: 50%;
+  bottom: 6%;
+  width: min(960px, 86vw);
+  height: min(420px, 46vh);
+  transform: translateX(-50%);
+  opacity: 0.7;
+}
+
+/* Subtle drift of the whole cluster (transform/opacity only → compositor-cheap). The   */
+/* wrapper keeps its static translateX(-50%) centring; the inner <g> does the float, so */
+/* the two transforms never fight. Fully parked under prefers-reduced-motion.           */
+@media (prefers-reduced-motion: no-preference) {
+  .dl-orbit__group {
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: dl-orbit-float 17s ease-in-out infinite alternate;
+    will-change: transform, opacity;
+  }
+
+  @keyframes dl-orbit-float {
+    from { transform: translateY(0);    opacity: 0.78; }
+    to   { transform: translateY(-9px); opacity: 1; }
+  }
+}
+
+/* Short viewports: shrink the pinned orbit so it never crowds the compact scene. */
+@media (max-height: 760px) {
+  .dl-orbit--workflow { height: min(360px, 50vh); opacity: 0.5; }
+}
+
+/* Mobile: keep the silver wall + dots, but drop the orbit — the stacked layouts have   */
+/* no room for it and it would read as clutter at narrow widths.                        */
+@media (max-width: 639px) {
+  .dl-orbit { display: none; }
 }
 
 /* Hero wall: soft directional blooms + a metallic conic sheen. */

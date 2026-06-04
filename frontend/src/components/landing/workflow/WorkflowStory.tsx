@@ -27,6 +27,7 @@ import { useWorkflowStep } from "./useWorkflowStep";
 import WorkflowActionCard, { type CardPosition } from "./WorkflowActionCard";
 import WorkflowContractStage from "./WorkflowContractStage";
 import TypewriterText from "./TypewriterText";
+import MetalOrbitLines from "../MetalOrbitLines";
 
 // Position is the card's DISTANCE from the active step, not its absolute index — so
 // only the active card (+ its immediate neighbours) is ever placed/visible. This is
@@ -140,6 +141,9 @@ export default function WorkflowStory() {
 
       <div className="dl-workflow__scroll" ref={trackRef}>
         <div className="dl-workflow__sticky">
+          {/* Decorative orbital guide pinned behind the contract — implies "flow"     */}
+          {/* without becoming an infographic. Background layer only (z-index below).   */}
+          <MetalOrbitLines className="dl-orbit--workflow" />
           <div className="dl-workflow__scene">
             <div className="dl-workflow__center">
               <WorkflowContractStage activeStep={activeStep} />
