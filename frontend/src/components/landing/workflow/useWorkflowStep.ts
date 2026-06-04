@@ -29,9 +29,15 @@ interface Options {
   /** Refs to each stacked card, used only on the mobile path. */
   cardRefs: RefObject<(HTMLElement | null)[]>;
   stepCount: number;
+  /**
+   * Desktop-only relative dwell per step (length === stepCount). Each step holds a
+   * slice of the scroll track proportional to its weight; omit or pass all-1 for
+   * perfectly even bands. (Mobile is card-driven, so weights don't apply there.)
+   */
+  stepWeights?: number[];
 }
 
-export function useWorkflowStep({ trackRef, cardRefs, stepCount }: Options) {
+export function useWorkflowStep({ trackRef, cardRefs, stepCount, stepWeights }: Options) {
   const [activeStep, setActiveStep] = useState(0);
   const [isMobile, setIsMobile] = useState(
     () => typeof window !== "undefined" && window.matchMedia(MOBILE_QUERY).matches,
@@ -52,6 +58,18 @@ export function useWorkflowStep({ trackRef, cardRefs, stepCount }: Options) {
     const track = trackRef.current;
     if (!track) return;
 
+    // Upper progress bound of each step, derived from the per-step dwell weights
+    // (defaults to even thirds/sixths when no weights are given). Computed once per
+    // effect run, not per frame. With all weights === 1 this reproduces the old
+    // Math.floor(progress * stepCount) equal-band behaviour exactly.
+    const weights =
+      stepWeights && stepWeights.length === stepCount
+        ? stepWeights
+        : Array.from({ length: stepCount }, () => 1);
+    const totalWeight = weights.reduce((a, w) => a + w, 0);
+    let acc = 0;
+    const bounds = weights.map((w) => (acc += w) / totalWeight); // ascending, last === 1
+
     let raf = 0;
     const measure = () => {
       raf = 0;
@@ -63,8 +81,15 @@ export function useWorkflowStep({ trackRef, cardRefs, stepCount }: Options) {
       }
       const scrolled = Math.min(Math.max(-rect.top, 0), total);
       const progress = scrolled / total;
-      // Equal bands; clamp so the final step holds through the tail of the scroll.
-      const step = Math.min(stepCount - 1, Math.floor(progress * stepCount));
+      // First band whose upper bound the progress hasn't passed; the final step
+      // holds through the tail of the scroll (progress === 1 falls through to it).
+      let step = stepCount - 1;
+      for (let i = 0; i < stepCount; i++) {
+        if (progress < bounds[i]) {
+          step = i;
+          break;
+        }
+      }
       setActiveStep((prev) => (prev === step ? prev : step));
     };
     const onScroll = () => {
@@ -80,7 +105,7 @@ export function useWorkflowStep({ trackRef, cardRefs, stepCount }: Options) {
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onScroll);
     };
-  }, [isMobile, trackRef, stepCount]);
+  }, [isMobile, trackRef, stepCount, stepWeights]);
 
   // Mobile: the highest stacked card crossing the viewport's centre band wins.
   useEffect(() => {
