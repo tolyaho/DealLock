@@ -1,7 +1,7 @@
 /* Counterparties — everyone the user has an agreement with, aggregated: number
  * of agreements and total value engaged. Real data derived from fixtures. */
 import { useMemo } from "react";
-import { Link } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { AGREEMENTS, counterparty } from "../../fixtures/agreements";
 import type { Party } from "../../fixtures/types";
 import { formatMoney } from "../../fixtures/format";
@@ -18,6 +18,7 @@ interface Agg {
 }
 
 export default function CounterpartiesPage() {
+  const navigate = useNavigate();
   const parties = useMemo(() => {
     const map = new Map<string, Agg>();
     for (const a of AGREEMENTS) {
@@ -35,7 +36,11 @@ export default function CounterpartiesPage() {
       <PageHeader title="Counterparties" subtitle="The clients and providers you have agreements with." />
       <div className="dl-grid dl-grid--3">
         {parties.map(({ party, count, valueUSDC, sampleId }) => (
-          <SectionCard key={party.id}>
+          <SectionCard
+            key={party.id}
+            onActivate={() => navigate(`/app/agreements/${sampleId}`)}
+            ariaLabel={`View agreements with ${party.name}`}
+          >
             <div className="dl-row" style={{ padding: 0, borderBottom: 0 }}>
               <Avatar initials={party.initials} size="lg" />
               <span className="dl-row__body">
@@ -57,7 +62,7 @@ export default function CounterpartiesPage() {
               </div>
             </div>
             <div className="dl-card__foot">
-              <Link to={`/app/agreements/${sampleId}`} className="dl-viewall">View agreements <IconArrowRight /></Link>
+              <span className="dl-viewall">View agreements <IconArrowRight /></span>
             </div>
           </SectionCard>
         ))}
