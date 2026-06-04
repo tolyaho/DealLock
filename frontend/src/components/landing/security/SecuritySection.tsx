@@ -21,6 +21,7 @@ import SecurityProofCards from "./SecurityProofCards";
 import RepoCta from "./RepoCta";
 import { useInView } from "./useInView";
 import TypewriterText from "../workflow/TypewriterText";
+import MetalSheen from "../MetalSheen";
 
 // Subtitle types in (like the workflow subtitle) once the section scrolls into
 // view — a short beat after the title fades up. rAF-driven, so it stays smooth.
@@ -45,7 +46,10 @@ export default function SecuritySection({ repoUrl = REPO_URL }: Props) {
       className={`dl-sec${inView ? " is-in" : ""}`}
       aria-labelledby="dl-sec-title"
     >
-      <div className="dl-sec__bg" aria-hidden="true" data-parallax="0.04" />
+      <div className="dl-sec__bg" aria-hidden="true" data-parallax="0.04">
+        {/* Soft specular sweeps so the security panel sits on lit satin metal too. */}
+        <MetalSheen />
+      </div>
 
       <div className="dl-sec__inner">
         <header className="dl-sec__header">

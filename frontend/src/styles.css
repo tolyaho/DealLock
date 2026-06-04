@@ -1212,11 +1212,14 @@ a {
   position: absolute;
   top: 50%;
   left: 50%;
-  width: min(52vw, 720px);
-  height: min(52vw, 720px);
+  width: min(60vw, 820px);
+  height: min(56vw, 760px);
   transform: translate(-50%, -50%);
-  background: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.58) 0%, rgba(236, 237, 233, 0.3) 40%, rgba(216, 218, 213, 0.12) 60%, rgba(196, 199, 193, 0) 76%);
-  opacity: 0.7;
+  /* Brighter studio key light so the contract card reads as a product lit on a metal   */
+  /* stage (the workflow gets the strongest metallic treatment). Still a soft radial    */
+  /* falloff — no hard disc — and the MetalSheen bands add the angled reflections.       */
+  background: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.94) 0%, rgba(240, 241, 237, 0.5) 34%, rgba(216, 219, 212, 0.2) 58%, rgba(196, 199, 193, 0) 76%);
+  opacity: 0.96;
   pointer-events: none;
   z-index: -1;
 }
@@ -3470,7 +3473,7 @@ a {
   min-height: 100dvh;
   background:
     /* soft key light, upper right (strongest at the top, fades over the first panels) */
-    radial-gradient(135% 78% at 86% -6%, rgba(255, 255, 255, 0.62) 0%, rgba(255, 255, 255, 0) 38%),
+    radial-gradient(135% 78% at 86% -6%, rgba(255, 255, 255, 0.70) 0%, rgba(255, 255, 255, 0) 40%),
     /* faint cool fill, lower left, to round the surface + darken the foot a touch      */
     radial-gradient(98% 62% at 6% 104%, rgba(196, 200, 194, 0.22) 0%, rgba(196, 200, 194, 0) 46%),
     /* large architectural panel seams — a few WIDE, soft recesses (not a grid). They   */
@@ -3497,12 +3500,24 @@ a {
       rgba(40, 42, 39, 0) 11%,
       rgba(40, 42, 39, 0) 89%,
       rgba(40, 42, 39, 0.05) 100%),
-    /* the wall: a gentle top→foot tonal descent through the silver family */
+    /* broad SATIN sweep — one soft diagonal tonal band (bright → faint steel → bright) */
+    /* across the whole wall, so the surface reads as a single aluminium panel caught    */
+    /* under angled studio light rather than a flat fill. Very low alpha; the per-section */
+    /* specular sheens (MetalSheen) carry the brighter reflections on top.                */
+    linear-gradient(115deg,
+      rgba(255, 255, 255, 0) 0%,
+      rgba(255, 255, 255, 0.28) 28%,
+      rgba(122, 126, 118, 0.05) 54%,
+      rgba(255, 255, 255, 0.22) 78%,
+      rgba(255, 255, 255, 0) 100%),
+    /* the wall: a top→foot tonal descent through a RICHER silver range (deeper foot =   */
+    /* more dimensional satin metal, less pale-paper SaaS canvas). Text stays dark ink,  */
+    /* so the deeper tone only helps the metallic read without touching contrast.        */
     linear-gradient(180deg,
-      #f4f5f2 0%,
-      #eef0eb 30%,
-      #e8e9e3 64%,
-      #e1e2dc 100%);
+      #fafbf8 0%,
+      #f1f2ed 30%,
+      #e7e9e2 64%,
+      #dcded7 100%);
 }
 
 /* Fine fractal-noise dither over the wall (kills gradient banding; neutral grain). */
@@ -3531,14 +3546,21 @@ a {
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  background-image: radial-gradient(circle, rgba(46, 50, 46, 0.16) 0.7px, transparent 0.8px);
-  background-size: 26px 26px;
-  opacity: 0.5;
-  -webkit-mask-image: linear-gradient(90deg, transparent 0%, #000 16%, #000 84%, transparent 100%);
-  mask-image: linear-gradient(90deg, transparent 0%, #000 16%, #000 84%, transparent 100%);
+  background-image: radial-gradient(circle, rgba(40, 44, 40, 0.12) 0.55px, transparent 0.65px);
+  background-size: 22px 22px;
+  /* Pulled WAY back so the metal — not the dots — is the surface. Dimmed + masked into  */
+  /* a soft central pool (radial, not full-width) so it never reads as a paper/tech grid */
+  /* and never fights the satin/specular layers; just a faint precision cue on a close   */
+  /* look behind the content column.                                                      */
+  opacity: 0.22;
+  -webkit-mask-image: radial-gradient(118% 90% at 50% 42%, #000 0%, #000 40%, transparent 82%);
+  mask-image: radial-gradient(118% 90% at 50% 42%, #000 0%, #000 40%, transparent 82%);
 }
 
-/* Brushed grain across the whole page (matte microcement, uniform tile). */
+/* Brushed-aluminium grain across the whole page. The fine ~96deg groove layer makes   */
+/* the texture ANISOTROPIC (directional brush lines) so it reads as satin metal, not    */
+/* isotropic paper grain; the two micro-dots + faint satin band keep the matte micro-    */
+/* cement depth under it. All ink-tinted, multiply-blended, very low alpha.             */
 .dl-page__texture {
   position: absolute;
   inset: 0;
@@ -3547,10 +3569,11 @@ a {
   opacity: 0.5;
   mix-blend-mode: multiply;
   background-image:
+    repeating-linear-gradient(96deg, rgba(108, 112, 106, 0.05) 0px, rgba(108, 112, 106, 0.05) 1px, transparent 2px, transparent 5px),
     radial-gradient(circle at 28% 18%, rgba(44, 48, 44, 0.05) 0 0.42px, transparent 0.9px),
     radial-gradient(circle at 72% 66%, rgba(255, 255, 255, 0.5) 0 0.46px, transparent 0.94px),
     linear-gradient(92deg, rgba(94, 100, 94, 0.022), rgba(255, 255, 255, 0.026) 47%, rgba(94, 100, 94, 0.018));
-  background-size: 4px 4px, 5px 5px, 100% 100%;
+  background-size: 7px 100%, 4px 4px, 5px 5px, 100% 100%;
 }
 
 /* ── Metallic orbital guide layer (MetalOrbitLines.tsx) ──────────────────────────── */
@@ -3623,6 +3646,98 @@ a {
 /* no room for it and it would read as clutter at narrow widths.                        */
 @media (max-width: 639px) {
   .dl-orbit { display: none; }
+}
+
+/* ── Specular metal sheen (MetalSheen.tsx) ───────────────────────────────────────── */
+/* Large soft reflection sweeps that make a section read as satin aluminium under       */
+/* studio light. `screen` blend lightens only (adds shine, never darkens text); bands    */
+/* are pre-blurred + cached and only their TRANSFORM drifts (compositor-cheap). z-index   */
+/* -1 keeps them behind the host's content but above the base wall.                      */
+.dl-sheen {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.dl-sheen__band {
+  position: absolute;
+  pointer-events: none;
+  mix-blend-mode: screen;
+  will-change: transform;
+}
+
+/* Diagonal chrome highlight, top-left → lower-right (the primary "lit metal" reading). */
+.dl-sheen__band--diag {
+  width: 84vw;
+  height: 30vh;
+  left: -16vw;
+  top: 12%;
+  transform: rotate(-15deg);
+  background: linear-gradient(90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0) 16%,
+    rgba(255, 255, 255, 0.52) 46%,
+    rgba(214, 217, 210, 0.16) 60%,
+    rgba(255, 255, 255, 0) 100%);
+  filter: blur(26px);
+  opacity: 0.48;
+}
+
+/* Soft vertical reflective column down the centre, behind the focal card. */
+.dl-sheen__band--column {
+  width: 30vw;
+  height: 88%;
+  left: 50%;
+  top: 4%;
+  transform: translateX(-50%) rotate(6deg);
+  background: linear-gradient(90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.34) 44%,
+    rgba(190, 194, 186, 0.08) 54%,
+    rgba(255, 255, 255, 0) 100%);
+  filter: blur(38px);
+  opacity: 0.42;
+}
+
+/* Faint lower silver reflection, low in the section (behind the orbit lines). */
+.dl-sheen__band--low {
+  width: 92vw;
+  height: 24vh;
+  left: 50%;
+  bottom: 3%;
+  transform: translateX(-50%) rotate(-3deg);
+  background: linear-gradient(90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.3) 50%,
+    rgba(255, 255, 255, 0) 100%);
+  filter: blur(28px);
+  opacity: 0.36;
+}
+
+/* Workflow gets the strongest, brightest reflections — it's the focal product stage. */
+.dl-sheen--workflow .dl-sheen__band--diag { opacity: 0.68; }
+.dl-sheen--workflow .dl-sheen__band--column { opacity: 0.58; }
+.dl-sheen--workflow .dl-sheen__band--low { opacity: 0.48; }
+
+/* Slow specular drift — TRANSFORM only (blur stays constant so the layer is cached and  */
+/* the per-variant opacity above is preserved). Fully parked under reduced-motion.       */
+@media (prefers-reduced-motion: no-preference) {
+  .dl-sheen__band--diag {
+    animation: dl-sheen-diag 19s ease-in-out infinite alternate;
+  }
+  .dl-sheen__band--column {
+    animation: dl-sheen-col 23s ease-in-out infinite alternate;
+  }
+  @keyframes dl-sheen-diag {
+    from { transform: rotate(-15deg) translateX(-3%); }
+    to   { transform: rotate(-15deg) translateX(6%); }
+  }
+  @keyframes dl-sheen-col {
+    from { transform: translateX(-50%) rotate(6deg) translateY(0); }
+    to   { transform: translateX(-50%) rotate(6deg) translateY(-2.4%); }
+  }
 }
 
 /* Hero wall: soft directional blooms + a metallic conic sheen. */
