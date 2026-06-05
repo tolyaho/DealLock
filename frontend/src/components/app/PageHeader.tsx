@@ -1,18 +1,18 @@
-/* Page header — serif title (the only serif on the screen) + sans subtitle and
- * optional right-aligned actions. Used at the top of every dashboard page. */
+/*
+ * PageHeader — the top of every page: optional mono eyebrow, the page title
+ * (Inter semibold — NOT the display serif; titles are frequent, so they stay
+ * machine-grade UI), an optional subtitle, and right-aligned actions.
+ */
 import type { ReactNode } from "react";
 
-export default function PageHeader({
-  eyebrow,
-  title,
-  subtitle,
-  actions,
-}: {
+interface Props {
   eyebrow?: string;
   title: ReactNode;
   subtitle?: ReactNode;
   actions?: ReactNode;
-}) {
+}
+
+export function PageHeader({ eyebrow, title, subtitle, actions }: Props) {
   return (
     <header className="dl-pagehead">
       <div>
