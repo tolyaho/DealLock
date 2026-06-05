@@ -105,6 +105,30 @@
   --dl-glow-silver:   rgba(190, 198, 198, 0.42);
   --dl-glow-graphite: rgba(40, 45, 48, 0.24);
 
+  /* Top specular shine — moodboard "ref-landing-crypto-ap-compliance-wallet".       */
+  /* A soft, bright, NEUTRAL silver-white glare blooming from the top edge of a       */
+  /* surface (brightest upper-left, a fainter cool-white secondary upper-right) and   */
+  /* diffusing downward — the look of studio light glancing off polished glass/metal. */
+  /* Strictly silver spectrum, NO hue (this is a gloss highlight, not a tint). The    */
+  /* radials self-feather, so the overlay needs no extra mask. Shared by the landing  */
+  /* hero (.dl-hero-v2::before) and the dashboard shell (.dl-dash__shine). Tune the   */
+  /* whites here, in one place. */
+  --dl-shine:
+    /* hot core — a bright soft glare upper-left, the dominant gleam (reaches further) */
+    radial-gradient(124% 96% at 26% -22%,
+      rgba(255, 255, 255, 1) 0%,
+      rgba(255, 255, 255, 0.82) 16%,
+      rgba(255, 255, 255, 0.34) 40%,
+      rgba(255, 255, 255, 0) 68%),
+    /* cool secondary bloom upper-right — faint blue-grey, the glass-glare tone       */
+    radial-gradient(92% 80% at 78% -14%,
+      rgba(226, 237, 244, 0.74) 0%,
+      rgba(226, 237, 244, 0) 60%),
+    /* broad soft wash tying the two together across the whole top band               */
+    radial-gradient(165% 135% at 50% -36%,
+      rgba(248, 250, 251, 0.62) 0%,
+      rgba(248, 250, 251, 0) 72%);
+
   /* On-dark text */
   --dl-on-dark:       #f4f5f3;
   --dl-on-dark-muted: rgba(244, 245, 243, 0.55);
@@ -230,6 +254,24 @@ a {
     /* comes from the blooms/conic/sheen overlays on top, not this base tone.            */
     linear-gradient(168deg, #f7f8f6 0%, #f1f3ef 52%, #ecedea 100%);
   overflow: hidden;
+}
+
+/* Top specular shine (moodboard ref-landing-crypto-…). A bright silver-white glare */
+/* blooming from the very top of the hero — behind the header + headline — that     */
+/* diffuses by ~mid-screen. screen blend so it ONLY lightens (a real gloss gleam,    */
+/* never a grey wash). z-index 1 lifts it above the metallic SVG background (z 0);   */
+/* the stage (also z 1, but later in the DOM) paints over it, so copy + vault stay   */
+/* fully crisp on top.                                                               */
+.dl-hero-v2::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 68%;
+  z-index: 1;
+  pointer-events: none;
+  background: var(--dl-shine);
+  mix-blend-mode: screen;
+  opacity: 1;
 }
 
 /* ── Site header — fixed, grid-aligned to the page container ─────────────────── */
@@ -2755,7 +2797,7 @@ a {
   overflow: auto;
   /* Bounded by viewport height so the whole panel (and the title above it) fit one  */
   /* screen; longer snippets scroll inside the panel.                                */
-  max-height: clamp(200px, 30vh, 380px);
+  max-height: clamp(220px, 33vh, 420px);
 }
 
 .dl-code-panel__scroll:focus-visible {
@@ -2782,7 +2824,7 @@ a {
 
 .dl-code {
   font-family: var(--dl-mono);
-  font-size: clamp(12px, 0.92vw, 13.5px);
+  font-size: clamp(13px, 1vw, 15px);
   line-height: 1.7;
   margin: 0;
   padding: 16px 0;
@@ -3473,7 +3515,7 @@ a {
   min-height: 100dvh;
   background:
     /* soft key light, upper right (strongest at the top, fades over the first panels) */
-    radial-gradient(135% 78% at 86% -6%, rgba(255, 255, 255, 0.70) 0%, rgba(255, 255, 255, 0) 40%),
+    radial-gradient(135% 80% at 86% -6%, rgba(255, 255, 255, 0.88) 0%, rgba(255, 255, 255, 0) 42%),
     /* faint cool fill, lower left, to round the surface + darken the foot a touch      */
     radial-gradient(98% 62% at 6% 104%, rgba(196, 200, 194, 0.22) 0%, rgba(196, 200, 194, 0) 46%),
     /* large architectural panel seams — a few WIDE, soft recesses (not a grid). They   */
@@ -3506,9 +3548,9 @@ a {
     /* specular sheens (MetalSheen) carry the brighter reflections on top.                */
     linear-gradient(115deg,
       rgba(255, 255, 255, 0) 0%,
-      rgba(255, 255, 255, 0.28) 28%,
-      rgba(122, 126, 118, 0.05) 54%,
-      rgba(255, 255, 255, 0.22) 78%,
+      rgba(255, 255, 255, 0.44) 26%,
+      rgba(122, 126, 118, 0.045) 54%,
+      rgba(255, 255, 255, 0.36) 78%,
       rgba(255, 255, 255, 0) 100%),
     /* the wall: a top→foot tonal descent through a RICHER silver range (deeper foot =   */
     /* more dimensional satin metal, less pale-paper SaaS canvas). Text stays dark ink,  */
