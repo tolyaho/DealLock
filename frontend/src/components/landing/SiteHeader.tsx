@@ -1,13 +1,12 @@
 import { useEffect, useState } from "react";
 
 // Center nav links. All hrefs are in-page anchors / placeholders — this is the
-// marketing landing, not the dApp. "Product" and "Developers" have no dedicated
-// section yet, so they point at "#" until those pages exist.
+// marketing landing, not the dApp. "Product" has no dedicated section yet, so it
+// points at "#" until that page exists.
 const NAV_LINKS = [
   { label: "Product", href: "#" },
   { label: "Workflow", href: "#workflow" },
   { label: "Security", href: "#security" },
-  { label: "Developers", href: "#" },
   { label: "FAQ", href: "#faq" },
 ] as const;
 
