@@ -10,12 +10,12 @@
  */
 import { useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
-import type { ReactNode } from "react";
 import {
   Button,
   Card,
   EmptyState,
   Identity,
+  MetalCTA,
   PageContainer,
   PageHeader,
   SearchInput,
@@ -25,22 +25,15 @@ import {
   type ChipTone,
   type Column,
 } from "../../components/app";
-import {
-  IconAgreements,
-  IconArrowRight,
-  IconEdit,
-  IconPlus,
-  IconShield,
-  IconUpload,
-} from "../../components/app/icons";
+import { IconAgreements, IconPlus } from "../../components/app/icons";
 import {
   AGREEMENTS,
   STATUS_LABEL,
   counterparty,
   currentMilestone,
+  milestoneProgress,
   myRole,
   rowAction,
-  type ActionKind,
 } from "../../fixtures/agreements";
 import { formatMoney } from "../../fixtures/format";
 import type { AgreementStatus } from "../../fixtures/types";
@@ -55,13 +48,11 @@ const TONE: Record<AgreementStatus, ChipTone> = {
   draft: "neutral",
 };
 
-const ACTION_ICON: Record<ActionKind, ReactNode> = {
-  view: <IconArrowRight />,
-  review: <IconShield />,
-  sign: <IconEdit />,
-  release: <IconShield />,
-  submit: <IconUpload />,
-  resubmit: <IconUpload />,
+// Compact chip copy for the dense table (the full label lives in STATUS_LABEL /
+// the detail view). Only the long one is shortened so the status column stays
+// tight and every chip reads on one line.
+const STATUS_CHIP_LABEL: Partial<Record<AgreementStatus, string>> = {
+  revision_requested: "Revision",
 };
 
 type Filter = "all" | "active" | "in_review" | "completed" | "draft";
@@ -79,16 +70,23 @@ const GROUP: Record<Exclude<Filter, "all">, AgreementStatus[]> = {
   draft: ["draft"],
 };
 
-// Stable widths (table-layout: fixed). Agreement is left auto so it takes the
-// remaining space and stays the largest; the rest are sized to their content.
+// Stable widths (table-layout: fixed). Agreement is the one auto column so it
+// absorbs the slack and stays the largest; the rest are sized to their content
+// (measured: counterparty names, the widest status chip, and the "Resubmit"
+// action all fit with 0 clip). Sum of fixed widths (796) is tuned against the
+// table min-width (920) so the whole table fits with NO in-card scroll at
+// ≥1280 — re-measure if you add or resize a column.
 const COLUMNS: Column[] = [
   { key: "agreement", label: "Agreement" },
-  { key: "counterparty", label: "Counterparty", width: "196px" },
-  { key: "role", label: "Role", width: "90px" },
-  { key: "status", label: "Status", width: "166px" },
-  { key: "locked", label: "Amount locked", align: "right", width: "112px" },
-  { key: "milestone", label: "Current milestone", width: "132px" },
-  { key: "action", label: "Action", align: "right", width: "128px" },
+  { key: "counterparty", label: "Counterparty", width: "188px" },
+  { key: "role", label: "Role", width: "92px" },
+  { key: "status", label: "Status", width: "130px" },
+  // Locked stays LEFT-aligned (header + value) so its label lines up with the
+  // amount directly below it and the table reads calm; tabular numerals
+  // (.dl-table__num) keep the digits in a tidy column without right-alignment.
+  { key: "locked", label: "Locked", width: "116px" },
+  { key: "milestone", label: "Milestone", width: "150px" },
+  { key: "action", label: "Action", align: "right", width: "120px" },
 ];
 
 export default function AgreementsPage() {
@@ -121,14 +119,12 @@ export default function AgreementsPage() {
   }, [source, filter, query]);
 
   return (
-    <PageContainer>
+    <PageContainer className="app-page--atmos">
       <PageHeader
         title="All agreements"
         subtitle="Track and manage your secured agreements."
         actions={
-          <Button variant="primary" icon={<IconPlus />}>
-            New agreement
-          </Button>
+          <MetalCTA icon={<IconPlus />}>New agreement</MetalCTA>
         }
       />
 
@@ -142,8 +138,13 @@ export default function AgreementsPage() {
               options={FILTERS}
             />
           </div>
-          <div className="dl-toolbar__search">
-            <SearchInput value={query} onChange={setQuery} placeholder="Search agreements or counterparty…" block />
+          <div className="dl-toolbar__end">
+            <span className="dl-toolbar__count" aria-live="polite">
+              {rows.length} of {source.length}
+            </span>
+            <div className="dl-toolbar__search">
+              <SearchInput value={query} onChange={setQuery} placeholder="Search agreements or counterparty…" block />
+            </div>
           </div>
         </div>
       )}
@@ -155,6 +156,11 @@ export default function AgreementsPage() {
               const role = myRole(a);
               const act = rowAction(a, role);
               const ms = currentMilestone(a);
+              const prog = milestoneProgress(a);
+              // Every row action wears the brushed-aluminum disc surface so the
+              // Action column reads as one calm, tactile metal column. The single
+              // dark primary still belongs to the page CTA, not every row.
+              const actVariant = "disc" as const;
               return (
                 <tr key={a.id}>
                   <td className="dl-cell-agreement">
@@ -168,19 +174,33 @@ export default function AgreementsPage() {
                     <span className="dl-role">{role === "client" ? "Client" : "Provider"}</span>
                   </td>
                   <td>
-                    <StatusChip tone={TONE[a.status]}>{STATUS_LABEL[a.status]}</StatusChip>
+                    <StatusChip tone={TONE[a.status]}>
+                      {STATUS_CHIP_LABEL[a.status] ?? STATUS_LABEL[a.status]}
+                    </StatusChip>
                   </td>
-                  <td data-align="right" className="dl-table__num">
+                  <td className="dl-table__num">
                     {a.locked.amount > 0 ? formatMoney(a.locked) : "—"}
                   </td>
                   <td className="dl-cell-ms">
-                    <div className="dl-table__name dl-num">
-                      {ms ? `${ms.order} / ${a.milestones.length}` : "—"}
-                    </div>
-                    {ms && <div className="dl-table__sub">{ms.title}</div>}
+                    {ms ? (
+                      <>
+                        <div className="dl-ms">
+                          <span className="dl-ms__count">{ms.order} / {prog.total}</span>
+                          <span className="dl-ms__track">
+                            <span
+                              className="dl-ms__fill"
+                              style={{ width: `${Math.round((prog.doneCount / prog.total) * 100)}%` }}
+                            />
+                          </span>
+                        </div>
+                        <div className="dl-table__sub">{ms.title}</div>
+                      </>
+                    ) : (
+                      <div className="dl-table__name dl-num">—</div>
+                    )}
                   </td>
                   <td data-align="right">
-                    <Button size="sm" variant={act.variant} icon={ACTION_ICON[act.kind]}>
+                    <Button size="sm" variant={actVariant}>
                       {act.label}
                     </Button>
                   </td>
@@ -195,11 +215,7 @@ export default function AgreementsPage() {
             icon={<IconAgreements />}
             title="No agreements yet"
             text="Create your first escrow agreement to start protecting a deal."
-            action={
-              <Button variant="primary" icon={<IconPlus />}>
-                New agreement
-              </Button>
-            }
+            action={<MetalCTA icon={<IconPlus />}>New agreement</MetalCTA>}
           />
         </Card>
       ) : (

@@ -15,6 +15,7 @@ export { default as MetalSurface } from "./MetalSurface";
 
 // Primitives
 export { Button, IconButton, Spinner } from "./Button";
+export { MetalCTA } from "./MetalCTA";
 export { Card, MetricCard } from "./Card";
 export { StatusChip, type ChipTone } from "./StatusChip";
 export { SegmentedControl } from "./SegmentedControl";

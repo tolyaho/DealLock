@@ -4,6 +4,9 @@
  * Button variants follow the moodboard's keycap language:
  *   primary   — dark graphite keycap with a top light-catch (one per screen)
  *   secondary — satin-aluminum face
+ *   metal     — brushed satin keycap (silver signature action; brightens on hover)
+ *   disc      — brushed-aluminum DISC surface (the --metal-disc radial material
+ *               from the MetalCTA disc / action tiles), shaped as a compact pill
  *   positive  — sage filled (secure / confirm)
  *   ghost     — chromeless
  *   danger    — muted brick, destructive only
@@ -15,7 +18,7 @@ export function Spinner() {
   return <span className="dl-spinner" aria-hidden="true" />;
 }
 
-type Variant = "primary" | "secondary" | "positive" | "ghost" | "danger";
+type Variant = "primary" | "secondary" | "metal" | "disc" | "positive" | "ghost" | "danger";
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: Variant;

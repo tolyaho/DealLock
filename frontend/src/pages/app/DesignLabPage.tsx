@@ -20,6 +20,7 @@ import {
   EmptyState,
   Identity,
   IconButton,
+  MetalCTA,
   MetalSurface,
   MetricCard,
   PageContainer,
@@ -38,6 +39,7 @@ import {
   IconBolt,
   IconDollar,
   IconDownload,
+  IconEdit,
   IconLock,
   IconPlus,
   IconSettings,
@@ -171,6 +173,7 @@ export default function DesignLabPage() {
           <div className="dl-lab__row">
             <Button variant="primary" icon={<IconPlus />}>Primary</Button>
             <Button variant="secondary">Secondary</Button>
+            <Button variant="metal" icon={<IconEdit />}>Sign</Button>
             <Button variant="positive" icon={<IconShield />}>Release</Button>
             <Button variant="ghost">Ghost</Button>
             <Button variant="danger">Cancel agreement</Button>
@@ -187,6 +190,10 @@ export default function DesignLabPage() {
             <IconButton label="Metal" icon={<IconBolt />} variant="metal" />
             <IconButton label="Selected" icon={<IconAgreements />} selected />
             <IconButton label="Small" icon={<IconLock />} size="sm" />
+          </div>
+          <div className="dl-lab__row">
+            <MetalCTA icon={<IconPlus />}>New agreement</MetalCTA>
+            <span className="dl-lab__note">Signature action — frosted pill + a brushed metal-disc icon.</span>
           </div>
         </Section>
 
@@ -298,6 +305,24 @@ export default function DesignLabPage() {
             <Button variant="ghost">Request revision</Button>
             <Button variant="positive" icon={<IconShield />}>Release funds</Button>
           </BottomActionBar>
+        </Section>
+
+        <Section idx="14" title="Table cell patterns" caption="Agreements row — role · milestone" stage>
+          <div className="dl-lab__row">
+            <span className="dl-lab__specimen-label">Role</span>
+            <span className="dl-role">Client</span>
+            <span className="dl-role">Provider</span>
+          </div>
+          <div className="dl-lab__row">
+            <span className="dl-lab__specimen-label">Current milestone</span>
+            <div style={{ width: 150 }}>
+              <div className="dl-ms">
+                <span className="dl-ms__count">2 / 4</span>
+                <span className="dl-ms__track"><span className="dl-ms__fill" style={{ width: "25%" }} /></span>
+              </div>
+              <div className="dl-table__sub">Design &amp; UX Deliverables</div>
+            </div>
+          </div>
         </Section>
       </div>
     </PageContainer>
