@@ -1331,8 +1331,11 @@ a {
   letter-spacing: -0.02em;
   line-height: 1.04;
   color: var(--dl-ink);
-  /* Reserve the wrapped height so the sub doesn't jump down as the title types in. */
-  min-height: 2.1em;
+  /* One-line floor only. The title is FIXED (it fades in, never types), and on every */
+  /* supported width "The Milestone Flow" sits on one line — so reserving two lines    */
+  /* just left a dead band above the subtitle. min-height is a floor, so a narrow      */
+  /* phone that wraps the title still grows the box (no clipping); the sub follows it.  */
+  min-height: 1.1em;
 }
 
 /* A touch wider/blockier caret to suit the large display title. */
@@ -1662,6 +1665,35 @@ a {
   animation: dl-wf-stage-float 9s ease-in-out infinite;
 }
 
+/* Ambient silver bloom behind the instrument — a soft studio key light on the wall  */
+/* so the chassis sits in a halo, not flat against the matte. Silver spectrum only.   */
+.dl-contract-stage::before {
+  content: "";
+  position: absolute;
+  inset: -6% 0 -2%;
+  z-index: -1;
+  background:
+    radial-gradient(ellipse 62% 54% at 50% 40%, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0) 70%),
+    radial-gradient(ellipse 80% 70% at 50% 46%, rgba(206, 212, 210, 0.2) 0%, rgba(206, 212, 210, 0) 72%);
+  pointer-events: none;
+}
+
+/* A faint elliptical floor reflection grounding the instrument. */
+.dl-contract-stage::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 1%;
+  width: 58%;
+  height: 4.5%;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: radial-gradient(ellipse 50% 50% at 50% 50%, rgba(17, 19, 21, 0.12) 0%, rgba(17, 19, 21, 0) 72%);
+  filter: blur(4px);
+  z-index: -1;
+  pointer-events: none;
+}
+
 @keyframes dl-wf-stage-float {
   0%, 100% { transform: translateY(-5px); }
   50%      { transform: translateY(5px); }
@@ -1690,16 +1722,18 @@ a {
     /* Satin body. */
     linear-gradient(176deg, #f6f7f5 0%, #e9ebe7 52%, #d9dcd6 100%);
   box-shadow:
-    /* Milled bevel: crisp lit top edge, side catch-lights, a fine inner edge line.       */
+    /* Milled bevel: crisp lit top edge, side catch-lights, a defined dark bottom edge   */
+    /* (physical thickness), and a fine inner edge line.                                  */
     inset 0 1.5px 0 rgba(255, 255, 255, 0.96),
     inset 1.5px 0 0 rgba(255, 255, 255, 0.55),
     inset -1.5px 0 0 rgba(17, 19, 21, 0.06),
+    inset 0 -1.5px 0 rgba(17, 19, 21, 0.05),
     inset 0 0 0 1px rgba(255, 255, 255, 0.4),
     inset 0 -26px 50px rgba(17, 19, 21, 0.08),
     /* Soft, deep, ink-tinted float — quiet depth, not a hard drop. */
     0 2px 4px rgba(17, 19, 21, 0.06),
     0 26px 52px rgba(17, 19, 21, 0.16),
-    0 46px 92px rgba(17, 19, 21, 0.12);
+    0 48px 96px rgba(17, 19, 21, 0.14);
 }
 
 /* ── Contract card UI (readable overlay) ─────────────────────────────────────── */
@@ -1730,8 +1764,9 @@ a {
   box-shadow:
     inset 0 1px 0 rgba(255, 255, 255, 0.96),
     inset 0 0 0 1px rgba(255, 255, 255, 0.22),
+    inset 0 14px 28px rgba(255, 255, 255, 0.32),
     0 2px 6px rgba(17, 19, 21, 0.06),
-    0 16px 38px rgba(17, 19, 21, 0.12);
+    0 18px 42px rgba(17, 19, 21, 0.14);
   /* No backdrop-filter: this face is opaque, so a blur behind it is invisible — pure   */
   /* per-frame cost. Keeping it off keeps the pinned card cheap during scroll.          */
 }
@@ -1946,13 +1981,17 @@ a {
   white-space: nowrap;
 }
 
-/* The key financial display: a softly RAISED satin module — the panel's visual anchor. */
+/* The escrow chamber: the panel's focal module. A softly raised satin well with a  */
+/* frosted top reflection; when funds are locked/released it gains a restrained      */
+/* lavender-silver edge glow so the eye lands here. The contract's "vault chamber".   */
 .dl-contract__amount {
+  position: relative;
+  overflow: hidden;
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  padding: clamp(13px, 1.4vw, 17px) clamp(15px, 1.5vw, 19px);
+  padding: clamp(14px, 1.5vw, 18px) clamp(15px, 1.5vw, 19px);
   border-radius: 16px;
   background:
     linear-gradient(var(--wf-wash), var(--wf-wash)),
@@ -1964,6 +2003,31 @@ a {
     0 1px 2px rgba(17, 19, 21, 0.04),
     0 8px 20px rgba(17, 19, 21, 0.08),
     0 0 0 1px var(--wf-ring);
+}
+
+/* a single soft glass reflection skimming the chamber's top edge */
+.dl-contract__amount::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 52%;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.7) 0%, rgba(255, 255, 255, 0) 100%);
+  pointer-events: none;
+}
+
+.dl-contract__amount > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Locked / released: the chamber lights with a restrained lavender-silver glow. */
+.is-active.dl-contract__amount {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.94),
+    0 1px 2px rgba(17, 19, 21, 0.04),
+    0 8px 22px rgba(17, 19, 21, 0.09),
+    0 0 0 1px var(--dl-accent-line),
+    0 0 20px rgba(111, 99, 189, 0.15);
 }
 
 .dl-contract__amount-main {
@@ -2022,9 +2086,10 @@ a {
   align-items: flex-start;
   justify-content: space-between;
   gap: 2px;
-  padding: 9px 8px 5px;
+  padding: 11px 9px 5px;
   position: relative;
   background: var(--wf-wash);
+  border-radius: 12px;
   box-shadow: 0 0 0 1px var(--wf-ring);
 }
 
@@ -2032,20 +2097,24 @@ a {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: 4px;
+  gap: 7px;
   flex: 1;
   position: relative;
 }
 
-/* Continuous rail behind the dots — the "mechanism" the milestones ride on. */
+/* Continuous precision rail behind the dots — the "mechanism" the milestones ride */
+/* on. Centred on the EXACT vertical middle of every 14px node (radius 7px) via    */
+/* top:7px + translateY(-50%), so the line threads each node dead-centre. Round     */
+/* caps + a faint gradient on filled segments read as a machined track, not a bar.  */
 .dl-contract__step::before {
   content: "";
   position: absolute;
-  top: 5.5px;
+  top: 7px;
   left: -50%;
   width: 100%;
-  height: 2px;
-  border-radius: 2px;
+  height: 1.5px;
+  transform: translateY(-50%);
+  border-radius: 999px;
   background: var(--dl-hairline);
   z-index: 0;
 }
@@ -2056,43 +2125,65 @@ a {
 
 .dl-contract__step.is-done::before,
 .dl-contract__step.is-current::before {
-  background: var(--dl-accent-line);
+  background: linear-gradient(90deg, rgba(111, 99, 189, 0.5), var(--dl-accent-line));
 }
 
+/* Milestone node — a precise 14px disc. Inner glyphs (check / active core) are     */
+/* ABSOLUTELY centred (top/left 50% + translate -50%,-50%) so they can never drift  */
+/* with box-sizing, border rounding, or sub-pixel placement. Even border all round. */
 .dl-contract__step-dot {
   position: relative;
   z-index: 1;
-  display: grid;
-  place-items: center;
-  width: 12px;
-  height: 12px;
+  width: 14px;
+  height: 14px;
   border-radius: 50%;
   background: #fff;
   border: 1.5px solid var(--dl-steel-300);
-  color: #fff;
-  box-shadow: inset 0 1px 1px rgba(17, 19, 21, 0.04);
+  box-shadow:
+    inset 0 1px 1px rgba(17, 19, 21, 0.05),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.7);
   transition: border-color 320ms ease, background 320ms ease, box-shadow 320ms ease;
 }
 
-.dl-contract__step.is-done .dl-contract__step-dot {
-  background: var(--dl-accent);
-  border-color: var(--dl-accent);
+.dl-contract__step-dot > svg {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: #fff;
 }
 
+.dl-contract__step.is-done .dl-contract__step-dot {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.32), rgba(255, 255, 255, 0) 62%),
+    var(--dl-accent);
+  border-color: var(--dl-accent-strong);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.42),
+    0 1px 2px var(--dl-accent-glow);
+}
+
+/* Active milestone — white disc, accent rim, an EVEN lavender halo (no directional */
+/* drop shadow) and a pixel-centred accent core. The "you are here" signal.          */
 .dl-contract__step.is-current .dl-contract__step-dot {
   border-color: var(--dl-accent);
   background: #fff;
   box-shadow:
     0 0 0 3px var(--dl-accent-surface),
-    0 1px 3px rgba(111, 99, 189, 0.25);
+    0 0 0 4px rgba(111, 99, 189, 0.12),
+    0 0 7px 1px var(--dl-accent-glow);
 }
 
 .dl-contract__step.is-current .dl-contract__step-dot::after {
   content: "";
-  width: 5px;
-  height: 5px;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 6px;
+  height: 6px;
   border-radius: 50%;
-  background: var(--dl-accent);
+  background: radial-gradient(circle at 38% 32%, #8a7fd0 0%, var(--dl-accent) 72%);
+  transform: translate(-50%, -50%);
 }
 
 .dl-contract__step-label {
