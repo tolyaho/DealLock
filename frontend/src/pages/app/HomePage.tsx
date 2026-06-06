@@ -13,6 +13,7 @@ import {
   ActionTile,
   Button,
   Card,
+  MetalCTA,
   MetricCard,
   PageContainer,
   PageHeader,
@@ -72,7 +73,8 @@ const ACTION_ICON: Record<ActionKind, ReactNode> = {
 
 const FEED: Record<ActivityKind, { icon: ReactNode; tone?: "secure" | "review" }> = {
   created: { icon: <IconPlus /> },
-  funded: { icon: <IconDollar />, tone: "secure" },
+  funded: { icon: <IconDollar /> }, // funding reads neutral silver, not sage — sage is reserved for release/approval
+
   submitted: { icon: <IconUpload />, tone: "review" },
   approved: { icon: <IconCheck />, tone: "secure" },
   released: { icon: <IconShield />, tone: "secure" },
@@ -89,6 +91,10 @@ function greeting(): string {
 function AttentionRow({ a, role, onAct }: { a: Agreement; role: Role; onAct: () => void }) {
   const act = rowAction(a, role);
   const ms = currentMilestone(a);
+  // The signature row actions (Sign / Submit / Resubmit) use a brushed-metal
+  // keycap instead of the dark graphite primary — silver, not black. Release
+  // stays sage (positive), Review satin (secondary), View chromeless (ghost).
+  const variant = act.variant === "primary" ? "metal" : act.variant;
   return (
     <div className="dl-list__row">
       <div className="dl-list__main">
@@ -100,7 +106,7 @@ function AttentionRow({ a, role, onAct }: { a: Agreement; role: Role; onAct: () 
       </div>
       <div className="dl-list__end">
         <StatusChip tone={TONE[a.status]}>{STATUS_LABEL[a.status]}</StatusChip>
-        <Button size="sm" variant={act.variant} icon={ACTION_ICON[act.kind]} onClick={onAct}>
+        <Button size="sm" variant={variant} icon={ACTION_ICON[act.kind]} onClick={onAct}>
           {act.label}
         </Button>
       </div>
@@ -128,8 +134,8 @@ function FeedItem({ e }: { e: ActivityEvent }) {
             </>
           ) : null}
         </span>
+        <span className="dl-feed__time">{e.when}</span>
       </div>
-      <span className="dl-feed__time">{e.when}</span>
     </div>
   );
 }
@@ -167,11 +173,11 @@ export default function HomePage() {
   const p = providerMetrics();
 
   const attentionAll = attentionFor(workspace);
-  const attention = attentionAll.slice(0, 4);
+  const attention = attentionAll.slice(0, 3);
   const progress = agreementsForRole(workspace)
     .filter((a) => a.status !== "completed" && a.status !== "draft" && a.milestones.length > 0)
     .slice(0, 3);
-  const activity = ACTIVITY.slice(0, 6);
+  const activity = ACTIVITY.slice(0, 5);
 
   return (
     <PageContainer>
@@ -184,13 +190,13 @@ export default function HomePage() {
         }
         actions={
           isClient ? (
-            <Button variant="primary" icon={<IconPlus />} onClick={() => go()}>
+            <MetalCTA icon={<IconPlus />} onClick={() => go()}>
               New agreement
-            </Button>
+            </MetalCTA>
           ) : (
-            <Button variant="primary" icon={<IconUpload />} onClick={() => go()}>
+            <MetalCTA icon={<IconUpload />} onClick={() => go()}>
               Submit work
-            </Button>
+            </MetalCTA>
           )
         }
       />
@@ -199,14 +205,14 @@ export default function HomePage() {
       <div className="dl-grid-metrics">
         {isClient ? (
           <>
-            <MetricCard label="In escrow" value={formatMoney({ amount: c.locked, asset: "USDC" })} meta="Across live agreements" icon={<IconLock />} tone="secure" />
+            <MetricCard label="In escrow" value={formatMoney({ amount: c.locked, asset: "USDC" })} meta="Across live agreements" icon={<IconLock />} tone="secure" primary />
             <MetricCard label="Needs review" value={c.needsReview} meta="Submitted for approval" icon={<IconShield />} tone="review" onClick={() => go("in_review")} />
             <MetricCard label="Active agreements" value={c.activeCount} meta="In progress" icon={<IconAgreements />} onClick={() => go("active")} />
             <MetricCard label="Pending funding" value={c.pendingFunding} meta="Drafts to sign" icon={<IconEdit />} onClick={() => go("draft")} />
           </>
         ) : (
           <>
-            <MetricCard label="Earnings released" value={formatMoney({ amount: p.earningsUSDC, asset: "USDC" })} meta="Lifetime" icon={<IconDollar />} tone="secure" />
+            <MetricCard label="Earnings released" value={formatMoney({ amount: p.earningsUSDC, asset: "USDC" })} meta="Lifetime" icon={<IconDollar />} tone="secure" primary />
             <MetricCard label="Pending submissions" value={p.pendingSubmissions} meta="Awaiting client review" icon={<IconUpload />} tone="review" onClick={() => go("in_review")} />
             <MetricCard label="Funded milestones" value={p.fundedMilestones} meta="Currently in play" icon={<IconLock />} />
             <MetricCard label="Revision requests" value={p.revisionRequests} meta="Needs your changes" icon={<IconRevision />} tone="review" onClick={() => go("active")} />
@@ -214,83 +220,84 @@ export default function HomePage() {
         )}
       </div>
 
-      {/* primary column (attention + progress) · supporting column (activity + actions) */}
+      {/* Main grid — one true 2×2: primary (wider) + supporting (narrower) columns.
+       * Row 1: Needs attention | Recent activity. Row 2: Milestone progress |
+       * Quick actions. Cards are direct grid children (no per-column stacks) so
+       * each row's pair aligns on one clean horizontal edge. */}
       <div className="dl-home__grid">
-        <div className="dl-home__col">
-          <Card
-            variant="raised"
-            label="Needs your attention"
-            action={
-              <span className="dl-card__actions">
-                {attentionAll.length > 0 && (
-                  <StatusChip tone="review">{attentionAll.length} to act</StatusChip>
-                )}
-                <Button variant="ghost" size="sm" onClick={() => go()}>
-                  All agreements
-                </Button>
-              </span>
-            }
-          >
-            {attention.length ? (
-              <div className="dl-list">
-                {attention.map((a) => (
-                  <AttentionRow key={a.id} a={a} role={workspace} onAct={() => go()} />
-                ))}
-              </div>
-            ) : (
-              <div className="dl-mini-empty">
-                <span className="dl-mini-empty__icon" aria-hidden="true">
-                  <IconCheck />
-                </span>
-                <div className="dl-mini-empty__title">You're all caught up</div>
-                <div className="dl-mini-empty__text">Nothing needs your action right now.</div>
-              </div>
-            )}
-          </Card>
-
-          <Card label="Milestone progress">
-            <div className="dl-progress">
-              {progress.map((a) => (
-                <ProgressRow key={a.id} a={a} />
-              ))}
-            </div>
-          </Card>
-        </div>
-
-        <div className="dl-home__col">
-          <Card
-            label="Recent activity"
-            action={
-              <Button variant="ghost" size="sm" onClick={() => navigate("/app/activity")}>
-                View all
-              </Button>
-            }
-          >
-            <div className="dl-feed">
-              {activity.map((e) => (
-                <FeedItem key={e.id} e={e} />
-              ))}
-            </div>
-          </Card>
-
-          <Card label="Quick actions">
-            <div className="dl-stack">
-              {isClient ? (
-                <>
-                  <ActionTile icon={<IconPlus />} label="New agreement" sub="Draft escrow terms" onClick={() => go()} />
-                  <ActionTile icon={<IconShield />} label="Review milestone" sub="Approve & release" onClick={() => go("in_review")} />
-                  <ActionTile icon={<IconMessages />} label="Message counterparty" sub="Open a conversation" onClick={() => navigate("/app/messages")} />
-                </>
-              ) : (
-                <>
-                  <ActionTile icon={<IconUpload />} label="Submit work" sub="Mark a milestone done" onClick={() => go()} />
-                  <ActionTile icon={<IconFile />} label="Upload proof" sub="Attach deliverables" onClick={() => go()} />
-                  <ActionTile icon={<IconMessages />} label="Message client" sub="Open a conversation" onClick={() => navigate("/app/messages")} />
-                </>
+        <Card
+          variant="raised"
+          className="dl-card--attention"
+          label="Needs your attention"
+          action={
+            <span className="dl-card__actions">
+              {attentionAll.length > 0 && (
+                <StatusChip tone="review">{attentionAll.length} to act</StatusChip>
               )}
+              <Button variant="ghost" size="sm" onClick={() => go()}>
+                All agreements
+              </Button>
+            </span>
+          }
+        >
+          {attention.length ? (
+            <div className="dl-list">
+              {attention.map((a) => (
+                <AttentionRow key={a.id} a={a} role={workspace} onAct={() => go()} />
+              ))}
             </div>
-          </Card>
-        </div>
+          ) : (
+            <div className="dl-mini-empty">
+              <span className="dl-mini-empty__icon" aria-hidden="true">
+                <IconCheck />
+              </span>
+              <div className="dl-mini-empty__title">You're all caught up</div>
+              <div className="dl-mini-empty__text">Nothing needs your action right now.</div>
+            </div>
+          )}
+        </Card>
+
+        <Card
+          className="dl-card--activity"
+          label="Recent activity"
+          action={
+            <Button variant="ghost" size="sm" onClick={() => navigate("/app/activity")}>
+              View all
+            </Button>
+          }
+        >
+          <div className="dl-feed">
+            {activity.map((e) => (
+              <FeedItem key={e.id} e={e} />
+            ))}
+          </div>
+        </Card>
+
+        <Card label="Milestone progress">
+          <div className="dl-progress">
+            {progress.map((a) => (
+              <ProgressRow key={a.id} a={a} />
+            ))}
+          </div>
+        </Card>
+
+        <Card label="Quick actions">
+          <div className="dl-stack">
+            {isClient ? (
+              <>
+                <ActionTile icon={<IconPlus />} label="New agreement" sub="Draft escrow terms" onClick={() => go()} />
+                <ActionTile icon={<IconShield />} label="Review milestone" sub="Approve & release" onClick={() => go("in_review")} />
+                <ActionTile icon={<IconMessages />} label="Message counterparty" sub="Open a conversation" onClick={() => navigate("/app/messages")} />
+              </>
+            ) : (
+              <>
+                <ActionTile icon={<IconUpload />} label="Submit work" sub="Mark a milestone done" onClick={() => go()} />
+                <ActionTile icon={<IconFile />} label="Upload proof" sub="Attach deliverables" onClick={() => go()} />
+                <ActionTile icon={<IconMessages />} label="Message client" sub="Open a conversation" onClick={() => navigate("/app/messages")} />
+              </>
+            )}
+          </div>
+        </Card>
       </div>
     </PageContainer>
   );

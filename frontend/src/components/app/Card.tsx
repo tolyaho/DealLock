@@ -92,10 +92,13 @@ interface MetricCardProps {
   icon?: ReactNode;
   /** tints the icon medallion to the semantic accent */
   tone?: "secure" | "review" | "technical" | "neutral";
+  /** the anchor metric of the strip (e.g. "In escrow") — bigger value, richer plate */
+  primary?: boolean;
   onClick?: () => void;
 }
 
-export function MetricCard({ label, value, meta, trend, icon, tone = "neutral", onClick }: MetricCardProps) {
+export function MetricCard({ label, value, meta, trend, icon, tone = "neutral", primary = false, onClick }: MetricCardProps) {
+  const base = primary ? "dl-metric dl-metric--primary" : "dl-metric";
   const metaCls = [
     "dl-metric__meta",
     trend === "up" && "dl-metric__meta--up",
@@ -118,7 +121,7 @@ export function MetricCard({ label, value, meta, trend, icon, tone = "neutral", 
   );
   if (onClick) {
     return (
-      <button type="button" className="dl-metric dl-metric--interactive" onClick={onClick}>
+      <button type="button" className={`${base} dl-metric--interactive`} onClick={onClick}>
         {medallion}
         <span className="dl-metric__go" aria-hidden="true">
           <IconArrowRight />
@@ -128,7 +131,7 @@ export function MetricCard({ label, value, meta, trend, icon, tone = "neutral", 
     );
   }
   return (
-    <div className="dl-metric">
+    <div className={base}>
       {medallion}
       {body}
     </div>

@@ -59,6 +59,7 @@
   --surface-inset:        rgba(28, 28, 22, 0.045); /* recessed track fill      */
   --surface-hover:        rgba(28, 28, 22, 0.04);  /* row / ghost hover wash   */
   --surface-hover-strong: rgba(28, 28, 22, 0.06);  /* stronger table-row wash  */
+  --surface-row-hover:    rgba(28, 28, 22, 0.032); /* whisper table-row tint   */
   --surface-selected:     rgba(28, 28, 22, 0.06);  /* selected row / nav item  */
 
   /* ── Borders & edges ─────────────────────────────────────────────────────
@@ -117,8 +118,8 @@
   --sidebar-w:        248px;   /* expanded labelled sidebar                    */
   --sidebar-w-rail:   76px;    /* collapsed icon rail                          */
   --topbar-h:         64px;    /* fixed top bar height                         */
-  --page-max:         1200px;  /* content max-width (rhythm)                   */
-  --page-pad-x:       clamp(20px, 2.6vw, 40px);
+  --page-max:         1320px;  /* content max-width (rhythm); topbar + page share it */
+  --page-pad-x:       clamp(24px, 3.5vw, 56px); /* deliberate gutter; shared by topbar inner */
   --page-pad-y:       clamp(20px, 2.4vh, 32px);
   --shell-gap:        clamp(10px, 1.3vw, 18px); /* gap from viewport → shell    */
 
@@ -206,6 +207,11 @@
     radial-gradient(124% 96% at 26% -22%, rgba(255, 255, 255, 1) 0%, rgba(255, 255, 255, 0.34) 40%, rgba(255, 255, 255, 0) 68%));
   /* Brushed-aluminum disc for keycap centers (high-contrast, used on controls). */
   --metal-disc: radial-gradient(circle at 36% 30%, #fdfdfc 0%, #e3e4df 30%, #b9bab2 60%, #8f9088 78%, #d6d7cf 100%);
+  /* Satin keycap face for BUTTONS — a clean top-lit brushed bar (even across the
+   * button width, no radial "pebble"). The silver alternative to the dark
+   * graphite primary for signature actions (see .dl-btn--metal).                */
+  --metal-keycap:       linear-gradient(176deg, #f7f7f4 0%, #ecece7 50%, #dcdcd5 100%);
+  --metal-keycap-hover: linear-gradient(176deg, #fcfcfa 0%, #f1f1ec 50%, #e3e3dc 100%);
   /* Identity token — a CALM, low-contrast satin face for monogram avatars. No
    * glossy bubble: a gentle top-lit silver gradient only (see .dl-avatar).       */
   --metal-token: linear-gradient(155deg, #f6f6f3 0%, #ecece7 54%, #e0e0da 100%);
@@ -219,4 +225,13 @@
   /* Studio-light pool behind a content zone — a soft cool bloom that gives the
    * satin body depth in the gutters around cards (sits BEHIND content).         */
   --bg-zone: radial-gradient(120% 70% at 50% -8%, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0) 60%);
+  /* Data-table page atmosphere (Agreements). Moodboard direction: a slightly
+   * deeper silver-grey base with material modulation, not a flat pale canvas —
+   * a top light-catch near the toolbar, a soft cool tonal falloff, and whisper
+   * structural linework. Pools at the top of the content zone and fades down so
+   * the cards stay crisp and legible. Layered front→back.                       */
+  --bg-agreements:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0) 28%),
+    repeating-linear-gradient(90deg, rgba(28, 28, 22, 0.016) 0 1px, transparent 1px 116px),
+    radial-gradient(150% 104% at 50% -8%, rgba(140, 142, 134, 0.20) 0%, rgba(140, 142, 134, 0) 60%);
 }

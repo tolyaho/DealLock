@@ -16,20 +16,22 @@ export function Topbar({ onToggleNav }: { onToggleNav: () => void }) {
   const [query, setQuery] = useState("");
   return (
     <header className="app-topbar">
-      <div className="app-topbar__left">
-        <IconButton label="Toggle navigation" icon={<IconMenu />} onClick={onToggleNav} />
-      </div>
-
-      <div className="app-topbar__center">
-        <WorkspaceSwitch />
-      </div>
-
-      <div className="app-topbar__right">
-        <div className="app-topbar__search">
-          <SearchInput value={query} onChange={setQuery} placeholder="Search agreements…" ariaLabel="Search" block />
+      <div className="app-topbar__inner">
+        <div className="app-topbar__left">
+          <IconButton label="Toggle navigation" icon={<IconMenu />} onClick={onToggleNav} />
         </div>
-        <IconButton label="Notifications" icon={<IconBell />} dot />
-        <Avatar initials="JL" size="md" metal />
+
+        <div className="app-topbar__center">
+          <WorkspaceSwitch />
+        </div>
+
+        <div className="app-topbar__right">
+          <div className="app-topbar__search">
+            <SearchInput value={query} onChange={setQuery} placeholder="Search agreements…" ariaLabel="Search" block />
+          </div>
+          <IconButton label="Notifications" icon={<IconBell />} dot />
+          <Avatar initials="JL" size="md" metal />
+        </div>
       </div>
     </header>
   );

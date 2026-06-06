@@ -10,10 +10,12 @@ interface Props {
   children: ReactNode;
   actionBar?: boolean;
   wide?: boolean;
+  /** extra class on the page frame (e.g. `app-page--atmos` for a data surface) */
+  className?: string;
 }
 
-export function PageContainer({ children, actionBar, wide }: Props) {
-  const cls = ["app-page", wide && "app-page--wide", actionBar && "app-page--actionbar"]
+export function PageContainer({ children, actionBar, wide, className = "" }: Props) {
+  const cls = ["app-page", wide && "app-page--wide", actionBar && "app-page--actionbar", className]
     .filter(Boolean)
     .join(" ");
   return <div className={cls}>{children}</div>;
