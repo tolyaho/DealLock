@@ -779,19 +779,38 @@
 .dl-table th[data-align="center"], .dl-table td[data-align="center"] { text-align: center; }
 .dl-table tbody td { padding: var(--space-4); border-bottom: 1px solid var(--border-hairline); color: var(--ink-soft); vertical-align: middle; }
 .dl-table tbody tr { transition: background var(--dur-2) var(--ease-out); }
-.dl-table tbody tr:hover { background: var(--surface-hover-strong); }
-/* first cell carries a sage marker on hover — a quiet "you can act here" cue */
-.dl-table tbody tr td:first-child { box-shadow: inset 0 0 0 0 var(--accent-secure); transition: box-shadow var(--dur-2) var(--ease-out); }
-.dl-table tbody tr:hover td:first-child { box-shadow: inset 2px 0 0 0 var(--accent-secure); }
+/* gentle glass row hover — a slightly brighter wash, no loud color */
+.dl-table tbody tr:hover { background: var(--surface-hover); }
 .dl-table tbody tr:last-child td { border-bottom: 0; }
 .dl-table--clickable tbody tr { cursor: pointer; }
 .dl-table__num { font-variant-numeric: tabular-nums; }
 /* primary cell: bold name + muted sub-line (e.g. agreement title + summary) */
-.dl-table__name { font-weight: var(--weight-semibold); color: var(--ink); }
-.dl-table__sub { font-size: var(--text-sm); color: var(--ink-muted); margin-top: 1px; }
-/* counterparty cell — small metal avatar + name (moodboard: orders table) */
-.dl-party { display: inline-flex; align-items: center; gap: var(--space-2); min-width: 0; max-width: 100%; }
-.dl-party__name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--ink-soft); }
+.dl-table__name { font-family: var(--font-ui); font-weight: var(--weight-semibold); color: var(--ink); }
+.dl-table__sub { font-family: var(--font-ui); font-size: var(--text-sm); color: var(--ink-muted); margin-top: 1px; }
+
+/* ── Identity cell — metal-token avatar + name (+ optional subtitle) ─────────
+ * Flex with min-width:0 the whole way down so the name ellipsizes against the
+ * available width (a fixed table cell or a flexible row), never mid-word fluff. */
+.dl-identity { display: flex; align-items: center; gap: var(--space-3); min-width: 0; max-width: 100%; }
+.dl-identity__text { display: flex; flex-direction: column; min-width: 0; }
+.dl-identity__name {
+  font-family: var(--font-ui);
+  font-weight: var(--weight-medium);
+  color: var(--ink);
+  line-height: var(--leading-snug);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.dl-identity__sub {
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
+  color: var(--ink-muted);
+  line-height: var(--leading-snug);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
 
 /* ── EmptyState (object-like, not a bare placeholder) ─────────────────────── */
 .dl-empty {
@@ -840,24 +859,32 @@
 .dl-actionbar__value { font-size: var(--text-md); font-weight: var(--weight-semibold); color: var(--ink); font-variant-numeric: tabular-nums; }
 .dl-actionbar__actions { display: flex; align-items: center; gap: var(--space-2); flex: 0 0 auto; }
 
-/* ── Avatar ──────────────────────────────────────────────────────────────── */
+/* ── Avatar — an engraved metal identity token ─────────────────────────────
+ * A calm, perfectly-circular satin face: low-contrast silver gradient, a thin
+ * inner light border, and a soft shadow. No glossy bubble / 3D highlight. The
+ * monogram is the UI sans (Inter), semibold, graphite — readable, not mono.    */
 .dl-avatar {
   display: inline-grid;
   place-items: center;
   flex: 0 0 auto;
   border-radius: var(--radius-pill);
-  font-family: var(--font-mono);
-  font-weight: var(--weight-medium);
-  color: var(--ink-soft);
-  background: var(--surface-inset);
-  border: 1px solid var(--border-hairline);
-  box-shadow: var(--edge-highlight-soft);
+  font-family: var(--font-ui);
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0;
+  line-height: 1;
+  color: var(--ink);
+  background: var(--metal-token);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-1), inset 0 0 0 1px rgba(255, 255, 255, 0.5);
   user-select: none;
+  overflow: hidden;
 }
-.dl-avatar--sm { width: 28px; height: 28px; font-size: var(--text-2xs); }
-.dl-avatar--md { width: 36px; height: 36px; font-size: var(--text-xs); }
-.dl-avatar--lg { width: 48px; height: 48px; font-size: var(--text-base); }
-.dl-avatar--metal { background: var(--metal-disc); color: var(--ink); box-shadow: var(--shadow-1), var(--edge-highlight-disc); border-color: transparent; }
+.dl-avatar--sm { width: 32px; height: 32px; font-size: var(--text-xs); }
+.dl-avatar--md { width: 40px; height: 40px; font-size: var(--text-sm); }
+.dl-avatar--lg { width: 48px; height: 48px; font-size: var(--text-lg); }
+/* `metal` no longer means a separate glossy disc — every avatar is the calm
+ * token. The modifier is kept as a no-op so existing call sites stay valid.    */
+.dl-avatar--metal { }
 
 /* ── Switch (rocker toggle with sage under-glow when on) ─────────────────── */
 .dl-switch {
@@ -1026,22 +1053,27 @@
   .dl-toolbar__search { width: 100%; }
 }
 
-/* Agreements table specifics — keeps cells from crushing; scrolls in-card on
- * narrow widths rather than overflowing the page. */
-.dl-table--agreements { min-width: 760px; }
-/* tighter horizontal rhythm so all 7 columns + the row action fit one row */
+/* Agreements table — STABLE column widths (table-layout: fixed). The widths are
+ * declared on the columns (AgreementsPage COLUMNS); Agreement is the one auto
+ * column, so it absorbs the slack and stays the largest. `min-width` keeps the
+ * columns from crushing on narrow viewports — the card scrolls horizontally
+ * there instead of overflowing the page. */
+.dl-table--agreements { table-layout: fixed; min-width: 920px; }
 .dl-table--agreements th,
-.dl-table--agreements td { white-space: nowrap; padding-left: var(--space-3); padding-right: var(--space-3); }
+.dl-table--agreements td {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding-left: var(--space-3);
+  padding-right: var(--space-3);
+}
 .dl-table--agreements th:first-child,
 .dl-table--agreements td:first-child { padding-left: var(--space-4); }
 .dl-table--agreements th:last-child,
 .dl-table--agreements td:last-child { padding-right: var(--space-4); }
-.dl-cell-agreement { min-width: 184px; max-width: 200px; }
 .dl-cell-agreement .dl-table__name,
 .dl-cell-agreement .dl-table__sub { overflow: hidden; text-overflow: ellipsis; }
 .dl-cell-agreement .dl-table__sub { font-size: var(--text-xs); }
-.dl-cell-party { max-width: 150px; }
-.dl-cell-ms { min-width: 116px; max-width: 150px; }
 .dl-cell-ms .dl-table__sub { overflow: hidden; text-overflow: ellipsis; font-size: var(--text-xs); }
 /* role pill — quiet metal tag so the role reads without competing with status */
 .dl-role {

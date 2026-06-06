@@ -18,6 +18,7 @@ import {
   Button,
   Card,
   EmptyState,
+  Identity,
   IconButton,
   MetalSurface,
   MetricCard,
@@ -269,12 +270,15 @@ export default function DesignLabPage() {
           </Card>
         </Section>
 
-        <Section idx="11" title="Avatars" stage>
+        <Section idx="11" title="Identity" caption="metal token · name in UI sans" stage>
           <div className="dl-lab__row">
             <Avatar initials="JL" size="sm" />
-            <Avatar initials="JL" size="md" />
-            <Avatar initials="JL" size="lg" />
-            <Avatar initials="AM" size="md" metal />
+            <Avatar initials="SV" size="md" />
+            <Avatar initials="AC" size="lg" />
+          </div>
+          <div className="dl-lab__row">
+            <Identity initials="SV" name="Summit Ventures" sub="Company" size="md" />
+            <Identity initials="JL" name="Jordan Lee" sub="Individual" size="md" />
           </div>
         </Section>
 

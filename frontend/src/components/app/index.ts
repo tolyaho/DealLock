@@ -24,6 +24,7 @@ export { TableShell, type Column } from "./TableShell";
 export { EmptyState } from "./EmptyState";
 export { BottomActionBar } from "./BottomActionBar";
 export { Avatar } from "./Avatar";
+export { Identity } from "./Identity";
 export { Switch } from "./Switch";
 
 // Context

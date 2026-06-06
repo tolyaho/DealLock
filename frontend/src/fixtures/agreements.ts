@@ -442,3 +442,26 @@ export function attentionFor(role: Role): Agreement[] {
     .filter((a) => needsMyAction(a, role))
     .sort((x, y) => rank[rowAction(x, role).kind] - rank[rowAction(y, role).kind]);
 }
+
+/** ---- Counterparties directory (rolled up across all agreements) -------- */
+export interface CounterpartyRollup {
+  party: Party;
+  agreements: number;
+  active: number;
+  /** total USDC currently locked in escrow across their agreements */
+  valueUSDC: number;
+}
+
+/** Every distinct counterparty, with how many agreements and value engaged. */
+export function counterparties(): CounterpartyRollup[] {
+  const map = new Map<string, CounterpartyRollup>();
+  for (const a of AGREEMENTS) {
+    const cp = counterparty(a);
+    const e = map.get(cp.id) ?? { party: cp, agreements: 0, active: 0, valueUSDC: 0 };
+    e.agreements += 1;
+    if (LIVE.includes(a.status)) e.active += 1;
+    if (a.locked.asset === "USDC") e.valueUSDC += a.locked.amount;
+    map.set(cp.id, e);
+  }
+  return [...map.values()].sort((x, y) => y.valueUSDC - x.valueUSDC || y.agreements - x.agreements);
+}

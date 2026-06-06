@@ -12,10 +12,10 @@ import { useMemo, useState } from "react";
 import { useSearchParams } from "react-router-dom";
 import type { ReactNode } from "react";
 import {
-  Avatar,
   Button,
   Card,
   EmptyState,
+  Identity,
   PageContainer,
   PageHeader,
   SearchInput,
@@ -79,14 +79,16 @@ const GROUP: Record<Exclude<Filter, "all">, AgreementStatus[]> = {
   draft: ["draft"],
 };
 
+// Stable widths (table-layout: fixed). Agreement is left auto so it takes the
+// remaining space and stays the largest; the rest are sized to their content.
 const COLUMNS: Column[] = [
   { key: "agreement", label: "Agreement" },
-  { key: "counterparty", label: "Counterparty" },
-  { key: "role", label: "Role" },
-  { key: "status", label: "Status" },
-  { key: "locked", label: "Amount locked", align: "right" },
-  { key: "milestone", label: "Current milestone" },
-  { key: "action", label: "Action", align: "right" },
+  { key: "counterparty", label: "Counterparty", width: "196px" },
+  { key: "role", label: "Role", width: "90px" },
+  { key: "status", label: "Status", width: "166px" },
+  { key: "locked", label: "Amount locked", align: "right", width: "112px" },
+  { key: "milestone", label: "Current milestone", width: "132px" },
+  { key: "action", label: "Action", align: "right", width: "128px" },
 ];
 
 export default function AgreementsPage() {
@@ -160,10 +162,7 @@ export default function AgreementsPage() {
                     <div className="dl-table__sub">{a.summary}</div>
                   </td>
                   <td className="dl-cell-party">
-                    <span className="dl-party">
-                      <Avatar initials={counterparty(a).initials} size="sm" metal />
-                      <span className="dl-party__name">{counterparty(a).name}</span>
-                    </span>
+                    <Identity initials={counterparty(a).initials} name={counterparty(a).name} size="sm" />
                   </td>
                   <td>
                     <span className="dl-role">{role === "client" ? "Client" : "Provider"}</span>
