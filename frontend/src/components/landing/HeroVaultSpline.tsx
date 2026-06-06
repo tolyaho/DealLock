@@ -114,10 +114,12 @@ export default function HeroVaultSpline() {
   const [sealed, setSealed] = useState(false);
   const [pulseKey, setPulseKey] = useState(0);
 
-  // Click "seals" the vault: the scene plays its own authored lock animation; we add
-  // the DOM-only confirmation the 3D scene can't render (pulse ring + status hint).
+  // Click TOGGLES the vault seal: seal → unseal → seal. The scene plays its own
+  // authored lock animation; we add the DOM-only confirmation the 3D scene can't
+  // render (pulse ring + a "Funds locked" status hint that fades back out when
+  // the vault is clicked again). Each click pulses as tactile click feedback.
   const handleSeal = useCallback(() => {
-    setSealed(true);
+    setSealed((s) => !s);
     setPulseKey((k) => k + 1);
   }, []);
 
