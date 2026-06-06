@@ -16,7 +16,9 @@ interface CardProps {
   title?: string;
   action?: ReactNode;
   children: ReactNode;
-  variant?: "base" | "raised" | "glass";
+  /** base = lifted white plate · raised = elevated hero · glass = frosted ·
+   *  inset = recessed secondary panel */
+  variant?: "base" | "raised" | "glass" | "inset";
   flush?: boolean;
   className?: string;
   id?: string;
@@ -41,6 +43,7 @@ export function Card({
     "dl-card",
     variant === "raised" && "dl-card--raised",
     variant === "glass" && "dl-card--glass",
+    variant === "inset" && "dl-card--inset",
     flush && "dl-card--flush",
     onActivate && "dl-card--interactive",
     className,
@@ -85,10 +88,14 @@ interface MetricCardProps {
   meta?: ReactNode;
   /** tints the meta line and (for non-interactive) implies direction */
   trend?: "up" | "down";
+  /** a faint identity glyph (top-right medallion). Helps the KPI strip scan. */
+  icon?: ReactNode;
+  /** tints the icon medallion to the semantic accent */
+  tone?: "secure" | "review" | "technical" | "neutral";
   onClick?: () => void;
 }
 
-export function MetricCard({ label, value, meta, trend, onClick }: MetricCardProps) {
+export function MetricCard({ label, value, meta, trend, icon, tone = "neutral", onClick }: MetricCardProps) {
   const metaCls = [
     "dl-metric__meta",
     trend === "up" && "dl-metric__meta--up",
@@ -96,6 +103,12 @@ export function MetricCard({ label, value, meta, trend, onClick }: MetricCardPro
   ]
     .filter(Boolean)
     .join(" ");
+  const medallion =
+    icon != null ? (
+      <span className={`dl-metric__icon${tone !== "neutral" ? ` dl-metric__icon--${tone}` : ""}`} aria-hidden="true">
+        {icon}
+      </span>
+    ) : null;
   const body = (
     <>
       <div className="dl-metric__label">{label}</div>
@@ -106,6 +119,7 @@ export function MetricCard({ label, value, meta, trend, onClick }: MetricCardPro
   if (onClick) {
     return (
       <button type="button" className="dl-metric dl-metric--interactive" onClick={onClick}>
+        {medallion}
         <span className="dl-metric__go" aria-hidden="true">
           <IconArrowRight />
         </span>
@@ -113,5 +127,10 @@ export function MetricCard({ label, value, meta, trend, onClick }: MetricCardPro
       </button>
     );
   }
-  return <div className="dl-metric">{body}</div>;
+  return (
+    <div className="dl-metric">
+      {medallion}
+      {body}
+    </div>
+  );
 }
