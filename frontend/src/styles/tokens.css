@@ -204,8 +204,11 @@
   /* Top specular bloom — reuses the landing's tuned `--dl-shine` when present.  */
   --metal-shine: var(--dl-shine,
     radial-gradient(124% 96% at 26% -22%, rgba(255, 255, 255, 1) 0%, rgba(255, 255, 255, 0.34) 40%, rgba(255, 255, 255, 0) 68%));
-  /* Brushed-aluminum disc for medallions / avatars / keycap centers.           */
+  /* Brushed-aluminum disc for keycap centers (high-contrast, used on controls). */
   --metal-disc: radial-gradient(circle at 36% 30%, #fdfdfc 0%, #e3e4df 30%, #b9bab2 60%, #8f9088 78%, #d6d7cf 100%);
+  /* Identity token — a CALM, low-contrast satin face for monogram avatars. No
+   * glossy bubble: a gentle top-lit silver gradient only (see .dl-avatar).       */
+  --metal-token: linear-gradient(155deg, #f6f6f3 0%, #ecece7 54%, #e0e0da 100%);
   /* Faint anisotropic (brushed) grain — overlaid via multiply at low opacity.   */
   --metal-grain: repeating-linear-gradient(
     104deg,
