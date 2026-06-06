@@ -55,8 +55,10 @@
   --surface-primary-hover:linear-gradient(150deg, #4c4d47 0%, #313229 52%, #212219 100%);
   /* Supporting fills */
   --surface-nested:       #fbfbfa; /* inset / nested panel inside a card       */
+  --surface-sunken:       #f0f0ec; /* secondary / recessed panel (inset card)  */
   --surface-inset:        rgba(28, 28, 22, 0.045); /* recessed track fill      */
-  --surface-hover:        rgba(28, 28, 22, 0.035); /* row / ghost hover wash   */
+  --surface-hover:        rgba(28, 28, 22, 0.04);  /* row / ghost hover wash   */
+  --surface-hover-strong: rgba(28, 28, 22, 0.06);  /* stronger table-row wash  */
   --surface-selected:     rgba(28, 28, 22, 0.06);  /* selected row / nav item  */
 
   /* ── Borders & edges ─────────────────────────────────────────────────────
@@ -77,6 +79,11 @@
   --shadow-3: 0 2px 6px rgba(24, 24, 20, 0.05), 0 14px 34px rgba(24, 24, 20, 0.08);
   --shadow-4: 0 6px 16px rgba(24, 24, 20, 0.07), 0 30px 72px rgba(24, 24, 20, 0.12);
   --shadow-inset:         inset 0 1px 3px rgba(24, 24, 20, 0.07);
+  /* Card elevation — the working surface depth. A touch more present than
+   * --shadow-2 so white plates read as objects lifted off the satin shell
+   * (fixes "white blocks on white"); the hover variant is the lift target.    */
+  --shadow-card:          0 1px 2px rgba(24, 24, 20, 0.06), 0 8px 22px rgba(24, 24, 20, 0.08);
+  --shadow-card-hover:    0 3px 8px rgba(24, 24, 20, 0.08), 0 18px 44px rgba(24, 24, 20, 0.13);
   --shadow-primary:       0 1px 2px rgba(24, 24, 20, 0.20), 0 8px 22px rgba(24, 24, 20, 0.22);
   --shadow-primary-hover: 0 2px 4px rgba(24, 24, 20, 0.22), 0 12px 28px rgba(24, 24, 20, 0.24);
   --glow-secure:          0 0 18px rgba(78, 125, 94, 0.34); /* sage under-glow (on) */
@@ -85,9 +92,10 @@
    * sheen-plate  = the faint top light-catch on white plates (card / metric)
    * sheen-keycap = the top sheen on the dark graphite keycap (primary button)
    * blur-glass   = the one frosted backdrop-filter (glass card / action bar)    */
-  --sheen-plate:  linear-gradient(180deg, rgba(255, 255, 255, 0.50), rgba(255, 255, 255, 0));
-  --sheen-keycap: linear-gradient(180deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0));
-  --blur-glass:   blur(16px) saturate(1.4);
+  --sheen-plate:        linear-gradient(180deg, rgba(255, 255, 255, 0.50), rgba(255, 255, 255, 0));
+  --sheen-plate-strong: linear-gradient(180deg, rgba(255, 255, 255, 0.80), rgba(255, 255, 255, 0.12) 40%, rgba(255, 255, 255, 0)); /* crisper card top light-catch */
+  --sheen-keycap:       linear-gradient(180deg, rgba(255, 255, 255, 0.18), rgba(255, 255, 255, 0));
+  --blur-glass:         blur(16px) saturate(1.4);
 
   /* ── Radii ───────────────────────────────────────────────────────────────
    * shell 28 · panel 24 · card 20 · inner 16 · control 12 · sm 8 · pill ∞      */
@@ -176,14 +184,15 @@
   /* ── Metal / specular system (consumed by `.metal-surface` & the shell) ──── */
   /* The wall the whole app rests on — deep satin silver with key lights.       */
   --metal-wall:
-    radial-gradient(122% 82% at 86% -10%, rgba(255, 255, 255, 1) 0%, rgba(255, 255, 255, 0) 46%),
-    radial-gradient(92% 62% at 2% 110%, rgba(150, 152, 144, 0.32) 0%, rgba(150, 152, 144, 0) 52%),
-    linear-gradient(166deg, #e2e2de 0%, #d3d3ce 56%, #c4c5be 100%);
-  /* The lit satin panel (the shell) — top-left glare + key light + satin foot.  */
+    radial-gradient(118% 86% at 88% -14%, rgba(255, 255, 255, 1) 0%, rgba(255, 255, 255, 0) 42%),
+    radial-gradient(100% 74% at 0% 116%, rgba(110, 114, 106, 0.44) 0%, rgba(110, 114, 106, 0) 56%),
+    linear-gradient(168deg, #e6e6e1 0%, #d1d1cc 52%, #b7b8b0 100%);
+  /* The lit satin panel (the shell) — top-corner key lights + a satin body kept
+   * a touch greyer than white so the cards resting on it read as objects.       */
   --metal-panel:
-    radial-gradient(92% 72% at 15% -8%, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0) 46%),
-    radial-gradient(135% 96% at 84% -14%, rgba(255, 255, 255, 0.92) 0%, rgba(255, 255, 255, 0) 46%),
-    linear-gradient(167deg, #f9f9f6 0%, #efefea 46%, #e4e4df 80%, #dadad4 100%);
+    radial-gradient(90% 70% at 14% -10%, rgba(255, 255, 255, 0.96) 0%, rgba(255, 255, 255, 0) 44%),
+    radial-gradient(140% 100% at 86% -16%, rgba(255, 255, 255, 0.96) 0%, rgba(255, 255, 255, 0) 46%),
+    linear-gradient(167deg, #fafaf8 0%, #edede8 44%, #e1e1db 78%, #d5d5cf 100%);
   /* Diagonal specular sweep — screen-blended so it only lightens (never dims).  */
   --metal-sweep: linear-gradient(
     122deg,
@@ -204,4 +213,7 @@
     rgba(28, 28, 22, 0.018) 1px,
     rgba(255, 255, 255, 0.02) 2px,
     rgba(255, 255, 255, 0.02) 3px);
+  /* Studio-light pool behind a content zone — a soft cool bloom that gives the
+   * satin body depth in the gutters around cards (sits BEHIND content).         */
+  --bg-zone: radial-gradient(120% 70% at 50% -8%, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0) 60%);
 }

@@ -11,6 +11,7 @@ import type {
   ActivityEvent,
   Agreement,
   AgreementStatus,
+  MilestoneStatus,
   Party,
   Role,
 } from "./types";
@@ -363,7 +364,9 @@ export function clientMetrics() {
   // Items needing the client: work submitted for review, or a draft to sign.
   const attention = mine.filter((a) => a.status === "in_review" || a.status === "draft");
   const activeCount = mine.filter((a) => LIVE.includes(a.status)).length;
-  return { mine, locked, attention, activeCount };
+  const needsReview = mine.filter((a) => a.status === "in_review").length;
+  const pendingFunding = mine.filter((a) => a.status === "draft").length;
+  return { mine, locked, attention, activeCount, needsReview, pendingFunding };
 }
 
 /** ---- Provider overview metrics ----------------------------------------- */
@@ -379,4 +382,63 @@ export function providerMetrics() {
     .reduce((sum, a) => sum + a.released.amount, 0);
   const revisionRequests = ms.filter((m) => m.status === "revision_requested").length;
   return { mine, pendingSubmissions, fundedMilestones, earningsUSDC, revisionRequests };
+}
+
+/** ---- Milestone helpers -------------------------------------------------- */
+/** The milestone an agreement is currently focused on. */
+export function currentMilestone(a: Agreement) {
+  return a.milestones.find((m) => m.id === a.currentMilestoneId) ?? a.milestones[0];
+}
+
+const DONE_MS: MilestoneStatus[] = ["released", "completed"];
+
+/** Progress along an agreement's milestones, by released value and by count. */
+export function milestoneProgress(a: Agreement) {
+  const total = a.milestones.length;
+  const order = currentMilestone(a)?.order ?? 1;
+  const doneCount = a.milestones.filter((m) => DONE_MS.includes(m.status)).length;
+  const totalValue = a.milestones.reduce((s, m) => s + m.value.amount, 0);
+  const doneValue = a.milestones
+    .filter((m) => DONE_MS.includes(m.status))
+    .reduce((s, m) => s + m.value.amount, 0);
+  const fraction = totalValue > 0 ? doneValue / totalValue : 0;
+  return { total, order, doneCount, fraction, totalValue, doneValue, asset: a.locked.asset };
+}
+
+/** ---- Per-agreement primary action (role + status aware) ----------------- */
+export type ActionKind = "view" | "review" | "sign" | "release" | "submit" | "resubmit";
+export type ActionVariant = "primary" | "secondary" | "positive" | "ghost";
+
+/**
+ * The single clearest action the signed-in user can take on an agreement, given
+ * their role. JSX-free (the icon is chosen at the call site) so fixtures stay
+ * pure. Drives both the Home "needs attention" list and the Agreements table.
+ */
+export function rowAction(
+  a: Agreement,
+  role: Role,
+): { kind: ActionKind; label: string; variant: ActionVariant } {
+  const ms = currentMilestone(a);
+  if (role === "client") {
+    if (a.status === "draft") return { kind: "sign", label: "Sign", variant: "primary" };
+    if (a.status === "in_review") return { kind: "review", label: "Review", variant: "secondary" };
+    if (a.status === "approved") return { kind: "release", label: "Release", variant: "positive" };
+    return { kind: "view", label: "View", variant: "ghost" };
+  }
+  if (a.status === "revision_requested") return { kind: "resubmit", label: "Resubmit", variant: "primary" };
+  if (a.status === "active" && ms?.status === "in_progress") return { kind: "submit", label: "Submit", variant: "primary" };
+  return { kind: "view", label: "View", variant: "ghost" };
+}
+
+/** True when the user (in `role`) has an action to take beyond just viewing. */
+export function needsMyAction(a: Agreement, role: Role): boolean {
+  return rowAction(a, role).kind !== "view";
+}
+
+/** Agreements in a workspace that need the user to act, most-urgent first. */
+export function attentionFor(role: Role): Agreement[] {
+  const rank: Record<ActionKind, number> = { release: 0, sign: 1, review: 2, resubmit: 3, submit: 4, view: 9 };
+  return agreementsForRole(role)
+    .filter((a) => needsMyAction(a, role))
+    .sort((x, y) => rank[rowAction(x, role).kind] - rank[rowAction(y, role).kind]);
 }

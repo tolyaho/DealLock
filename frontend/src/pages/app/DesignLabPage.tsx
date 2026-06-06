@@ -35,6 +35,7 @@ import {
   IconAgreements,
   IconBell,
   IconBolt,
+  IconDollar,
   IconDownload,
   IconLock,
   IconPlus,
@@ -46,6 +47,7 @@ import {
 const SURFACES = [
   { name: "--surface-card", bg: "var(--surface-card)" },
   { name: "--surface-nested", bg: "var(--surface-nested)" },
+  { name: "--surface-sunken", bg: "var(--surface-sunken)" },
   { name: "--surface-inset", bg: "var(--surface-inset)" },
   { name: "--surface-action", bg: "var(--surface-action)" },
   { name: "--surface-primary", bg: "var(--surface-primary)" },
@@ -215,24 +217,27 @@ export default function DesignLabPage() {
           </div>
         </Section>
 
-        <Section idx="07" title="Metric cards">
+        <Section idx="07" title="Metric cards" caption="optional identity medallion">
           <div className="dl-grid-metrics">
-            <MetricCard label="In escrow" value="$48,250" meta="Across 6 agreements" />
-            <MetricCard label="Released" value="$31,900" meta="▲ 5.1% vs. prior" trend="up" />
-            <MetricCard label="Needs review" value={3} meta="Submitted work" onClick={() => {}} />
+            <MetricCard label="In escrow" value="$48,250" meta="Across 6 agreements" icon={<IconLock />} tone="secure" />
+            <MetricCard label="Released" value="$31,900" meta="▲ 5.1% vs. prior" trend="up" icon={<IconDollar />} tone="secure" />
+            <MetricCard label="Needs review" value={3} meta="Submitted work" icon={<IconShield />} tone="review" onClick={() => {}} />
           </div>
         </Section>
 
-        <Section idx="08" title="Cards" caption="base · raised · glass">
+        <Section idx="08" title="Cards" caption="base · raised · glass · inset">
           <div className="dl-grid-2">
             <Card label="Base card" title="Milestone 02">
               <p className="dl-muted">White plate on the satin shell with a faint brushed catch.</p>
             </Card>
-            <Card variant="raised" label="Raised card" title="Elevated">
-              <p className="dl-muted">A deeper shadow lifts it off the surface.</p>
+            <Card variant="raised" label="Raised card" title="Elevated hero">
+              <p className="dl-muted">A deeper shadow lifts it off the surface — for the primary zone.</p>
             </Card>
             <Card variant="glass" label="Glass panel" title="Frosted">
               <p className="dl-muted">Restrained blur — used for sticky / floating surfaces only.</p>
+            </Card>
+            <Card variant="inset" label="Inset panel" title="Secondary">
+              <p className="dl-muted">A recessed surface for nested or supporting content.</p>
             </Card>
           </div>
         </Section>
