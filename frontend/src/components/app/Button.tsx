@@ -7,6 +7,8 @@
  *   metal     — brushed satin keycap (silver signature action; brightens on hover)
  *   disc      — brushed-aluminum DISC surface (the --metal-disc radial material
  *               from the MetalCTA disc / action tiles), shaped as a compact pill
+ *   glass     — cool frosted-glass control (translucent, hairline, soft top
+ *               light-catch); a calm non-metallic action (e.g. Agreements rows)
  *   positive  — sage filled (secure / confirm)
  *   ghost     — chromeless
  *   danger    — muted brick, destructive only
@@ -18,7 +20,7 @@ export function Spinner() {
   return <span className="dl-spinner" aria-hidden="true" />;
 }
 
-type Variant = "primary" | "secondary" | "metal" | "disc" | "positive" | "ghost" | "danger";
+type Variant = "primary" | "secondary" | "metal" | "disc" | "glass" | "positive" | "ghost" | "danger";
 
 interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
   variant?: Variant;

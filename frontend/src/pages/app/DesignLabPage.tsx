@@ -18,6 +18,7 @@ import {
   Button,
   Card,
   EmptyState,
+  EmptyStateStage,
   Identity,
   IconButton,
   MetalCTA,
@@ -27,6 +28,7 @@ import {
   PageHeader,
   SearchInput,
   SegmentedControl,
+  SplineObjectSlot,
   StatusChip,
   Switch,
   TableShell,
@@ -174,6 +176,7 @@ export default function DesignLabPage() {
             <Button variant="primary" icon={<IconPlus />}>Primary</Button>
             <Button variant="secondary">Secondary</Button>
             <Button variant="metal" icon={<IconEdit />}>Sign</Button>
+            <Button variant="glass">Glass</Button>
             <Button variant="positive" icon={<IconShield />}>Release</Button>
             <Button variant="ghost">Ghost</Button>
             <Button variant="danger">Cancel agreement</Button>
@@ -323,6 +326,28 @@ export default function DesignLabPage() {
               <div className="dl-table__sub">Design &amp; UX Deliverables</div>
             </div>
           </div>
+        </Section>
+
+        <Section idx="15" title="Spline object slots" caption="metal placeholders, ready to mount a scene" stage>
+          <div className="dl-lab__row">
+            <SplineObjectSlot type="activity" />
+            <SplineObjectSlot type="messages" />
+            <SplineObjectSlot type="counterparties" />
+            <SplineObjectSlot type="statistics" />
+            <SplineObjectSlot type="wallet" />
+            <SplineObjectSlot type="settings" />
+            <SplineObjectSlot type="designlab" />
+          </div>
+        </Section>
+
+        <Section idx="16" title="Empty-state stage" caption="the polished no-data moment">
+          <EmptyStateStage
+            splineType="designlab"
+            title="No experiments yet"
+            description="Component previews and visual experiments will appear here. The whole empty-state system — stage, Spline slot, and CTA — is built only from the kit."
+            primaryAction={{ label: "Add experiment", to: "/app/design-lab", icon: <IconPlus /> }}
+            secondaryAction={{ label: "View foundation" }}
+          />
         </Section>
       </div>
     </PageContainer>
