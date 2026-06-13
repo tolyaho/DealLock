@@ -381,7 +381,30 @@ export function providerMetrics() {
     .filter((a) => a.released.asset === "USDC")
     .reduce((sum, a) => sum + a.released.amount, 0);
   const revisionRequests = ms.filter((m) => m.status === "revision_requested").length;
-  return { mine, pendingSubmissions, fundedMilestones, earningsUSDC, revisionRequests };
+
+  // ---- Provider-lens KPI values (keyed to ROLE_CONFIG.provider.kpis) -------
+  // The provider reads the same agreements through a "deliver work → get paid"
+  // lens: money still in escrow they expect to collect, work waiting on the
+  // client, deliverables in flight, and funds already released (withdrawable).
+  // Aliases reuse the metrics above where the meaning is the same.
+  const expectedPayout = mine
+    .filter((a) => LIVE.includes(a.status) && a.locked.asset === "USDC")
+    .reduce((sum, a) => sum + a.locked.amount, 0);
+  const awaitingApproval = pendingSubmissions;
+  const activeWork = fundedMilestones;
+  const readyToWithdraw = earningsUSDC;
+
+  return {
+    mine,
+    pendingSubmissions,
+    fundedMilestones,
+    earningsUSDC,
+    revisionRequests,
+    expectedPayout,
+    awaitingApproval,
+    activeWork,
+    readyToWithdraw,
+  };
 }
 
 /** ---- Milestone helpers -------------------------------------------------- */

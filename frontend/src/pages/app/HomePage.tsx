@@ -18,6 +18,7 @@ import {
   PageContainer,
   PageHeader,
   StatusChip,
+  useRoleConfig,
   useWorkspace,
   type ChipTone,
 } from "../../components/app";
@@ -27,7 +28,6 @@ import {
   IconCheck,
   IconDollar,
   IconEdit,
-  IconFile,
   IconLock,
   IconMessages,
   IconPlus,
@@ -142,7 +142,9 @@ function FeedItem({ e }: { e: ActivityEvent }) {
 
 function ProgressRow({ a }: { a: Agreement }) {
   const p = milestoneProgress(a);
-  const pct = Math.round(p.fraction * 100);
+  // The fill must match the DISPLAYED fraction exactly: completed milestones over
+  // total (by count, matching "{doneCount}/{total} milestones"), clamped 0–100.
+  const fillPercent = p.total > 0 ? Math.max(0, Math.min((p.doneCount / p.total) * 100, 100)) : 0;
   return (
     <div className="dl-progress__row">
       <div className="dl-progress__head">
@@ -152,7 +154,10 @@ function ProgressRow({ a }: { a: Agreement }) {
         </span>
       </div>
       <div className="dl-progress__track">
-        <div className="dl-progress__fill" style={{ width: `${pct}%` }} />
+        <div
+          className={`dl-progress__fill${fillPercent >= 100 ? " dl-progress__fill--full" : ""}`}
+          style={{ width: `${fillPercent}%` }}
+        />
       </div>
       <div className="dl-progress__meta">
         {formatMoney({ amount: p.doneValue, asset: p.asset })} of{" "}
@@ -162,8 +167,11 @@ function ProgressRow({ a }: { a: Agreement }) {
   );
 }
 
+type MetricTone = "secure" | "review" | "technical" | "neutral";
+
 export default function HomePage() {
   const { workspace } = useWorkspace();
+  const cfg = useRoleConfig();
   const navigate = useNavigate();
   const go = (status?: string) =>
     navigate(status ? `/app/agreements?status=${status}` : "/app/agreements");
@@ -172,52 +180,79 @@ export default function HomePage() {
   const c = clientMetrics();
   const p = providerMetrics();
 
+  // KPI strip. The copy — label, helper, and ORDER — comes from the role config
+  // (the source of truth); the computed value, identity glyph, accent tone, and
+  // deep-link stay here (presentational) and bind to each tile by its config
+  // `key`. So changing the wording or priorities is a config edit, not a JSX one.
+  const kpiView: Record<
+    string,
+    { value: ReactNode; icon: ReactNode; tone?: MetricTone; status?: string; primary?: boolean }
+  > = isClient
+    ? {
+        inEscrow: { value: formatMoney({ amount: c.locked, asset: "USDC" }), icon: <IconLock />, tone: "secure", primary: true },
+        needsReview: { value: c.needsReview, icon: <IconShield />, tone: "review", status: "in_review" },
+        activeAgreements: { value: c.activeCount, icon: <IconAgreements />, status: "active" },
+        pendingFunding: { value: c.pendingFunding, icon: <IconEdit />, status: "draft" },
+      }
+    : {
+        expectedPayout: { value: formatMoney({ amount: p.expectedPayout, asset: "USDC" }), icon: <IconDollar />, tone: "secure", primary: true },
+        awaitingApproval: { value: p.awaitingApproval, icon: <IconUpload />, tone: "review", status: "in_review" },
+        activeWork: { value: p.activeWork, icon: <IconLock /> },
+        readyToWithdraw: { value: formatMoney({ amount: p.readyToWithdraw, asset: "USDC" }), icon: <IconShield />, tone: "secure" },
+      };
+
+  // Quick actions. Labels/helpers come from the role config; the icon + the
+  // navigation target stay here, bound by the config `key`.
+  const quickView: Record<string, { icon: ReactNode; onClick: () => void }> = isClient
+    ? {
+        newAgreement: { icon: <IconPlus />, onClick: () => go() },
+        reviewMilestone: { icon: <IconShield />, onClick: () => go("in_review") },
+        message: { icon: <IconMessages />, onClick: () => navigate("/app/messages") },
+      }
+    : {
+        submitMilestone: { icon: <IconUpload />, onClick: () => go() },
+        requestApproval: { icon: <IconShield />, onClick: () => go("in_review") },
+        message: { icon: <IconMessages />, onClick: () => navigate("/app/messages") },
+      };
+
+  const primaryIcon = cfg.primaryAction.icon === "upload" ? <IconUpload /> : <IconPlus />;
+
   const attentionAll = attentionFor(workspace);
   const attention = attentionAll.slice(0, 3);
   const progress = agreementsForRole(workspace)
     .filter((a) => a.status !== "completed" && a.status !== "draft" && a.milestones.length > 0)
     .slice(0, 3);
-  const activity = ACTIVITY.slice(0, 5);
+  const activity = ACTIVITY.slice(0, 4);
 
   return (
     <PageContainer>
       <PageHeader
         title={`${greeting()}, ${ME}.`}
-        subtitle={
-          isClient
-            ? "Here's what's happening with your deals."
-            : "Track submissions, funded milestones, and earnings across your contracts."
-        }
+        subtitle={cfg.greetingSubtitle}
         actions={
-          isClient ? (
-            <MetalCTA icon={<IconPlus />} onClick={() => go()}>
-              New agreement
-            </MetalCTA>
-          ) : (
-            <MetalCTA icon={<IconUpload />} onClick={() => go()}>
-              Submit work
-            </MetalCTA>
-          )
+          <MetalCTA icon={primaryIcon} onClick={() => go()}>
+            {cfg.primaryAction.label}
+          </MetalCTA>
         }
       />
 
-      {/* KPI strip */}
+      {/* KPI strip — copy + order from the role config, values bound by key. */}
       <div className="dl-grid-metrics">
-        {isClient ? (
-          <>
-            <MetricCard label="In escrow" value={formatMoney({ amount: c.locked, asset: "USDC" })} meta="Across live agreements" icon={<IconLock />} tone="secure" primary />
-            <MetricCard label="Needs review" value={c.needsReview} meta="Submitted for approval" icon={<IconShield />} tone="review" onClick={() => go("in_review")} />
-            <MetricCard label="Active agreements" value={c.activeCount} meta="In progress" icon={<IconAgreements />} onClick={() => go("active")} />
-            <MetricCard label="Pending funding" value={c.pendingFunding} meta="Drafts to sign" icon={<IconEdit />} onClick={() => go("draft")} />
-          </>
-        ) : (
-          <>
-            <MetricCard label="Earnings released" value={formatMoney({ amount: p.earningsUSDC, asset: "USDC" })} meta="Lifetime" icon={<IconDollar />} tone="secure" primary />
-            <MetricCard label="Pending submissions" value={p.pendingSubmissions} meta="Awaiting client review" icon={<IconUpload />} tone="review" onClick={() => go("in_review")} />
-            <MetricCard label="Funded milestones" value={p.fundedMilestones} meta="Currently in play" icon={<IconLock />} />
-            <MetricCard label="Revision requests" value={p.revisionRequests} meta="Needs your changes" icon={<IconRevision />} tone="review" onClick={() => go("active")} />
-          </>
-        )}
+        {cfg.kpis.map((k) => {
+          const v = kpiView[k.key];
+          return (
+            <MetricCard
+              key={k.key}
+              label={k.label}
+              value={v.value}
+              meta={k.helper}
+              icon={v.icon}
+              tone={v.tone}
+              primary={v.primary}
+              onClick={v.status ? () => go(v.status) : undefined}
+            />
+          );
+        })}
       </div>
 
       {/* Main grid — one true 2×2: primary (wider) + supporting (narrower) columns.
@@ -228,7 +263,7 @@ export default function HomePage() {
         <Card
           variant="raised"
           className="dl-card--attention"
-          label="Needs your attention"
+          label={cfg.attention.title}
           action={
             <span className="dl-card__actions">
               {attentionAll.length > 0 && (
@@ -251,8 +286,8 @@ export default function HomePage() {
               <span className="dl-mini-empty__icon" aria-hidden="true">
                 <IconCheck />
               </span>
-              <div className="dl-mini-empty__title">You're all caught up</div>
-              <div className="dl-mini-empty__text">Nothing needs your action right now.</div>
+              <div className="dl-mini-empty__title">{cfg.attention.emptyTitle}</div>
+              <div className="dl-mini-empty__text">{cfg.attention.emptyDescription}</div>
             </div>
           )}
         </Card>
@@ -273,7 +308,7 @@ export default function HomePage() {
           </div>
         </Card>
 
-        <Card label="Milestone progress">
+        <Card label="Milestone progress" className="dl-card--instrument">
           <div className="dl-progress">
             {progress.map((a) => (
               <ProgressRow key={a.id} a={a} />
@@ -283,19 +318,12 @@ export default function HomePage() {
 
         <Card label="Quick actions">
           <div className="dl-stack">
-            {isClient ? (
-              <>
-                <ActionTile icon={<IconPlus />} label="New agreement" sub="Draft escrow terms" onClick={() => go()} />
-                <ActionTile icon={<IconShield />} label="Review milestone" sub="Approve & release" onClick={() => go("in_review")} />
-                <ActionTile icon={<IconMessages />} label="Message counterparty" sub="Open a conversation" onClick={() => navigate("/app/messages")} />
-              </>
-            ) : (
-              <>
-                <ActionTile icon={<IconUpload />} label="Submit work" sub="Mark a milestone done" onClick={() => go()} />
-                <ActionTile icon={<IconFile />} label="Upload proof" sub="Attach deliverables" onClick={() => go()} />
-                <ActionTile icon={<IconMessages />} label="Message client" sub="Open a conversation" onClick={() => navigate("/app/messages")} />
-              </>
-            )}
+            {cfg.quickActions.map((q) => {
+              const v = quickView[q.key];
+              return (
+                <ActionTile key={q.key} icon={v.icon} label={q.label} sub={q.helper} onClick={v.onClick} />
+              );
+            })}
           </div>
         </Card>
       </div>

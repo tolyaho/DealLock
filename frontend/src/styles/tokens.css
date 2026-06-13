@@ -49,6 +49,10 @@
   --surface-metal:        #f4f4f1; /* 2 · brushed satin panel (the shell)      */
   --surface-card:         #ffffff; /* 3 · base card                            */
   --surface-card-raised:  #ffffff; /* 4 · elevated card (differs by shadow)    */
+  /* Brushed metal PLATES — a whisper-soft top→bottom gradient so cards read as
+   * lightly brushed silver panels, not flat paper. Minimal: ~4% drop, no lines. */
+  --surface-plate:        linear-gradient(180deg, #ffffff 0%, #f1f2ee 44%, #e8eae3 100%);
+  --surface-plate-raised: linear-gradient(180deg, #ffffff 0%, #eef0ea 44%, #e2e4dc 100%);
   --surface-glass:        rgba(252, 252, 250, 0.66); /* 5 · glass panel        */
   --surface-action:       #fbfbf9; /* 6 · action surface (control face)        */
   --surface-primary:      linear-gradient(150deg, #43443f 0%, #2b2c27 52%, #1b1c18 100%); /* 7 · dark primary action */
@@ -73,6 +77,72 @@
   --edge-highlight-disc: inset 0 1px 0 rgba(255, 255, 255, 0.85); /* brushed disc/knob top catch */
   --edge-on-dark:        inset 0 1px 0 rgba(255, 255, 255, 0.16);
   --border-glass:        rgba(255, 255, 255, 0.60); /* frosted glass plate edge */
+  /* Lower/right dark edge — the complement to --edge-highlight. Paired
+   * (var(--edge-highlight), var(--edge-shadow)) they give a plate a machined rim:
+   * a bright top-left light-catch over a dark lower-right contact edge.          */
+  --edge-shadow:         inset 0 -1px 0 rgba(64, 68, 60, 0.12);
+  --edge-shadow-soft:    inset 0 -1px 0 rgba(64, 68, 60, 0.07);
+  /* Focus ring — neutral graphite-silver (NOT the lavender technical accent), so
+   * focus reads as precise hardware, never a coloured SaaS outline.             */
+  --focus-ring:          rgba(46, 50, 44, 0.82);
+
+  /* ── Structural rails (machined silver seams, frames, tracks) ─────────────
+   * The "hardware" layer: thin precision lines that mount the frosted panels
+   * into a subtle silver frame — seams, dividers, active rails, track edges.
+   * Ink-tinted, never pure black; quiet by default, brighten ~10% on hover.
+   * Used sparingly: structure, active state, section boundaries, progress,
+   * selected rows, important controls — NOT every element. Role temperature
+   * rides --rail-accent (flipped per [data-workspace] in app.css).            */
+  --rail-soft:            rgba(105, 110, 104, 0.24); /* faint seam / divider     */
+  --rail-medium:          rgba(95, 100, 94, 0.36);   /* visible structural rail  */
+  --rail-strong:          rgba(75, 82, 76, 0.50);    /* emphasis / header rail   */
+  --rail-highlight:       rgba(255, 255, 255, 0.86); /* top light-catch on rails */
+  --rail-shadow:          rgba(55, 60, 54, 0.16);    /* soft drop under a strip  */
+  --rail-client-accent:   rgba(64, 112, 82, 0.58);   /* sage rail (visible)      */
+  --rail-provider-accent: rgba(168, 132, 72, 0.58);  /* champagne rail (visible) */
+  --rail-accent:          var(--rail-client-accent); /* active role rail (flips) */
+
+  /* Brushed-silver BEAMS — the *structural* rail (3–6px), a real machined strip
+   * (not a hairline). Horizontal beams (topbar / card header / table header) are
+   * lit top→bottom: bright top edge → satin body → dark lower seam. The vertical
+   * variant lights left→right for spines and left rails. --rail-bracket is the
+   * stroke for the small L-shaped hardware corner marks.                        */
+  --rail-beam:    linear-gradient(180deg, #ffffff 0%, #dde0d9 28%, #c3c6bc 62%, #8a9087 100%);
+  --rail-beam-v:  linear-gradient(90deg, #f7f8f4 0%, #cdd0c7 48%, #8d938a 100%);
+  --rail-bracket: rgba(75, 82, 76, 0.5);  /* silver stroke for L-corner brackets */
+
+  /* ── Instrument PROGRESS rail — one shared look for every milestone/progress
+   * bar (table mini-bars + card bars). The empty track is a pale pearl-silver
+   * groove cut into frosted metal; the fill is luminous satin silver-sage with a
+   * soft white bloom and a light-catch at the leading edge. Neutral by design —
+   * silver-sage, never a coloured/green progress bar.                          */
+  /* TRACK — a recessed silver channel carved into the panel: light top rim, pale
+   * silver center, a darker graphite-silver lower inner edge, a thin metallic
+   * outline, and a bright outer lower catch so it reads as milled INTO the surface
+   * (not a flat line). Kept light so the satin fill has a high-contrast bed.       */
+  --prog-track-bg:     linear-gradient(180deg, rgba(252, 253, 249, 0.96) 0%, rgba(225, 227, 221, 0.96) 50%, rgba(199, 203, 196, 0.94) 100%);
+  --prog-track-shadow: inset 0 0 0 1px rgba(96, 102, 94, 0.30),    /* thin metallic outline */
+    inset 0 1px 1px rgba(255, 255, 255, 0.88),                     /* bright upper rim      */
+    inset 0 -1.5px 2px rgba(52, 56, 50, 0.16),                     /* graphite lower edge   */
+    0 1px 0 rgba(255, 255, 255, 0.60);                             /* carved outer catch    */
+  /* FILL — a satin-metal insert one clear value step below the track (silver-sage
+   * undertone, never green): an upper-surface reflection over a brushed body that
+   * runs bright lit top → dense satin center → darker steel lower contour. The
+   * leading-edge light-catch lives on ::after (see app.css). Reads without glow.  */
+  --prog-fill-bg:      linear-gradient(180deg, rgba(255, 255, 255, 0.40) 0%, rgba(255, 255, 255, 0) 48%),
+    linear-gradient(180deg, #f0f3ef 0%, #adb8ad 46%, #828f84 100%);
+  /* All shadows are INSET — the shine lives strictly inside the fill so it can
+   * never extend past the fill's right edge and make the bar read longer than its
+   * true width. The fill's width is the only source of truth for progress.        */
+  --prog-fill-shadow:  inset 0 1px 0 rgba(255, 255, 255, 0.82),    /* polished top highlight */
+    inset 0 -1px 1px rgba(45, 50, 44, 0.24),                       /* darker lower contour   */
+    inset 0 0 6px rgba(255, 255, 255, 0.22);                       /* contained silver shine */
+  /* hover / completed — a fuller internal shine, still fully contained */
+  --prog-fill-shadow-strong: inset 0 1px 0 rgba(255, 255, 255, 0.95),
+    inset 0 -1px 1px rgba(45, 50, 44, 0.26),
+    inset 0 0 9px rgba(255, 255, 255, 0.34);
+  /* leading-edge light-catch (polished catch where the insert ends) */
+  --prog-edge:         linear-gradient(90deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.55) 62%, rgba(255, 255, 255, 0.14) 100%);
 
   /* ── Shadows — one consistent elevation scale, soft & ink-tinted ─────────── */
   --shadow-1: 0 1px 2px rgba(24, 24, 20, 0.05);
@@ -214,7 +284,21 @@
   --metal-keycap-hover: linear-gradient(176deg, #fcfcfa 0%, #f1f1ec 50%, #e3e3dc 100%);
   /* Identity token — a CALM, low-contrast satin face for monogram avatars. No
    * glossy bubble: a gentle top-lit silver gradient only (see .dl-avatar).       */
-  --metal-token: linear-gradient(155deg, #f6f6f3 0%, #ecece7 54%, #e0e0da 100%);
+  --metal-token: linear-gradient(155deg, #fbfbf9 0%, #e8e9e3 50%, #d1d3ca 100%);
+  /* Brushed-aluminum SIDEBAR plate — a REAL silver panel, not a pale tint. Three
+   * layers that together read as machined metal: (1) a fine vertical brush, (2) a
+   * diagonal specular reflection sweep (the metallic give-away), (3) a cool-neutral
+   * body with a genuine value range (light top → mid-silver foot, ~91%→80%). Hue
+   * is neutral-cool (silver/aluminum), never warm/cream.                         */
+  --surface-sidebar:
+    repeating-linear-gradient(90deg,
+      rgba(255, 255, 255, 0.32) 0px, rgba(255, 255, 255, 0.32) 1px,
+      rgba(92, 96, 96, 0.05) 1px, rgba(92, 96, 96, 0.05) 2px,
+      rgba(255, 255, 255, 0) 2px, rgba(255, 255, 255, 0) 4px),
+    linear-gradient(118deg,
+      rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.40) 23%, rgba(255, 255, 255, 0) 41%,
+      rgba(255, 255, 255, 0) 65%, rgba(255, 255, 255, 0.24) 81%, rgba(255, 255, 255, 0) 100%),
+    linear-gradient(168deg, #e7e9e9 0%, #d7dad9 47%, #cacdcb 100%);
   /* Faint anisotropic (brushed) grain — overlaid via multiply at low opacity.   */
   --metal-grain: repeating-linear-gradient(
     104deg,
@@ -222,6 +306,15 @@
     rgba(28, 28, 22, 0.018) 1px,
     rgba(255, 255, 255, 0.02) 2px,
     rgba(255, 255, 255, 0.02) 3px);
+  /* Vertical brushed grain — a whisper of machined silver striations for card /
+   * panel / sidebar faces. Layered into the surface itself (no blend mode), kept
+   * at ~2% so the user FEELS metal, never sees an obvious pattern.              */
+  --metal-grain-v: repeating-linear-gradient(
+    90deg,
+    rgba(28, 28, 22, 0.020) 0px,
+    rgba(28, 28, 22, 0.020) 1px,
+    rgba(255, 255, 255, 0.016) 1px,
+    rgba(255, 255, 255, 0.016) 3px);
   /* Studio-light pool behind a content zone — a soft cool bloom that gives the
    * satin body depth in the gutters around cards (sits BEHIND content).         */
   --bg-zone: radial-gradient(120% 70% at 50% -8%, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0) 60%);
@@ -234,4 +327,15 @@
     linear-gradient(180deg, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0) 28%),
     repeating-linear-gradient(90deg, rgba(28, 28, 22, 0.016) 0 1px, transparent 1px 116px),
     radial-gradient(150% 104% at 50% -8%, rgba(140, 142, 134, 0.20) 0%, rgba(140, 142, 134, 0) 60%);
+
+  /* ── Material aliases — the "silver hardware" vocabulary, mapped to the canonical
+   * tokens above so there is ONE coherent system (no parallel gradients). Use these
+   * friendly names when reaching for a surface/rim/shadow in new work.           */
+  --surface-pearl:       var(--surface-plate);        /* card / panel face        */
+  --surface-silver:      var(--surface-plate-raised);  /* raised face              */
+  --surface-metal-soft:  var(--metal-keycap);          /* control / key face       */
+  --rim-silver:          var(--rail-medium);           /* machined silver rim       */
+  --rim-graphite:        var(--border-strong);         /* darker precise rim        */
+  --shadow-metal-soft:   var(--shadow-card);           /* resting elevation         */
+  --shadow-metal-lifted: var(--shadow-card-hover);     /* hover / lifted elevation  */
 }

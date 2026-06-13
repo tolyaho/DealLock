@@ -40,6 +40,30 @@
   --dl-steel-400: #909997;
   --dl-steel-500: #6d7474;
 
+  /* Brushed-metal control face — the "metallic disc" material (a slightly lighter
+   * cousin of the app design-lab --metal-disc) that the landing's signature
+   * buttons wear instead of the old graphite fill: Launch App, the hero CTA, and
+   * the repo "view contracts" CTA. A radial silver disc with a soft diagonal
+   * specular sweep; hover brightens it. Silver spectrum only; shadows are
+   * ink-tinted (rgba(17,19,21,…)), never pure black. Text on it is --dl-ink. */
+  --dl-metal-face:
+    linear-gradient(120deg, rgba(255, 255, 255, 0.50) 0%, rgba(255, 255, 255, 0) 34%, rgba(255, 255, 255, 0) 60%, rgba(255, 255, 255, 0.34) 100%),
+    radial-gradient(circle at 32% 24%, #ffffff 0%, #f2f3ef 30%, #dedfd8 60%, #c4c5bd 80%, #e9eae4 100%);
+  --dl-metal-face-hover:
+    linear-gradient(120deg, rgba(255, 255, 255, 0.60) 0%, rgba(255, 255, 255, 0) 34%, rgba(255, 255, 255, 0) 60%, rgba(255, 255, 255, 0.42) 100%),
+    radial-gradient(circle at 32% 24%, #ffffff 0%, #f7f8f4 30%, #e6e7e0 60%, #d0d1c9 80%, #eff0ea 100%);
+  --dl-metal-edge: rgba(17, 19, 21, 0.16);
+  --dl-metal-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.92),
+    inset 0 -1px 2px rgba(17, 19, 21, 0.12),
+    0 4px 12px rgba(17, 19, 21, 0.12),
+    0 1px 3px rgba(17, 19, 21, 0.08);
+  --dl-metal-shadow-hover:
+    inset 0 1px 0 rgba(255, 255, 255, 0.95),
+    inset 0 -1px 2px rgba(17, 19, 21, 0.14),
+    0 6px 18px rgba(17, 19, 21, 0.16),
+    0 2px 5px rgba(17, 19, 21, 0.10);
+
   /* Shared wall surface — ONE matte microcement/brushed-metal material used by both  */
   /* the hero and the workflow so the whole page reads as a single continuous wall.   */
   /* Warm matte silver (graphite only for seams + text). Tuned so adjacent tones step */
@@ -421,7 +445,8 @@ a {
 .nav-link:hover { color: var(--dl-ink); }
 .nav-link:hover::after { transform: scaleX(1); }
 
-/* Right — Launch App, dark metallic pill, aligned to the hero's right content edge. */
+/* Right — Launch App, brushed-metal pill (lighter silver disc material), aligned
+   to the hero's right content edge. */
 .launch-button {
   grid-column: 3;
   justify-self: end;
@@ -429,9 +454,9 @@ a {
   font-size: 13px;
   font-weight: 600;
   letter-spacing: 0.01em;
-  color: rgba(255, 255, 255, 0.97);
-  background: linear-gradient(180deg, #22262b 0%, #0b0d10 100%);
-  border: 1px solid rgba(17, 19, 21, 0.92);
+  color: var(--dl-ink);
+  background: var(--dl-metal-face);
+  border: 1px solid var(--dl-metal-edge);
   border-radius: 999px;
   padding: 0 22px;
   height: 42px;
@@ -439,21 +464,14 @@ a {
   align-items: center;
   white-space: nowrap;
   cursor: pointer;
-  transition: transform 160ms ease, box-shadow 160ms ease;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.18),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.34),
-    0 4px 12px rgba(17, 19, 21, 0.18),
-    0 1px 3px rgba(17, 19, 21, 0.10);
+  transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease;
+  box-shadow: var(--dl-metal-shadow);
 }
 
 .launch-button:hover {
   transform: translateY(-1px);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.22),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.36),
-    0 6px 18px rgba(17, 19, 21, 0.22),
-    0 2px 5px rgba(17, 19, 21, 0.12);
+  background: var(--dl-metal-face-hover);
+  box-shadow: var(--dl-metal-shadow-hover);
 }
 
 .launch-button:focus-visible {
@@ -591,32 +609,24 @@ a {
   font-size: 13.5px;
   font-weight: 600;
   letter-spacing: 0.005em;
-  color: rgba(255, 255, 255, 0.96);
-  background:
-    linear-gradient(180deg, #1d2024 0%, #0e1012 100%);
-  border: 1px solid rgba(17, 19, 21, 0.92);
+  color: var(--dl-ink);
+  background: var(--dl-metal-face);
+  border: 1px solid var(--dl-metal-edge);
   border-radius: 10px;
   padding: 0 22px;
   height: 46px;
   cursor: pointer;
-  transition: transform 160ms ease, box-shadow 160ms ease;
+  transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease;
   display: inline-flex;
   align-items: center;
   gap: 8px;
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.14),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.30),
-    0 4px 14px rgba(17, 19, 21, 0.16),
-    0 1px 3px rgba(17, 19, 21, 0.08);
+  box-shadow: var(--dl-metal-shadow);
 }
 
 .dl-cta-primary:hover {
   transform: translateY(-1px);
-  box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.18),
-    inset 0 -1px 0 rgba(0, 0, 0, 0.32),
-    0 6px 20px rgba(17, 19, 21, 0.20),
-    0 2px 6px rgba(17, 19, 21, 0.10);
+  background: var(--dl-metal-face-hover);
+  box-shadow: var(--dl-metal-shadow-hover);
 }
 
 .dl-cta-primary:focus-visible {
@@ -3097,14 +3107,16 @@ a {
 }
 
 .dl-repo-cta__btn--solid {
-  color: var(--sc-solid-text);
-  background: var(--sc-solid-bg);
-  border: 1px solid var(--sc-solid-border);
-  box-shadow: var(--sc-solid-shadow);
+  color: var(--dl-ink);
+  background: var(--dl-metal-face);
+  border: 1px solid var(--dl-metal-edge);
+  box-shadow: var(--dl-metal-shadow);
 }
 
 .dl-repo-cta__btn--solid:hover {
   transform: translateY(-1px);
+  background: var(--dl-metal-face-hover);
+  box-shadow: var(--dl-metal-shadow-hover);
 }
 
 .dl-repo-cta__btn:focus-visible {

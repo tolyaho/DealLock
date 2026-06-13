@@ -157,10 +157,16 @@ export default function AgreementsPage() {
               const act = rowAction(a, role);
               const ms = currentMilestone(a);
               const prog = milestoneProgress(a);
-              // Every row action wears the brushed-aluminum disc surface so the
-              // Action column reads as one calm, tactile metal column. The single
-              // dark primary still belongs to the page CTA, not every row.
-              const actVariant = "disc" as const;
+              // The fill must match the DISPLAYED fraction exactly: the current
+              // milestone position over total ("{ms.order} / {total}"), clamped
+              // 0–100. Pure data — no presets, no cross-row normalization.
+              const fillPercent =
+                prog.total > 0 ? Math.max(0, Math.min((prog.order / prog.total) * 100, 100)) : 0;
+              // Every row action wears the cool frosted-glass control so the
+              // Action column reads as one calm, light column — deliberately NOT
+              // metallic (the brushed-metal disc now belongs to the page CTA and
+              // the landing's signature buttons, not every row).
+              const actVariant = "glass" as const;
               return (
                 <tr key={a.id}>
                   <td className="dl-cell-agreement">
@@ -188,8 +194,8 @@ export default function AgreementsPage() {
                           <span className="dl-ms__count">{ms.order} / {prog.total}</span>
                           <span className="dl-ms__track">
                             <span
-                              className="dl-ms__fill"
-                              style={{ width: `${Math.round((prog.doneCount / prog.total) * 100)}%` }}
+                              className={`dl-ms__fill${fillPercent >= 100 ? " dl-ms__fill--full" : ""}`}
+                              style={{ width: `${fillPercent}%` }}
                             />
                           </span>
                         </div>

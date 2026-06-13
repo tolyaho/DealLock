@@ -1,16 +1,43 @@
-/* Messages (skeleton placeholder) — agreement-scoped messaging ships next phase. */
-import { EmptyState, PageContainer, PageHeader } from "../../components/app";
-import { IconMessages } from "../../components/app/icons";
+/*
+ * Messages — agreement-scoped conversations (ships next phase). Copy adapts to
+ * the active workspace: a client talks to providers, a provider talks to clients.
+ */
+import { useState } from "react";
+import { EmptyStatePage, PageToolbar, SearchInput, SegmentedControl, useWorkspace } from "../../components/app";
+import { IconArrowRight } from "../../components/app/icons";
+
+const FILTERS = [
+  { value: "all", label: "All" },
+  { value: "unread", label: "Unread" },
+];
 
 export default function MessagesPage() {
+  const { workspace } = useWorkspace();
+  const [filter, setFilter] = useState("all");
+  const [search, setSearch] = useState("");
+  const counterparties = workspace === "client" ? "providers" : "clients";
+
   return (
-    <PageContainer>
-      <PageHeader title="Messages" subtitle="Agreement-scoped coordination with your counterparties." />
-      <EmptyState
-        icon={<IconMessages />}
-        title="Secure messaging on the way"
-        text="Threaded, agreement-scoped messaging will live here, tied to each contract. For now, coordinate on the agreement timeline."
-      />
-    </PageContainer>
+    <EmptyStatePage
+      title="Messages"
+      subtitle="Keep agreement conversations tied to the right counterparty and milestone."
+      toolbar={
+        <PageToolbar
+          filters={
+            <SegmentedControl ariaLabel="Message filter" value={filter} onChange={setFilter} options={FILTERS} />
+          }
+          end={
+            <div className="dl-toolbar__search">
+              <SearchInput value={search} onChange={setSearch} placeholder="Search messages…" block />
+            </div>
+          }
+        />
+      }
+      splineType="messages"
+      emptyTitle="No conversations yet"
+      emptyDescription={`Messages with ${counterparties} will appear here when an agreement starts — every thread scoped to its contract and milestone.`}
+      primaryAction={{ label: "Open agreement", to: "/app/agreements", icon: <IconArrowRight /> }}
+      secondaryAction={{ label: "Create agreement", to: "/app/agreements" }}
+    />
   );
 }
