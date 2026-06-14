@@ -29,6 +29,7 @@ import WorkflowContractStage from "./WorkflowContractStage";
 import TypewriterText from "./TypewriterText";
 import MetalOrbitLines from "../MetalOrbitLines";
 import MetalSheen from "../MetalSheen";
+import WorkflowContractSpline from "../WorkflowContractSpline";
 
 // Position is the card's DISTANCE from the active step, not its absolute index — so
 // only the active card (+ its immediate neighbours) is ever placed/visible. This is
@@ -121,6 +122,7 @@ export default function WorkflowStory() {
       {/* Header sits ABOVE the sticky track, so it scrolls through/away as the       */}
       {/* contract-card scene takes over and pins as the central focal object.        */}
       <header className="dl-workflow__header" ref={headerRef}>
+        <WorkflowContractSpline />
         <span className={`dl-workflow__eyebrow${headerInView ? " is-in" : ""}`}>
           Workflow
         </span>

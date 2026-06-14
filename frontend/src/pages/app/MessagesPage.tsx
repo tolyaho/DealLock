@@ -3,8 +3,9 @@
  * the active workspace: a client talks to providers, a provider talks to clients.
  */
 import { useState } from "react";
-import { EmptyStatePage, PageToolbar, SearchInput, SegmentedControl, useWorkspace } from "../../components/app";
+import { EmptyStatePage, PageToolbar, SearchInput, SegmentedControl, SplineObject, useWorkspace } from "../../components/app";
 import { IconArrowRight } from "../../components/app/icons";
+import { SPLINE_SCENES } from "../../splineScenes";
 
 const FILTERS = [
   { value: "all", label: "All" },
@@ -34,6 +35,7 @@ export default function MessagesPage() {
         />
       }
       splineType="messages"
+      object={<SplineObject scene={SPLINE_SCENES.messages} scale={3.2} float />}
       emptyTitle="No conversations yet"
       emptyDescription={`Messages with ${counterparties} will appear here when an agreement starts — every thread scoped to its contract and milestone.`}
       primaryAction={{ label: "Open agreement", to: "/app/agreements", icon: <IconArrowRight /> }}

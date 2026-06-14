@@ -24,10 +24,20 @@ export { ActionTile } from "./ActionTile";
 export { TableShell, type Column } from "./TableShell";
 export { EmptyState } from "./EmptyState";
 export { SplineObjectSlot, type SplineSlotType } from "./SplineObjectSlot";
-export { StatisticsSplineObject } from "./StatisticsSplineObject";
+export { SplineObject } from "./SplineObject";
 export { EmptyStateStage, type StageAction } from "./EmptyStateStage";
 export { PageToolbar } from "./PageToolbar";
 export { EmptyStatePage } from "./EmptyStatePage";
+export {
+  usePageLoading,
+  SkeletonText,
+  SkeletonCircle,
+  SkeletonButton,
+  SkeletonCard,
+  SkeletonRow,
+  SkeletonTable,
+  StageSkeleton,
+} from "./Skeleton";
 export { BottomActionBar } from "./BottomActionBar";
 export { Avatar } from "./Avatar";
 export { Identity } from "./Identity";

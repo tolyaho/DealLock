@@ -34,10 +34,11 @@
 import { lazy, Suspense, useCallback, useEffect, useState } from "react";
 import type { Application } from "@splinetool/runtime";
 import VaultObject from "./VaultObject";
+import { SPLINE_SCENES } from "../../splineScenes";
 
 const Spline = lazy(() => import("@splinetool/react-spline"));
 
-const SCENE_URL = "https://prod.spline.design/AGe6U1U5GtmgortZ/scene.splinecode";
+const SCENE_URL = SPLINE_SCENES.heroVault;
 
 /*
  * The published scene's camera frames the figure so its square metal/glass plate
@@ -89,12 +90,6 @@ function frameFullFigure(app: Application) {
   }
 }
 
-function handleSplineLoad(app: Application) {
-  frameFullFigure(app);
-  // Re-assert once in case the scene runs an intro camera transition on start.
-  window.setTimeout(() => frameFullFigure(app), 600);
-}
-
 function usePrefersReducedMotion() {
   const query = "(prefers-reduced-motion: reduce)";
   const [reduced, setReduced] = useState(
@@ -113,6 +108,23 @@ export default function HeroVaultSpline() {
   const reducedMotion = usePrefersReducedMotion();
   const [sealed, setSealed] = useState(false);
   const [pulseKey, setPulseKey] = useState(0);
+  // The premium metallic placeholder holds the (fixed) slot until the scene's
+  // onLoad fires; then the placeholder fades out and the canvas fades in (~550ms).
+  const [loaded, setLoaded] = useState(false);
+
+  const onSplineLoad = useCallback((app: Application) => {
+    frameFullFigure(app);
+    // Re-assert once in case the scene runs an intro camera transition on start.
+    window.setTimeout(() => frameFullFigure(app), 600);
+    setLoaded(true);
+  }, []);
+
+  // Timeout fallback: if onLoad never fires (slow/blocked Spline), reveal anyway
+  // so the placeholder never lingers and the page stays usable.
+  useEffect(() => {
+    const t = window.setTimeout(() => setLoaded(true), 9000);
+    return () => window.clearTimeout(t);
+  }, []);
 
   // Click TOGGLES the vault seal: seal → unseal → seal. The scene plays its own
   // authored lock animation; we add the DOM-only confirmation the 3D scene can't
@@ -135,11 +147,22 @@ export default function HeroVaultSpline() {
 
   return (
     <div
-      className={`dl-spline-vault${sealed ? " is-sealed" : ""}`}
+      className={`dl-spline-vault${sealed ? " is-sealed" : ""}${loaded ? " is-loaded" : ""}`}
       onClick={handleSeal}
     >
-      <Suspense fallback={<div className="dl-spline-vault__skeleton" />}>
-        <Spline scene={SCENE_URL} onLoad={handleSplineLoad} className="dl-spline-vault__canvas" />
+      {/* premium metallic placeholder — a frosted vault aperture + light sweep,
+       *  visible until the scene's onLoad fires, then crossfades to the canvas */}
+      <div className="dl-spline-vault__skeleton" aria-hidden="true">
+        <span className="dl-spline-vault__loadlabel">Loading secure vault…</span>
+      </div>
+
+      <Suspense fallback={null}>
+        <Spline
+          scene={SCENE_URL}
+          onLoad={onSplineLoad}
+          onError={() => setLoaded(true)}
+          className="dl-spline-vault__canvas"
+        />
       </Suspense>
 
       <div className="dl-spline-vault__fx" aria-hidden="true">

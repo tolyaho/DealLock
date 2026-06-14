@@ -1567,65 +1567,47 @@
   white-space: nowrap;
 }
 
-/* ── StatisticsSplineObject — JUST the circular medallion, blended into the page ─
- * NO square plate, no backing, no border/overflow — the canvas is transparent so
- * only the circular object shows. A fixed 1:1 box (no layout shift); soft blending
- * via a pearl glow behind it, a circular drop-shadow that follows the coin (not a
- * rectangle), a whisper of edge glow, and a touch of transparency. pointer-events:
- * none so it never blocks the CTA. */
+/* ── Spline empty-state object — a clean, transparent, premium 3D object placed
+ * above the empty-state title. NO plate, NO mask/crop, NO center-pinned glow.
+ *
+ * Why no center-pinned glow: Spline scenes don't frame their object dead-centre, so
+ * a glow/shadow pinned to the BOX centre reads as a detached circle offset to one
+ * side (the "bottom-right artifact") — and it's invisible in the Spline editor
+ * because it's pure CSS. Grounding therefore lives ONLY on a `drop-shadow` filter on
+ * the object layer: it's computed from the canvas alpha, so it tracks the object's
+ * real silhouette and CANNOT detach into a separate circle.
+ *
+ * Fixed 1:1 box (no layout shift), centered, pointer-events:none (never blocks the
+ * CTA). The placeholder is UNMOUNTED on load (component-side), so only the live
+ * canvas layer remains afterwards. */
 .dl-spline-object {
   position: relative;
-  width: 168px;
-  height: 168px;            /* 1:1 — square footprint, circular object */
+  width: 170px;
+  aspect-ratio: 1 / 1;
+  margin-inline: auto;
   flex: 0 0 auto;
   pointer-events: none;
   display: grid;
   place-items: center;
 }
-/* faint pearl glow behind the coin — merges it into the silver page */
-.dl-spline-object::before {
-  content: "";
+/* the object layer — transparent canvas, fades in smoothly on load (opacity 0 →
+ * 0.97). The grounding shadow tracks the object's own alpha (drop-shadow), so it
+ * hugs the object and never becomes a detached circle. */
+.dl-spline-object__object {
   position: absolute;
   left: 50%;
   top: 50%;
-  width: 88%;
-  height: 88%;
-  transform: translate(-50%, -50%);
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(255, 255, 255, 0.5) 0%, rgba(226, 228, 221, 0.3) 46%, rgba(226, 228, 221, 0) 70%);
-  filter: blur(6px);
-  z-index: 0;
-  pointer-events: none;
-}
-/* the object layer — transparent + clipped to the coin's CIRCLE so ONLY the round
- * medallion shows. The clip drops a soft secondary element the scene carries in the
- * corner (revealed once the background went transparent) and gives a clean circular
- * edge that blends. The grounding shadow lives on ::after (a mask here would clip a
- * drop-shadow), kept soft + symmetric — never an offset blob. */
-.dl-spline-object__object {
-  position: relative;
   z-index: 1;
-  width: 100%;
-  height: 100%;
-  opacity: 0.97;
-  -webkit-mask-image: radial-gradient(circle closest-side, #000 85%, rgba(0, 0, 0, 0) 99%);
-  mask-image: radial-gradient(circle closest-side, #000 85%, rgba(0, 0, 0, 0) 99%);
+  /* --spline-scale normalizes apparent object size: the canvas renders at this
+   * multiple of the wrapper (native res → sharp), centred over the fixed footprint. */
+  width: calc(100% * var(--spline-scale, 1));
+  height: calc(100% * var(--spline-scale, 1));
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  filter: drop-shadow(0 4px 7px rgba(70, 74, 68, 0.16));
+  transition: opacity var(--dur-4) var(--ease-out);
 }
-/* soft, symmetric shadow grounding the coin (replaces the old offset drop-shadow) */
-.dl-spline-object::after {
-  content: "";
-  position: absolute;
-  left: 50%;
-  bottom: 9%;
-  width: 50%;
-  height: 10%;
-  transform: translateX(-50%);
-  border-radius: 50%;
-  background: radial-gradient(50% 50% at 50% 50%, rgba(70, 74, 68, 0.16) 0%, rgba(70, 74, 68, 0) 72%);
-  filter: blur(4px);
-  z-index: 0;
-  pointer-events: none;
-}
+.dl-spline-object.is-loaded .dl-spline-object__object { opacity: 0.97; }
 /* the scene fills the box — react-spline may render a <canvas> (optionally wrapped
  * in a <div>); cover both, and force the canvas clear transparent. */
 .dl-spline-object__scene,
@@ -1636,27 +1618,132 @@
   display: block;
   background: transparent !important;
 }
-/* loading placeholder — a soft circular silver glow, fades on load (no plate) */
-.dl-spline-object__fallback {
+/* ── loader — a brushed pearl medallion with a specular arc sweeping its rim, like
+ * light catching polished silver. Shown alone (centred is correct) from the first
+ * frame until the scene loads, then CROSSFADED out + UNMOUNTED (component-side) so it
+ * never lingers behind the live object. */
+.dl-spline-object__loader {
   position: absolute;
-  left: 50%;
-  top: 50%;
-  width: 76%;
-  height: 76%;
-  transform: translate(-50%, -50%);
+  inset: 16%;
+  z-index: 2;            /* above the object layer (z-index:1) through the crossfade */
   border-radius: 50%;
-  background: radial-gradient(circle at 50% 46%, rgba(255, 255, 255, 0.9) 0%, rgba(212, 215, 208, 0.45) 40%, rgba(212, 215, 208, 0) 72%);
+  display: grid;
+  place-items: center;
+  /* pearl medallion bed: soft top-lit silver disc */
+  background: radial-gradient(circle at 50% 38%,
+    rgba(255, 255, 255, 0.82) 0%,
+    rgba(229, 231, 225, 0.46) 50%,
+    rgba(206, 209, 202, 0.18) 82%,
+    rgba(206, 209, 202, 0) 100%);
+  box-shadow:
+    0 6px 16px rgba(70, 74, 68, 0.10),
+    inset 0 1px 1px rgba(255, 255, 255, 0.65);
   opacity: 1;
-  transition: opacity var(--dur-4) var(--ease-out);
-  animation: dl-slot-glow 6s var(--ease-standard) infinite;
+  transform: scale(1);
+  transition: opacity var(--dur-4) var(--ease-out), transform var(--dur-4) var(--ease-out);
   pointer-events: none;
 }
-.dl-spline-object__fallback[data-hidden] { opacity: 0; }
+/* breathing inner core — gives the disc quiet life while it waits */
+.dl-spline-object__loader::before {
+  content: "";
+  position: absolute;
+  inset: 20%;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 44%, rgba(255, 255, 255, 0.92) 0%, rgba(255, 255, 255, 0) 70%);
+  animation: dl-spline-pulse 2.4s var(--ease-standard) infinite;
+}
+/* specular arc travelling around the rim — a conic highlight clipped to a thin ring */
+.dl-spline-object__loader-ring {
+  position: absolute;
+  inset: -4%;
+  border-radius: 50%;
+  background: conic-gradient(from 90deg,
+    rgba(255, 255, 255, 0) 0deg,
+    rgba(255, 255, 255, 0) 48deg,
+    rgba(255, 255, 255, 0.92) 118deg,
+    rgba(214, 217, 210, 0.22) 196deg,
+    rgba(255, 255, 255, 0) 268deg,
+    rgba(255, 255, 255, 0) 360deg);
+  -webkit-mask: radial-gradient(circle, transparent 60%, #000 63%, #000 84%, transparent 87%);
+  mask: radial-gradient(circle, transparent 60%, #000 63%, #000 84%, transparent 87%);
+  animation: dl-spline-spin 1.5s linear infinite;
+}
+/* crossfade out once the scene reports loaded; the slight scale-up reads as the
+ * medallion "opening" into the object, not a hard cut */
+.dl-spline-object__loader[data-done] {
+  opacity: 0;
+  transform: scale(1.06);
+}
+.dl-spline-object__loader[data-done] .dl-spline-object__loader-ring,
+.dl-spline-object__loader[data-done]::before { animation-play-state: paused; }
+@keyframes dl-spline-spin { to { transform: rotate(360deg); } }
+@keyframes dl-spline-pulse { 0%, 100% { opacity: 0.4; } 50% { opacity: 0.95; } }
+/* mild floating bob — opt-in via the `float` prop (e.g. Messages, whose scene is
+ * otherwise static). Straight up/down only; amplitude small enough it never clips the
+ * box. Keyframes carry the -50%/-50% centering so they compose with the positioning. */
+.dl-spline-object--float .dl-spline-object__object {
+  animation: dl-spline-float 4s var(--ease-standard) infinite;
+}
+@keyframes dl-spline-float {
+  0%, 100% { transform: translate(-50%, calc(-50% - 4px)); }
+  50%      { transform: translate(-50%, calc(-50% + 4px)); }
+}
 @media (max-width: 640px) {
-  .dl-spline-object { width: 120px; height: 120px; }
+  .dl-spline-object { width: 125px; }
 }
 @media (prefers-reduced-motion: reduce) {
-  .dl-spline-object__fallback { animation: none; }
+  .dl-spline-object__loader-ring,
+  .dl-spline-object__loader::before { animation: none; }
+  .dl-spline-object__object { transition: none; animation: none; }
+}
+
+/* ── Skeletons — silver/pearl loading placeholders with a soft L→R light sweep ──
+ * Recessed pearl surface (no flat grey), rounded to match real components, sweep
+ * disabled under reduced-motion. Markup is aria-hidden; loading regions set
+ * aria-busy. No spinners for normal dashboard data. */
+.dl-skel {
+  position: relative;
+  overflow: hidden;
+  background: var(--surface-sunken);
+  border-radius: var(--radius-sm);
+}
+.dl-skel::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, rgba(255, 255, 255, 0) 20%, rgba(255, 255, 255, 0.55) 50%, rgba(255, 255, 255, 0) 80%);
+  transform: translateX(-100%);
+  animation: dl-skel-sweep 1.5s var(--ease-standard) infinite;
+}
+@keyframes dl-skel-sweep { 100% { transform: translateX(100%); } }
+
+.dl-skel-line { display: block; height: 12px; border-radius: var(--radius-pill); }
+.dl-skel-line--sm { height: 10px; }
+.dl-skel-lines { display: flex; flex-direction: column; gap: var(--space-2); }
+.dl-skel-circle { display: block; border-radius: 50%; flex: 0 0 auto; }
+.dl-skel-btn { display: block; height: 36px; border-radius: var(--radius-control); }
+.dl-skel-chip { display: inline-block; width: 76px; height: 24px; border-radius: var(--radius-pill); }
+.dl-skel-bar { display: block; height: 6px; border-radius: var(--radius-pill); }
+
+/* card skeleton reuses the real .dl-card shell; just space its inner bits */
+.dl-skel-card { display: flex; flex-direction: column; gap: var(--space-4); }
+.dl-skel-card__body { margin-top: var(--space-1); }
+.dl-skel-metric { min-height: 132px; gap: var(--space-3); }     /* matches MetricCard height */
+.dl-skel-cardhead { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
+
+/* generic list/table row skeleton — matches the .dl-list__row rhythm */
+.dl-skel-row { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-4) 0; }
+.dl-skel-row + .dl-skel-row { border-top: 1px solid var(--rail-soft); }
+.dl-skel-row__main { display: flex; flex-direction: column; gap: var(--space-2); flex: 1; min-width: 0; }
+.dl-skel-table__head { padding: var(--space-3) 0; border-bottom: 2px solid var(--rail-soft); }
+
+/* empty-state stage skeleton bits */
+.dl-skel-stage__obj { border-radius: 28px; }
+.dl-skel-stage__text { width: 320px; max-width: 80%; }
+.dl-skel-stage__cta { height: 40px; margin-top: var(--space-2); }
+
+@media (prefers-reduced-motion: reduce) {
+  .dl-skel::after { animation: none; }
 }
 
 @keyframes dl-slot-float {

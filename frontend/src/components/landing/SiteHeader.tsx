@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 
 // Center nav links. All hrefs are in-page anchors / placeholders — this is the
 // marketing landing, not the dApp. "Product" has no dedicated section yet, so it
@@ -68,9 +69,9 @@ export default function SiteHeader() {
           </ul>
         </nav>
 
-        <button className="launch-button" type="button">
+        <Link className="launch-button" to="/app">
           Launch App
-        </button>
+        </Link>
       </div>
     </header>
   );
