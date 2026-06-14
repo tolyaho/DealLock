@@ -4,8 +4,9 @@
  * use (type filter + search) so the page reads as finished, not unbuilt.
  */
 import { useState } from "react";
-import { EmptyStatePage, PageToolbar, SearchInput, SegmentedControl } from "../../components/app";
+import { EmptyStatePage, PageToolbar, SearchInput, SegmentedControl, SplineObject } from "../../components/app";
 import { IconPlus } from "../../components/app/icons";
+import { SPLINE_SCENES } from "../../splineScenes";
 
 const TYPES = [
   { value: "all", label: "All" },
@@ -35,6 +36,7 @@ export default function ActivityPage() {
         />
       }
       splineType="activity"
+      object={<SplineObject scene={SPLINE_SCENES.activity} scale={3.46} float />}
       emptyTitle="No activity yet"
       emptyDescription="Once agreements move forward, every submission, review, release, and message will appear here in one calm feed."
       primaryAction={{ label: "Create agreement", to: "/app/agreements", icon: <IconPlus /> }}

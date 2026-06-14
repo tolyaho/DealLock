@@ -20,8 +20,10 @@ import {
   PageHeader,
   SearchInput,
   SegmentedControl,
+  SkeletonCircle,
   StatusChip,
   TableShell,
+  usePageLoading,
   type ChipTone,
   type Column,
 } from "../../components/app";
@@ -89,8 +91,39 @@ const COLUMNS: Column[] = [
   { key: "action", label: "Action", align: "right", width: "120px" },
 ];
 
+// One skeleton row matching the real 7-column layout (avatar · title/sub · role ·
+// status pill · amount · milestone count + mini bar · action) so the swap to data
+// causes no shift. aria-hidden; the wrapping table region carries aria-busy.
+function AgreementsSkeletonRow() {
+  return (
+    <tr aria-hidden="true">
+      <td className="dl-cell-agreement">
+        <span className="dl-skel dl-skel-line" style={{ width: "68%" }} />
+        <span className="dl-skel dl-skel-line dl-skel-line--sm" style={{ width: "92%", marginTop: 6 }} />
+      </td>
+      <td className="dl-cell-party">
+        <span style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <SkeletonCircle size={28} />
+          <span className="dl-skel dl-skel-line" style={{ width: 92 }} />
+        </span>
+      </td>
+      <td><span className="dl-skel dl-skel-line" style={{ width: 50 }} /></td>
+      <td><span className="dl-skel dl-skel-chip" /></td>
+      <td className="dl-table__num"><span className="dl-skel dl-skel-line" style={{ width: 68 }} /></td>
+      <td className="dl-cell-ms">
+        <span className="dl-skel dl-skel-line" style={{ width: 44, marginBottom: 8 }} />
+        <span className="dl-skel dl-skel-bar" style={{ width: "82%" }} />
+      </td>
+      <td data-align="right">
+        <span className="dl-skel dl-skel-btn" style={{ width: 78, marginLeft: "auto" }} />
+      </td>
+    </tr>
+  );
+}
+
 export default function AgreementsPage() {
   const [params, setParams] = useSearchParams();
+  const loading = usePageLoading();
   const urlFilter = params.get("status") as Filter | null;
   const [filter, setFilter] = useState<Filter>(
     urlFilter && FILTERS.some((f) => f.value === urlFilter) ? urlFilter : "all",
@@ -149,7 +182,17 @@ export default function AgreementsPage() {
         </div>
       )}
 
-      {rows.length > 0 ? (
+      {loading ? (
+        <Card flush>
+          <div aria-busy="true">
+            <TableShell columns={COLUMNS} caption="Loading agreements" className="dl-table--agreements">
+              {Array.from({ length: 8 }).map((_, i) => (
+                <AgreementsSkeletonRow key={i} />
+              ))}
+            </TableShell>
+          </div>
+        </Card>
+      ) : rows.length > 0 ? (
         <Card flush>
           <TableShell columns={COLUMNS} caption="All agreements" className="dl-table--agreements">
             {rows.map((a) => {

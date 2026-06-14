@@ -22,6 +22,7 @@ import RepoCta from "./RepoCta";
 import { useInView } from "./useInView";
 import TypewriterText from "../workflow/TypewriterText";
 import MetalSheen from "../MetalSheen";
+import SecurityShieldSpline from "../SecurityShieldSpline";
 
 // Subtitle types in (like the workflow subtitle) once the section scrolls into
 // view — a short beat after the title fades up. rAF-driven, so it stays smooth.
@@ -54,6 +55,7 @@ export default function SecuritySection({ repoUrl = REPO_URL }: Props) {
       <div className="dl-sec__inner">
         <header className="dl-sec__header">
           <div className="dl-sec__intro">
+            <SecurityShieldSpline />
             <span className="dl-sec__eyebrow">Security</span>
             <h2 id="dl-sec-title" className="dl-sec__title">
               Readable On-Chain Security

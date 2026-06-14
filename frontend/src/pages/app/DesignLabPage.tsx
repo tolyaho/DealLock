@@ -28,6 +28,11 @@ import {
   PageHeader,
   SearchInput,
   SegmentedControl,
+  SkeletonButton,
+  SkeletonCard,
+  SkeletonCircle,
+  SkeletonRow,
+  SkeletonText,
   SplineObjectSlot,
   StatusChip,
   Switch,
@@ -348,6 +353,32 @@ export default function DesignLabPage() {
             primaryAction={{ label: "Add experiment", to: "/app/design-lab", icon: <IconPlus /> }}
             secondaryAction={{ label: "View foundation" }}
           />
+        </Section>
+
+        <Section idx="17" title="Loading skeletons" caption="silver/pearl · L→R sweep · ?loading=1 on any page" stage>
+          <div className="dl-lab__row" style={{ gap: "var(--space-6)", alignItems: "flex-start", flexWrap: "wrap" }}>
+            <div style={{ display: "flex", flexDirection: "column", gap: "var(--space-3)", width: 220 }}>
+              <span className="dl-lab__note">Text · circle · button</span>
+              <SkeletonText lines={3} width="100%" />
+              <div style={{ display: "flex", gap: "var(--space-3)", alignItems: "center" }}>
+                <SkeletonCircle size={40} />
+                <SkeletonButton width={120} />
+              </div>
+            </div>
+            <div style={{ width: 280 }}>
+              <span className="dl-lab__note">Card</span>
+              <SkeletonCard />
+            </div>
+            <div style={{ width: 300 }}>
+              <span className="dl-lab__note">List rows</span>
+              <SkeletonRow />
+              <SkeletonRow />
+            </div>
+          </div>
+          <p className="dl-lab__note">
+            Append <code>?loading=1</code> to any dashboard route (Home, Agreements, Counterparties, or the
+            empty-state pages) to preview its live skeleton — the seam swaps for a real query flag later.
+          </p>
         </Section>
       </div>
     </PageContainer>

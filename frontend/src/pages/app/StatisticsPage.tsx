@@ -4,9 +4,9 @@
  * stays calm until there's data to chart.
  */
 import { useState } from "react";
-import { EmptyStatePage, PageToolbar, SegmentedControl } from "../../components/app";
-import { StatisticsSplineObject } from "../../components/app/StatisticsSplineObject";
+import { EmptyStatePage, PageToolbar, SegmentedControl, SplineObject } from "../../components/app";
 import { IconPlus } from "../../components/app/icons";
+import { SPLINE_SCENES } from "../../splineScenes";
 
 const RANGES = [
   { value: "30d", label: "30D" },
@@ -27,7 +27,7 @@ export default function StatisticsPage() {
         />
       }
       splineType="statistics"
-      object={<StatisticsSplineObject />}
+      object={<SplineObject scene={SPLINE_SCENES.statistics} />}
       emptyTitle="No statistics yet"
       emptyDescription="Charts and insights appear once your first agreements start moving — escrowed value, releases, and milestone completion in one calm view."
       primaryAction={{ label: "Create agreement", to: "/app/agreements", icon: <IconPlus /> }}

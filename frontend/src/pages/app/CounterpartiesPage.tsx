@@ -5,13 +5,52 @@
  * Button + the reusable .dl-list module); the Identity cell is the same one the
  * Agreements table uses, at the larger `md` size.
  */
-import { Button, Card, Identity, PageContainer, PageHeader } from "../../components/app";
-import { IconArrowRight } from "../../components/app/icons";
+import { useSearchParams } from "react-router-dom";
+import { Button, Card, EmptyStatePage, Identity, PageContainer, PageHeader, SkeletonRow, SplineObject, usePageLoading } from "../../components/app";
+import { IconArrowRight, IconPlus } from "../../components/app/icons";
 import { counterparties } from "../../fixtures/agreements";
 import { formatMoney } from "../../fixtures/format";
+import { SPLINE_SCENES } from "../../splineScenes";
 
 export default function CounterpartiesPage() {
-  const rows = counterparties();
+  const [params] = useSearchParams();
+  // `?empty=1` previews the onboarding empty state for design review.
+  const rows = params.get("empty") === "1" ? [] : counterparties();
+  const loading = usePageLoading();
+
+  // No counterparties yet → the same polished Spline empty state as Messages/Activity
+  // (the populated list below is left untouched).
+  if (rows.length === 0) {
+    return (
+      <EmptyStatePage
+        title="Counterparties"
+        subtitle="The people and companies you've locked agreements with."
+        splineType="counterparties"
+        object={<SplineObject scene={SPLINE_SCENES.counterparties} scale={1.15} zoomOut={0.75} float />}
+        emptyTitle="No counterparties yet"
+        emptyDescription="People and companies you lock agreements with will appear here once your first agreement is underway."
+        primaryAction={{ label: "Create agreement", to: "/app/agreements", icon: <IconPlus /> }}
+      />
+    );
+  }
+
+  if (loading) {
+    return (
+      <PageContainer>
+        <PageHeader
+          title="Counterparties"
+          subtitle="The people and companies you've locked agreements with."
+        />
+        <Card label="All counterparties">
+          <div className="dl-list" aria-busy="true">
+            {Array.from({ length: 6 }).map((_, i) => (
+              <SkeletonRow key={i} />
+            ))}
+          </div>
+        </Card>
+      </PageContainer>
+    );
+  }
 
   return (
     <PageContainer>

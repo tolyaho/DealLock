@@ -17,7 +17,12 @@ import {
   MetricCard,
   PageContainer,
   PageHeader,
+  SkeletonButton,
+  SkeletonCard,
+  SkeletonCircle,
+  SkeletonText,
   StatusChip,
+  usePageLoading,
   useRoleConfig,
   useWorkspace,
   type ChipTone,
@@ -169,10 +174,48 @@ function ProgressRow({ a }: { a: Agreement }) {
 
 type MetricTone = "secure" | "review" | "technical" | "neutral";
 
+// Home loading skeleton — mirrors the KPI strip + the 2×2 card grid so the swap
+// to real content causes no layout shift. Card skeletons reuse the real .dl-card.
+function HomeSkeleton() {
+  return (
+    <div aria-busy="true">
+      <div className="dl-grid-metrics">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <SkeletonCard key={i} className="dl-skel-metric">
+            <SkeletonText width="52%" />
+            <span className="dl-skel dl-skel-line" style={{ width: "44%", height: 26 }} />
+            <SkeletonText width="68%" className="dl-skel-line--sm" />
+          </SkeletonCard>
+        ))}
+      </div>
+      <div className="dl-home__grid">
+        {Array.from({ length: 4 }).map((_, i) => (
+          <SkeletonCard key={i}>
+            <div className="dl-skel-cardhead">
+              <SkeletonText width="38%" />
+              <SkeletonButton width={84} />
+            </div>
+            {Array.from({ length: 3 }).map((_, r) => (
+              <div className="dl-skel-row" key={r}>
+                <SkeletonCircle size={34} />
+                <span className="dl-skel-row__main">
+                  <span className="dl-skel dl-skel-line" style={{ width: "56%" }} />
+                  <span className="dl-skel dl-skel-line dl-skel-line--sm" style={{ width: "38%" }} />
+                </span>
+              </div>
+            ))}
+          </SkeletonCard>
+        ))}
+      </div>
+    </div>
+  );
+}
+
 export default function HomePage() {
   const { workspace } = useWorkspace();
   const cfg = useRoleConfig();
   const navigate = useNavigate();
+  const loading = usePageLoading();
   const go = (status?: string) =>
     navigate(status ? `/app/agreements?status=${status}` : "/app/agreements");
 
@@ -236,6 +279,10 @@ export default function HomePage() {
         }
       />
 
+      {loading ? (
+        <HomeSkeleton />
+      ) : (
+      <>
       {/* KPI strip — copy + order from the role config, values bound by key. */}
       <div className="dl-grid-metrics">
         {cfg.kpis.map((k) => {
@@ -327,6 +374,8 @@ export default function HomePage() {
           </div>
         </Card>
       </div>
+      </>
+      )}
     </PageContainer>
   );
 }

@@ -328,10 +328,49 @@ a {
   grid-template-columns: 1fr auto 1fr;
   align-items: center;
   gap: 24px;
+  position: relative;
+  isolation: isolate;
 }
 
-/* Only the real controls take pointer events — the gutters stay click-through. */
-.site-header-inner > * { pointer-events: auto; }
+/* Scrolled glass BAR — a single frosted pill spanning the full content width, from   */
+/* the wordmark's left edge to the Launch App button's right edge (the button's own   */
+/* metal bg sits on top at the right, so the glass reads as ending at the button's     */
+/* left side). Backgroundless at the top of the page; fades in on .nav-scrolled. The   */
+/* left edge is nudged out a touch so the wordmark sits inside the rounded cap.        */
+.site-header-inner::before {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  left: calc(var(--page-padding-x) - 14px);
+  right: var(--page-padding-x);
+  height: 52px;
+  border-radius: 18px;
+  pointer-events: none;
+  opacity: 0;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.34), rgba(255, 255, 255, 0.14)),
+    linear-gradient(110deg, rgba(255, 255, 255, 0.34) 0%, transparent 38%, rgba(255, 255, 255, 0.12) 54%, transparent 74%);
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(28px) saturate(1.45) contrast(1.04);
+  -webkit-backdrop-filter: blur(28px) saturate(1.45) contrast(1.04);
+  box-shadow:
+    0 18px 50px rgba(30, 32, 30, 0.10),
+    inset 0 1px 0 rgba(255, 255, 255, 0.68),
+    inset 0 -1px 0 rgba(80, 82, 78, 0.08);
+  transition: opacity 320ms var(--nav-ease);
+}
+
+.site-header.nav-scrolled .site-header-inner::before { opacity: 1; }
+
+/* Only the real controls take pointer events — the gutters stay click-through. The    */
+/* controls also sit ABOVE the glass bar (z-index:1 over the ::before at z-index:0).    */
+.site-header-inner > * {
+  pointer-events: auto;
+  position: relative;
+  z-index: 1;
+}
 
 /* Left — DealLock wordmark (Stardos Stencil), aligned to the hero's left content edge. */
 .deallock-wordmark {
@@ -455,11 +494,12 @@ a {
   font-weight: 600;
   letter-spacing: 0.01em;
   color: var(--dl-ink);
+  text-decoration: none;
   background: var(--dl-metal-face);
   border: 1px solid var(--dl-metal-edge);
-  border-radius: 999px;
+  border-radius: 18px;
   padding: 0 22px;
-  height: 42px;
+  height: 52px;
   display: inline-flex;
   align-items: center;
   white-space: nowrap;
@@ -479,23 +519,10 @@ a {
   outline-offset: 2px;
 }
 
-/* Scrolled state — the rail fades into liquid glass (translucent white/silver, blur + */
-/* saturation, soft highlights, very soft shadow). Driven by JS adding .nav-scrolled. */
-.site-header.nav-scrolled .nav-rail {
-  background:
-    linear-gradient(180deg, rgba(255, 255, 255, 0.34), rgba(255, 255, 255, 0.14)),
-    linear-gradient(110deg, rgba(255, 255, 255, 0.34) 0%, transparent 38%, rgba(255, 255, 255, 0.12) 54%, transparent 74%);
-  border-color: rgba(255, 255, 255, 0.55);
-  backdrop-filter: blur(28px) saturate(1.45) contrast(1.04);
-  -webkit-backdrop-filter: blur(28px) saturate(1.45) contrast(1.04);
-  box-shadow:
-    0 18px 50px rgba(30, 32, 30, 0.10),
-    inset 0 1px 0 rgba(255, 255, 255, 0.68),
-    inset 0 -1px 0 rgba(80, 82, 78, 0.08);
-}
-
-.site-header.nav-scrolled .nav-rail::before { opacity: 0.9; }
-.site-header.nav-scrolled .nav-rail::after  { opacity: 0.5; }
+/* The center rail no longer carries its own glass pill — the full-width glass BAR    */
+/* (.site-header-inner::before) is the single frosted surface now, and the nav links   */
+/* sit directly on it. The rail stays a transparent flex container; its dormant        */
+/* highlight pseudo-elements never fade in (kept only as a styling hook).              */
 
 /* Collapse the center nav when space gets tight — wordmark + Launch App always stay.  */
 @media (max-width: 920px) {
@@ -504,7 +531,10 @@ a {
 
 @media (max-width: 639px) {
   .deallock-wordmark { font-size: 21px; }
-  .launch-button { height: 38px; padding: 0 16px; font-size: 12px; }
+  /* Keep the glass bar and the button the same height so the button still caps the */
+  /* bar's right end cleanly on small screens. */
+  .site-header-inner::before { height: 46px; }
+  .launch-button { height: 46px; padding: 0 16px; font-size: 12px; }
 }
 
 /* ── Hero v2 stage — Resend-style two-column composition ─────────────────────── */
@@ -939,7 +969,11 @@ a {
 .dl-spline-vault__canvas {
   animation: dl-vault-breathe 7s ease-in-out infinite;
   transform-origin: 50% 50%;
+  /* fade in once the scene reports onLoad (crossfades with the placeholder out) */
+  opacity: 0;
+  transition: opacity 550ms ease;
 }
+.dl-spline-vault.is-loaded .dl-spline-vault__canvas { opacity: 1; }
 
 @keyframes dl-vault-breathe {
   0%, 100% { transform: scale(1); }
@@ -950,6 +984,7 @@ a {
   .dl-spline-vault__canvas { animation: none; }
 
   /* Still switch between the two navbar states, just without the cross-fade. */
+  .site-header-inner::before,
   .nav-rail,
   .nav-rail::before,
   .nav-rail::after,
@@ -1092,20 +1127,60 @@ a {
   max-width: 100%;
 }
 
-/* No-layout-shift loading placeholder — a soft glass shimmer filling the figure */
-/* box (not a spinner). Holds the fixed slot until the scene paints.             */
+/* Premium metallic placeholder — a frosted vault aperture + a soft silver light  */
+/* sweep (not a spinner). Holds the fixed slot until the scene paints, then fades  */
+/* out as the canvas fades in. No layout shift, no black flash.                    */
 .dl-spline-vault__skeleton {
   position: absolute;
   inset: 6%;
   border-radius: 28px;
+  overflow: hidden;
+  display: grid;
+  place-items: end center;
   background:
-    radial-gradient(ellipse 70% 60% at 46% 38%, rgba(255, 255, 255, 0.50) 0%, rgba(236, 239, 238, 0.22) 46%, rgba(220, 226, 228, 0.05) 72%, rgba(220, 226, 228, 0) 82%);
-  animation: dl-spline-pulse 2.4s ease-in-out infinite;
+    radial-gradient(circle at 50% 44%, rgba(255, 255, 255, 0.42) 0%, rgba(236, 239, 238, 0.18) 40%, rgba(220, 226, 228, 0) 70%),
+    radial-gradient(circle at 50% 54%, rgba(220, 226, 228, 0.10) 40%, rgba(220, 226, 228, 0) 62%);
+  opacity: 1;
+  transition: opacity 600ms ease;
+  pointer-events: none;
 }
-
-@keyframes dl-spline-pulse {
-  0%, 100% { opacity: 0.5; }
-  50%      { opacity: 0.85; }
+/* frosted circular aperture silhouette behind the label */
+.dl-spline-vault__skeleton::before {
+  content: "";
+  position: absolute;
+  left: 50%;
+  top: 44%;
+  width: 58%;
+  aspect-ratio: 1;
+  transform: translate(-50%, -50%);
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(255, 255, 255, 0.28) 0%, rgba(255, 255, 255, 0) 62%);
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.34), 0 0 0 1px rgba(120, 130, 135, 0.12);
+}
+/* subtle silver light sweep */
+.dl-spline-vault__skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, transparent 30%, rgba(255, 255, 255, 0.5) 50%, transparent 70%);
+  transform: translateX(-100%);
+  animation: dl-vault-sweep 1.9s ease-in-out infinite;
+}
+@keyframes dl-vault-sweep { 100% { transform: translateX(100%); } }
+.dl-spline-vault.is-loaded .dl-spline-vault__skeleton {
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity 600ms ease, visibility 0s linear 600ms;
+}
+.dl-spline-vault__loadlabel {
+  position: relative;
+  margin-bottom: 13%;
+  font-family: var(--dl-mono, ui-monospace, monospace);
+  font-size: 11px;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(70, 80, 86, 0.6);
+  white-space: nowrap;
 }
 
 /* Best-effort hide of the "Built with Spline" watermark IF the runtime injects */
@@ -1144,7 +1219,140 @@ a {
     transform: none;
   }
 
-  .dl-spline-vault__skeleton {
+  .dl-spline-vault__skeleton::after {
+    animation: none;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════════════════ */
+/* SECTION EMBLEMS — small decorative 3D Spline icons above section headings      */
+/* (Security shield, Workflow contract). Resend-style intro emblems: a fixed,     */
+/* small square box so there's no layout shift, a transparent canvas (no plate/   */
+/* crop/frame), pointer-events:none, aria-hidden. A frosted silver placeholder    */
+/* holds the slot until the scene paints, then crossfades to the live object.     */
+/* ════════════════════════════════════════════════════════════════════════════ */
+.dl-emblem {
+  position: relative;
+  width: 132px;
+  aspect-ratio: 1 / 1;
+  margin: 0 auto clamp(20px, 3vh, 30px);
+  pointer-events: none;
+  display: grid;
+  place-items: center;
+}
+
+/* Canvas container — absolutely centred so an upscale (`--emblem-scale`) grows    */
+/* the canvas symmetrically without changing the fixed wrapper footprint. The      */
+/* drop-shadow tracks the object's own alpha, so the grounding can never detach    */
+/* into an offset circle the way a centre-pinned glow would.                       */
+.dl-emblem__object {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: calc(100% * var(--emblem-scale, 1));
+  height: calc(100% * var(--emblem-scale, 1));
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  filter: drop-shadow(0 6px 11px rgba(17, 19, 21, 0.13));
+  transition: opacity 600ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.dl-emblem.is-loaded .dl-emblem__object {
+  opacity: 1;
+}
+
+/* Mild vertical bob — pure up/down (the base translate keeps it centred). Calm and  */
+/* slow so it reads as a gentle hover, never a bounce. Off under reduced-motion.      */
+.dl-emblem--float .dl-emblem__object {
+  animation: dl-emblem-float 5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+@keyframes dl-emblem-float {
+  0%,
+  100% {
+    transform: translate(-50%, calc(-50% - 4px));
+  }
+  50% {
+    transform: translate(-50%, calc(-50% + 4px));
+  }
+}
+
+.dl-emblem__canvas,
+.dl-emblem__object > div {
+  width: 100%;
+  height: 100%;
+}
+
+.dl-emblem__canvas canvas {
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+  background: transparent !important;
+}
+
+/* Frosted silver placeholder — a soft medallion with a single light sweep (not a  */
+/* spinner). Fades out as the object fades in, then is unmounted from the DOM.      */
+.dl-emblem__skeleton {
+  position: absolute;
+  inset: 16%;
+  z-index: 1;
+  border-radius: 50%;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 50% 40%, rgba(255, 255, 255, 0.6) 0%, rgba(236, 239, 238, 0.3) 48%, rgba(220, 226, 228, 0) 74%);
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.6);
+  opacity: 1;
+  transition: opacity 600ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.dl-emblem__skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, transparent 30%, rgba(255, 255, 255, 0.55) 50%, transparent 70%);
+  transform: translateX(-100%);
+  animation: dl-emblem-sweep 1.9s ease-in-out infinite;
+}
+
+@keyframes dl-emblem-sweep {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.dl-emblem__skeleton[data-done] {
+  opacity: 0;
+}
+
+/* Reduced-motion fallback — a static silver medallion (no WebGL, no runtime        */
+/* download), so the emblem still reads as a calm metallic disc above the heading.  */
+.dl-emblem--static .dl-emblem__medallion {
+  position: absolute;
+  inset: 16%;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 50% 38%, rgba(255, 255, 255, 0.72) 0%, rgba(232, 236, 236, 0.42) 50%, rgba(214, 221, 222, 0.16) 82%, rgba(214, 221, 222, 0) 100%);
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.65), 0 6px 14px rgba(17, 19, 21, 0.1);
+}
+
+/* Best-effort hide of the "Built with Spline" watermark if the runtime injects it. */
+.dl-emblem a[href*="spline.design"] {
+  display: none !important;
+}
+
+@media (max-width: 639px) {
+  .dl-emblem {
+    width: 100px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dl-emblem__object,
+  .dl-emblem--float .dl-emblem__object {
+    transition: none;
+    animation: none;
+  }
+  .dl-emblem__skeleton::after {
     animation: none;
   }
 }
