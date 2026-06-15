@@ -42,6 +42,7 @@ function makeRateLimit(windowMinutes: number, max: number) {
   return rateLimit({
     windowMs: windowMinutes * 60 * 1000,
     max,
+    skip: () => process.env.DISABLE_RATE_LIMITS === "true",
     standardHeaders: true,
     legacyHeaders: false,
     handler(_req, res) {
@@ -115,8 +116,15 @@ export function createApp() {
     }),
   );
 
-  // Auth — rate limited.
-  app.use("/auth", authLimiter, authRouter);
+  // Auth — rate limited, except the safe CSRF bootstrap endpoint.
+  app.use(
+    "/auth",
+    (req, res, next) => {
+      if (req.method === "GET" && req.path === "/csrf") return next();
+      return authLimiter(req, res, next);
+    },
+    authRouter,
+  );
 
   app.get(
     "/me",
