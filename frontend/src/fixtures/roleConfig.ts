@@ -37,11 +37,15 @@ export type WorkspaceGlyph = "shield" | "upload";
  *  review tokens) so the app never looks like two different brands. */
 export type WorkspaceAccent = "sage" | "champagne";
 
-/** The headline action that anchors the dashboard header for this role. */
+/** The headline CREATION action that anchors the dashboard header for this role.
+ *  Product rule: the CLIENT creates the escrow agreement; the PROVIDER only creates
+ *  a proposal (off-chain draft) that the client must accept + fund. So the label is
+ *  role-asymmetric: "New agreement" (client) vs "New proposal" (provider). */
 export interface RolePrimaryAction {
-  /** Active label, e.g. "New agreement" / "Submit work". */
+  /** Active label, e.g. "New agreement" (client) / "New proposal" (provider). */
   label: string;
-  /** Secondary phrasing for contexts where the primary verb is taken. */
+  /** The role's final create-flow action — client "Create escrow agreement" (they
+   *  fund it), provider "Send proposal" (the client funds later, never the provider). */
   altLabel: string;
   icon: PrimaryActionIcon;
 }
@@ -105,6 +109,14 @@ export interface RoleConfig {
   kpis: RoleKpi[];
   attention: RoleAttention;
   quickActions: RoleQuickAction[];
+  /** Empty-list copy for the Agreements page. Role-aware: "agreements" for the
+   *  client (who creates + funds them) vs "proposals" for the provider (who drafts
+   *  + sends them; the client accepts + funds). */
+  emptyList: { title: string; text: string };
+  /** Counterparty invite copy — who this role invites and what happens next.
+   *  Source of truth for a future invite UI; the model is provider-connects-wallet-
+   *  before-signing, client-reviews-and-funds. */
+  counterparty: { inviteLabel: string; note: string };
 }
 
 export const ROLE_CONFIG: Record<Role, RoleConfig> = {
@@ -121,7 +133,8 @@ export const ROLE_CONFIG: Record<Role, RoleConfig> = {
     greetingSubtitle: "Client workspace · Review submissions and control fund release.",
     dashboardQuestion: "What work needs my review?",
     accent: "sage",
-    primaryAction: { label: "New agreement", altLabel: "Create escrow", icon: "plus" },
+    // Client OWNS creation + funding of the escrow.
+    primaryAction: { label: "New agreement", altLabel: "Create escrow agreement", icon: "plus" },
     kpis: [
       { key: "inEscrow", label: "In escrow", helper: "Across live agreements" },
       { key: "needsReview", label: "Needs review", helper: "Submitted for approval" },
@@ -146,6 +159,14 @@ export const ROLE_CONFIG: Record<Role, RoleConfig> = {
       { key: "reviewMilestone", label: "Review milestone", helper: "Approve or request changes" },
       { key: "message", label: "Message provider", helper: "Open a conversation" },
     ],
+    emptyList: {
+      title: "No agreements yet",
+      text: "Create your first escrow agreement to start protecting a deal.",
+    },
+    counterparty: {
+      inviteLabel: "Invite provider",
+      note: "Provider will connect a wallet before signing.",
+    },
   },
 
   provider: {
@@ -161,7 +182,9 @@ export const ROLE_CONFIG: Record<Role, RoleConfig> = {
     greetingSubtitle: "Provider workspace · Submit milestones and track upcoming payouts.",
     dashboardQuestion: "What can I deliver or collect?",
     accent: "champagne",
-    primaryAction: { label: "Submit work", altLabel: "New agreement", icon: "upload" },
+    // Provider can only DRAFT + SEND a proposal — never create a funded/active escrow.
+    // The client accepts + funds. ("Submit work" is a post-funding action, not creation.)
+    primaryAction: { label: "New proposal", altLabel: "Send proposal", icon: "plus" },
     kpis: [
       { key: "expectedPayout", label: "Expected payout", helper: "Across active work" },
       { key: "awaitingApproval", label: "Awaiting approval", helper: "Submitted to clients" },
@@ -186,6 +209,14 @@ export const ROLE_CONFIG: Record<Role, RoleConfig> = {
       { key: "requestApproval", label: "Request approval", helper: "Send work for review" },
       { key: "message", label: "Message client", helper: "Open a conversation" },
     ],
+    emptyList: {
+      title: "No proposals yet",
+      text: "Create a proposal and send it to a client — they review, accept, and fund the escrow.",
+    },
+    counterparty: {
+      inviteLabel: "Invite client",
+      note: "Client will review the proposal and fund escrow if accepted.",
+    },
   },
 };
 

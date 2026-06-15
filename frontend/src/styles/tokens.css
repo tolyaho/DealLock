@@ -53,6 +53,19 @@
    * lightly brushed silver panels, not flat paper. Minimal: ~4% drop, no lines. */
   --surface-plate:        linear-gradient(180deg, #ffffff 0%, #f1f2ee 44%, #e8eae3 100%);
   --surface-plate-raised: linear-gradient(180deg, #ffffff 0%, #eef0ea 44%, #e2e4dc 100%);
+  /* ── Cool-silver plate SCALE — light, blue-neutral silver (NO green tint), the
+   * consistent material for dashboard cards/panels/tiles. Four tiers by how present
+   * the silver reads, all sharing the same hue so surfaces nest cleanly:
+   *   soft   — lightest / "barely-there" silver (large calm cards, action tiles)
+   *   cool   — the standard card face
+   *   raised — a touch deeper (anchor / primary tiles)
+   *   sunken — recessed inset/nested panel inside a card
+   * Keep the warmer --surface-plate (above) for the brushed-aluminium shell hardware
+   * (sidebar active pill etc.); these cool tiers are for the content panels.        */
+  --surface-plate-cool-soft:   linear-gradient(180deg, #ffffff 0%, #fafbfc 52%, #f3f5f8 100%);
+  --surface-plate-cool:        linear-gradient(180deg, #ffffff 0%, #f5f6f8 44%, #edeff3 100%);
+  --surface-plate-cool-raised: linear-gradient(180deg, #ffffff 0%, #f2f4f7 44%, #e7eaf0 100%);
+  --surface-sunken-cool:       #e8eaef; /* cool recessed inset (vs warm --surface-sunken) */
   --surface-glass:        rgba(252, 252, 250, 0.66); /* 5 · glass panel        */
   --surface-action:       #fbfbf9; /* 6 · action surface (control face)        */
   --surface-primary:      linear-gradient(150deg, #43443f 0%, #2b2c27 52%, #1b1c18 100%); /* 7 · dark primary action */
@@ -157,7 +170,7 @@
   --shadow-card-hover:    0 3px 8px rgba(24, 24, 20, 0.08), 0 18px 44px rgba(24, 24, 20, 0.13);
   --shadow-primary:       0 1px 2px rgba(24, 24, 20, 0.20), 0 8px 22px rgba(24, 24, 20, 0.22);
   --shadow-primary-hover: 0 2px 4px rgba(24, 24, 20, 0.22), 0 12px 28px rgba(24, 24, 20, 0.24);
-  --glow-secure:          0 0 18px rgba(78, 125, 94, 0.34); /* sage under-glow (on) */
+  --glow-secure:          0 0 22px rgba(78, 125, 94, 0.46); /* sage under-glow (on) */
 
   /* ── Surface sheens & glass blur (the specular language, factored out) ──────
    * sheen-plate  = the faint top light-catch on white plates (card / metric)
@@ -338,4 +351,24 @@
   --rim-graphite:        var(--border-strong);         /* darker precise rim        */
   --shadow-metal-soft:   var(--shadow-card);           /* resting elevation         */
   --shadow-metal-lifted: var(--shadow-card-hover);     /* hover / lifted elevation  */
+
+  /* ── Silver ORB — a soft, diffuse atmospheric silver-light-grey surface (the
+   * ElevenLabs "gradient orb" idiom, rendered in cool-neutral grey instead of pastel).
+   * This is the calm alternative to the machined --metal-* faces: a light cool-grey
+   * base lit by an off-white bloom upper-left + a fainter cooler-grey bloom lower-right,
+   * carried by a hairline rim and a single soft drop. Use it for soft capsules /
+   * medallions / coins / pills (the switcher pill + glyph, action tiles, empty-state
+   * medallions, avatars). Cool-neutral (B-leaning channel), NEVER green. Apply via the
+   * `.dl-orb` / `.dl-orb--deep` helpers, or these tokens directly.                  */
+  --orb-bloom:
+    radial-gradient(72% 120% at 26% 14%, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0) 56%),
+    radial-gradient(85% 130% at 88% 92%, rgba(202, 207, 217, 0.55) 0%, rgba(202, 207, 217, 0) 60%);
+  --orb-surface:       var(--orb-bloom), linear-gradient(180deg, #eef0f3 0%, #e4e7ec 100%);
+  --orb-surface-deep:  var(--orb-bloom), linear-gradient(180deg, #e6e8ed 0%, #d8dbe2 100%); /* a shade deeper — medallions/coins set off a pill */
+  --orb-rim:           rgba(120, 126, 138, 0.22);      /* hairline cool-grey rim     */
+  --orb-rim-strong:    rgba(120, 126, 138, 0.32);      /* hover / open rim           */
+  --orb-shadow:        inset 0 1px 0 rgba(255, 255, 255, 0.7),
+                       0 4px 16px rgba(44, 48, 58, 0.06), 0 1px 2px rgba(44, 48, 58, 0.05);
+  --orb-inset:         inset 0 0 0 1px rgba(120, 126, 138, 0.24),
+                       inset 0 1px 1px rgba(255, 255, 255, 0.75), inset 0 -1px 2px rgba(44, 48, 58, 0.06);
 }

@@ -63,6 +63,14 @@ const SURFACES = [
   { name: "--surface-primary", bg: "var(--surface-primary)" },
   { name: "--metal-disc", bg: "var(--metal-disc)" },
 ];
+// Cool-silver plate scale — the consistent (blue-neutral, no-green) material for
+// dashboard cards/panels/tiles. Ordered lightest → deepest.
+const COOL_SILVER = [
+  { name: "--surface-plate-cool-soft", bg: "var(--surface-plate-cool-soft)" },
+  { name: "--surface-plate-cool", bg: "var(--surface-plate-cool)" },
+  { name: "--surface-plate-cool-raised", bg: "var(--surface-plate-cool-raised)" },
+  { name: "--surface-sunken-cool", bg: "var(--surface-sunken-cool)" },
+];
 const ACCENTS = [
   { name: "--accent-secure", bg: "var(--accent-secure)" },
   { name: "--accent-review", bg: "var(--accent-review)" },
@@ -164,6 +172,10 @@ export default function DesignLabPage() {
           <div>
             <div className="dl-lab__specimen-label">Surfaces</div>
             <div className="dl-lab__grid">{SURFACES.map((s) => <Swatch key={s.name} {...s} />)}</div>
+          </div>
+          <div>
+            <div className="dl-lab__specimen-label">Cool-silver plate scale — dashboard cards/panels (lightest → deepest, no green)</div>
+            <div className="dl-lab__grid">{COOL_SILVER.map((s) => <Swatch key={s.name} {...s} />)}</div>
           </div>
         </Section>
 
@@ -378,6 +390,65 @@ export default function DesignLabPage() {
           <p className="dl-lab__note">
             Append <code>?loading=1</code> to any dashboard route (Home, Agreements, Counterparties, or the
             empty-state pages) to preview its live skeleton — the seam swaps for a real query flag later.
+          </p>
+        </Section>
+
+        <Section
+          idx="18"
+          title="Silver orb surface"
+          caption="soft atmospheric silver-grey — the calm capsule/medallion family"
+          stage
+        >
+          <div className="dl-lab__row" style={{ gap: "var(--space-6)", alignItems: "center", flexWrap: "wrap" }}>
+            {/* pill */}
+            <span
+              className="dl-orb"
+              style={{
+                display: "inline-flex",
+                alignItems: "center",
+                gap: "var(--space-2)",
+                padding: "8px 16px",
+                borderRadius: "var(--radius-pill)",
+                fontSize: "var(--text-sm)",
+                color: "var(--ink)",
+              }}
+            >
+              <span
+                className="dl-orb dl-orb--deep"
+                style={{ display: "grid", placeItems: "center", width: 26, height: 26, borderRadius: "var(--radius-control)", color: "var(--ink-soft)" }}
+              >
+                <IconShield />
+              </span>
+              Orb pill
+            </span>
+            {/* round glyph capsule */}
+            <span
+              className="dl-orb dl-orb--deep"
+              style={{ display: "grid", placeItems: "center", width: 40, height: 40, borderRadius: "var(--radius-control)", color: "var(--ink-soft)" }}
+            >
+              <IconBolt />
+            </span>
+            {/* medallion */}
+            <span
+              className="dl-orb dl-orb--deep"
+              style={{ display: "grid", placeItems: "center", width: 56, height: 56, borderRadius: "var(--radius-inner)", color: "var(--ink-soft)" }}
+            >
+              <IconLock />
+            </span>
+            {/* coin */}
+            <span
+              className="dl-orb dl-orb--deep"
+              style={{ display: "grid", placeItems: "center", width: 44, height: 44, borderRadius: "var(--radius-pill)", fontWeight: 600, color: "var(--ink-soft)" }}
+            >
+              DL
+            </span>
+          </div>
+          <p className="dl-lab__note">
+            One reusable surface (<code>--orb-*</code> tokens · <code>.dl-orb</code> / <code>.dl-orb--deep</code>
+            helpers). Cool-neutral silver-grey — diffuse blooms, hairline rim, single soft drop; never green.
+            Live on the workspace switcher pill + glyph, action-tile medallions, empty-state medallions, and
+            avatars. Reach for it for any soft capsule; keep the machined <code>--metal-*</code> faces for
+            structural hardware (sidebar, table rails, switch).
           </p>
         </Section>
       </div>

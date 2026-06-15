@@ -514,36 +514,70 @@
 
 .dl-ws { position: relative; display: inline-flex; }
 
-.dl-ws__trigger {
+/* ⚠ Scoped under `.dl-app` ON PURPOSE: the global `.dl-app button { background:none;
+ * border:0 }` reset (0,1,1) outranks a bare `.dl-ws__trigger` (0,1,0) and was silently
+ * stripping this control's fill + rim — it rendered as a transparent (white-looking)
+ * pill. `.dl-app .dl-ws__trigger` (0,2,0) reclaims the surface. Same gotcha as the
+ * `.dl-btn--disc` / `.dl-btn--glass` variants. */
+.dl-app .dl-ws__trigger {
   display: inline-flex;
   align-items: center;
   gap: var(--space-2);
   padding: 6px 12px 6px 7px;
   border-radius: var(--radius-pill);
-  /* a real brushed-silver KEY: the satin metal keycap face (same material as the
-   * metal buttons) under a faint vertical brush, a machined rim, a bright inner
-   * top light-catch, a dark lower metal lip, and a soft drop — a physically
-   * present metal control, not a white dock. */
-  background: var(--metal-grain-v), var(--metal-keycap);
-  border: 1px solid var(--rail-strong);
-  box-shadow: inset 0 1px 0 var(--rail-highlight), inset 0 -2px 1px rgba(28, 30, 26, 0.08),
-    var(--shadow-1), 0 8px 16px -12px var(--rail-shadow);
+  /* The soft silver ORB pill — see `--orb-*` in tokens.css (the reusable atmospheric
+   * silver-light-grey surface; ElevenLabs idiom in cool neutral grey). Hairline rim +
+   * single soft drop, diffuse blooms, no machined bevel/brush. The whole soft
+   * capsule/medallion/coin family shares these tokens via the `.dl-orb` helper. */
+  background: var(--orb-surface);
+  border: 1px solid var(--orb-rim);
+  box-shadow: var(--orb-shadow);
   color: var(--ink);
   text-align: left;
-  transition: background var(--dur-2) var(--ease-out), border-color var(--dur-2) var(--ease-out),
+  transition: border-color var(--dur-2) var(--ease-out),
     box-shadow var(--dur-2) var(--ease-out), transform var(--dur-1) var(--ease-out);
 }
-.dl-ws__trigger:hover { /* the metal face brightens, the rim sharpens, it lifts */
-  border-color: var(--ink-faint);
-  background: var(--metal-grain-v), var(--metal-keycap-hover);
-  box-shadow: inset 0 1px 0 #fff, inset 0 -2px 1px rgba(28, 30, 26, 0.10),
-    var(--shadow-2), 0 11px 20px -12px var(--rail-shadow);
+.dl-app .dl-ws__trigger:hover {
+  /* the orb glows a touch brighter and it lifts gently — no hard state change */
+  border-color: var(--orb-rim-strong);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85),
+    0 6px 20px rgba(44, 48, 58, 0.08), 0 1px 2px rgba(44, 48, 58, 0.05);
 }
-.dl-ws__trigger:active { transform: translateY(1px); }
+/* Open: the menu is showing — the orb settles in softly (a gentle inner shade, no
+ * hard recess). */
+.dl-app .dl-ws__trigger[aria-expanded="true"] {
+  border-color: var(--orb-rim-strong);
+  box-shadow: inset 0 2px 6px rgba(44, 48, 58, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.45), 0 2px 8px rgba(44, 48, 58, 0.05);
+}
+.dl-app .dl-ws__trigger:active { transform: translateY(1px); }
+/* Custom soft silver-grey focus ring (keeps the resting orb shadow, adds a crisp white
+ * inner edge + a faint cool-silver halo; outranks the global graphite :focus-visible). */
+.dl-app .dl-ws__trigger:focus-visible {
+  outline: none;
+  border-color: var(--orb-rim-strong);
+  box-shadow: var(--orb-shadow), 0 0 0 1px rgba(255, 255, 255, 0.7),
+    0 0 0 4px rgba(150, 156, 168, 0.32);
+}
 
-/* icon chamber — a recessed silver well holding the role glyph. The chip is the
- * ONE role cue here: a muted tint fill (--ws-chip, mostly silver) behind a
- * machined silver rim. No coloured ring — silver frames it, the tint whispers. */
+/* Silver-orb surface helper — apply to any soft capsule / medallion / coin / pill so
+ * the family stays consistent (see `--orb-*` in tokens.css). Scoped under `.dl-app` so
+ * a <button> using it still beats the `.dl-app button` background/border reset. Pair
+ * `.dl-orb` (rim + drop) with `.dl-orb--deep` for the deeper, inset medallion face. */
+.dl-app .dl-orb {
+  background: var(--orb-surface);
+  border: 1px solid var(--orb-rim);
+  box-shadow: var(--orb-shadow);
+}
+.dl-app .dl-orb--deep {
+  background: var(--orb-surface-deep);
+  box-shadow: var(--orb-inset);
+}
+
+/* icon chamber — a recessed silver well holding the role glyph. Fully neutral:
+ * a machined brushed-silver recess (grain over the sunken silver face) framed by a
+ * silver rim, with a graphite glyph. The persistent trigger stays all-silver; role
+ * "temperature" lives only in the menu option cards below, not on this control. */
 .dl-ws__glyph {
   display: grid;
   place-items: center;
@@ -551,10 +585,12 @@
   height: 30px;
   flex: none;
   border-radius: var(--radius-control);
-  background: var(--ws-chip);
-  color: var(--ws-accent-ink);
-  box-shadow: inset 0 0 0 1px var(--rail-medium),
-    inset 0 1px 1px rgba(255, 255, 255, 0.85), inset 0 -1px 2px rgba(28, 30, 26, 0.12);
+  /* a soft silver-grey orb plate (--orb-surface-deep + --orb-inset) — a shade deeper
+   * than the pill, calm and diffuse to match it, not a machined recess. (A span, not a
+   * button, so the `.dl-app button` reset never touched it.) */
+  background: var(--orb-surface-deep);
+  color: var(--ink-soft);
+  box-shadow: var(--orb-inset);
 }
 .dl-ws__glyph svg { width: 16px; height: 16px; }
 
@@ -568,8 +604,9 @@
   line-height: 1.15;
   min-width: 0;
   padding-left: var(--space-3);
-  border-left: 1px solid var(--rail-strong);
-  box-shadow: -1px 0 0 rgba(255, 255, 255, 0.7);
+  /* soft hairline seam — a faint cool-grey divider with a gentle white catch */
+  border-left: 1px solid rgba(120, 126, 138, 0.2);
+  box-shadow: -1px 0 0 rgba(255, 255, 255, 0.6);
 }
 .dl-ws__op { font-size: var(--text-sm); font-weight: var(--weight-semibold); color: var(--ink); white-space: nowrap; }
 .dl-ws__hint {
@@ -581,7 +618,9 @@
   white-space: nowrap;
 }
 
-/* the chevron sits in its own small metal zone, divided off by a seam */
+/* the chevron sits in its own small metal zone of the same key, divided off by a
+ * matching engraved seam (graphite hairline + white catch) so it reads as part of
+ * the metal control, not a detached affordance. */
 .dl-ws__chev {
   display: grid;
   place-items: center;
@@ -589,8 +628,8 @@
   margin-left: 2px;
   align-self: stretch;
   color: var(--ink-muted);
-  border-left: 1px solid var(--rail-soft);
-  box-shadow: -1px 0 0 rgba(255, 255, 255, 0.6);
+  border-left: 1px solid rgba(120, 126, 138, 0.18);
+  box-shadow: -1px 0 0 rgba(255, 255, 255, 0.55);
 }
 .dl-ws__chev svg {
   width: 16px;
@@ -1014,13 +1053,24 @@
 .dl-metal-cta:hover .dl-metal-cta__disc::after { opacity: 1; }
 .dl-metal-cta__disc svg { position: relative; width: 17px; height: 17px; }
 .dl-metal-cta__label { padding-right: var(--space-1); }
+/* --lg — a slightly larger variant for hero moments (e.g. the empty-state CTA, where
+ * it's the single primary action). Same material/shape, gently scaled up. */
+.dl-metal-cta--lg {
+  min-height: 48px;
+  gap: var(--space-3);
+  padding: 5px var(--space-5) 5px 5px;
+  font-size: var(--text-md);
+}
+.dl-metal-cta--lg .dl-metal-cta__disc { width: 38px; height: 38px; }
+.dl-metal-cta--lg .dl-metal-cta__disc svg { width: 19px; height: 19px; }
 
 /* ── Card + MetricCard ───────────────────────────────────────────────────── */
 .dl-card {
   position: relative;
-  /* frosted pearl-silver plate: a whisper of vertical brushed grain over the satin
-   * plate gradient, framed by a bright top light-catch and a dark lower edge.    */
-  background: var(--metal-grain-v), var(--surface-plate);
+  /* frosted light cool-silver plate: a whisper of vertical brushed grain over the cool
+   * plate gradient, framed by a bright top light-catch and a dark lower edge. Cool
+   * (blue-neutral) so every dashboard panel reads as one consistent silver family.  */
+  background: var(--metal-grain-v), var(--surface-plate-cool);
   border: 1px solid var(--border);
   border-radius: var(--radius-card);
   box-shadow: var(--shadow-card), var(--edge-highlight), var(--edge-shadow);
@@ -1052,7 +1102,7 @@
 /* inset — a recessed secondary panel (nested inside a card or as a quiet
  * supporting surface). Sits below the plane rather than lifted above it.       */
 .dl-card--inset {
-  background: var(--surface-sunken);
+  background: var(--surface-sunken-cool);
   border-color: var(--border-hairline);
   box-shadow: var(--shadow-inset);
 }
@@ -1082,7 +1132,8 @@
   flex-direction: column;
   gap: var(--space-2);
   min-height: 132px;
-  background: var(--surface-plate);
+  /* light cool-silver plate (not the warmer green-leaning --surface-plate) */
+  background: var(--surface-plate-cool);
   border: 1px solid var(--border);
   border-radius: var(--radius-card);
   box-shadow: var(--shadow-card), var(--edge-highlight);
@@ -1092,13 +1143,15 @@
   width: 100%;
   transition: transform var(--dur-3) var(--ease-out), box-shadow var(--dur-3) var(--ease-out), border-color var(--dur-2) var(--ease-standard);
 }
-.dl-metric::before { /* a crisp top light-catch — the plate's brushed sheen */
+.dl-metric::before { /* a crisp top light-catch — the plate's brushed sheen. Bright
+  * enough that EVERY tile reads as the same light cool-silver; the primary anchor is
+  * set apart by its larger value + extra lift, not by a brighter plate. */
   content: "";
   position: absolute;
   inset: 0 0 auto 0;
-  height: 46%;
+  height: 54%;
   background: var(--sheen-plate-strong);
-  opacity: 0.85;
+  opacity: 1;
   pointer-events: none;
 }
 .dl-metric::after { /* very subtle inner glow, top-left */
@@ -1106,7 +1159,7 @@
   position: absolute;
   inset: 0;
   background: radial-gradient(120% 92% at 14% -8%, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0) 54%);
-  opacity: 0.6;
+  opacity: 0.9;
   pointer-events: none;
 }
 .dl-metric > * { position: relative; z-index: 1; }
@@ -1120,12 +1173,10 @@
 .dl-metric--interactive:active { transform: translateY(0); }
 /* primary anchor tile — richer, more-lifted plate + a larger value. Same width;
  * the grid stretches the row so every tile keeps a matching height.            */
-.dl-metric--primary {
-  background: var(--surface-plate-raised);
-  box-shadow: var(--shadow-card-hover), var(--edge-highlight);
-}
-.dl-metric--primary::before { height: 56%; opacity: 1; }
-.dl-metric--primary::after { opacity: 0.95; }
+/* The anchor tile shares the EXACT same cool-silver plate, sheen AND elevation as the
+ * others, so the whole strip reads as one consistent material — it's set apart only by
+ * its larger value (a stronger drop here made it "pop" while the others looked duller
+ * by contrast, which read as inconsistent). */
 .dl-metric--primary .dl-metric__value { font-size: var(--text-3xl); }
 /* identity glyph — a frosted metal capsule, top-right. On an interactive card it
  * crossfades to the drill-down arrow on hover. */
@@ -1292,7 +1343,8 @@
   gap: var(--space-3);
   padding: var(--space-4);
   border-radius: var(--radius-inner);
-  background: var(--surface-card);
+  /* lightest cool-silver tier — a calm secondary surface in the silver family */
+  background: var(--surface-plate-cool-soft);
   border: 1px solid var(--border);
   box-shadow: var(--shadow-card), var(--edge-highlight);
   text-align: left;
@@ -1311,7 +1363,7 @@
 }
 .dl-action > * { position: relative; }
 .dl-action:hover { transform: translateY(-2px); box-shadow: var(--shadow-card-hover), var(--edge-highlight); border-color: var(--border-strong); }
-.dl-action:hover .dl-action__icon { box-shadow: var(--shadow-2), var(--edge-highlight-disc); }
+.dl-action:hover .dl-action__icon { box-shadow: inset 0 0 0 1px rgba(120, 126, 138, 0.2), inset 0 1px 1px rgba(255, 255, 255, 0.9), 0 3px 8px rgba(44, 48, 58, 0.08); }
 .dl-action:active { transform: translateY(0) scale(0.99); }
 .dl-action:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: var(--shadow-1); }
 .dl-action__icon {
@@ -1320,9 +1372,10 @@
   width: 40px; height: 40px;
   flex: 0 0 auto;
   border-radius: var(--radius-control);
-  background: var(--metal-disc);
+  /* soft silver-orb medallion — same family as the switcher glyph (see --orb-*) */
+  background: var(--orb-surface-deep);
   color: var(--ink);
-  box-shadow: var(--shadow-1), var(--edge-highlight-disc);
+  box-shadow: var(--orb-inset);
 }
 .dl-action__icon svg { width: 19px; height: 19px; }
 .dl-action__body { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
@@ -1402,9 +1455,11 @@
   place-items: center;
   width: 56px; height: 56px;
   border-radius: var(--radius-inner);
-  background: var(--metal-disc);
+  /* soft silver-orb medallion floating above the empty-state copy (see --orb-*) */
+  background: var(--orb-surface-deep);
+  border: 1px solid var(--orb-rim);
   color: var(--ink-soft);
-  box-shadow: var(--shadow-2), var(--edge-highlight-disc);
+  box-shadow: var(--orb-shadow);
   margin-bottom: var(--space-1);
 }
 .dl-empty__icon svg { width: 26px; height: 26px; }
@@ -1807,12 +1862,11 @@
   letter-spacing: 0;
   line-height: 1;
   color: var(--ink-soft);
-  /* a brushed-silver coin — satin gradient, machined rim, bright top light-catch
-   * and a soft lower shade so the monogram reads as struck metal */
-  background: var(--metal-token);
-  border: 1px solid var(--rail-medium);
-  box-shadow: var(--shadow-1), inset 0 1px 0 rgba(255, 255, 255, 0.9),
-    inset 0 -2px 3px rgba(28, 30, 26, 0.1);
+  /* a soft silver-orb coin — same atmospheric family as the switcher pill (see --orb-*),
+   * so the monogram reads on a calm light-grey orb rather than a struck-metal disc */
+  background: var(--orb-surface-deep);
+  border: 1px solid var(--orb-rim);
+  box-shadow: var(--orb-shadow);
   user-select: none;
   overflow: hidden;
 }
@@ -1872,7 +1926,7 @@
 .dl-switch.is-on {
   /* brighter silver-SAGE channel + the subtle sage ON halo (restored) */
   background: linear-gradient(180deg, #e3e9e2 0%, #edf2ec 60%, #f4f8f3 100%);
-  border-color: color-mix(in srgb, var(--accent-secure) 32%, var(--rail-strong));
+  border-color: color-mix(in srgb, var(--accent-secure) 44%, var(--rail-strong));
   --switch-shadow:
     inset 0 1px 2px rgba(40, 44, 38, 0.16),
     inset 0 -1px 0 rgba(255, 255, 255, 0.78),
@@ -1882,7 +1936,7 @@
 /* soft sage aura behind the knob (right side) — muted, never neon/bright */
 .dl-switch.is-on::before {
   opacity: 1;
-  background: radial-gradient(60% 120% at 78% 50%, rgba(96, 142, 112, 0.46) 0%, rgba(96, 142, 112, 0) 62%);
+  background: radial-gradient(62% 120% at 78% 50%, rgba(96, 142, 112, 0.6) 0%, rgba(96, 142, 112, 0) 64%);
 }
 .dl-switch.is-on .dl-switch__knob {
   transform: translateX(18px);
@@ -2433,7 +2487,8 @@
 @media (max-width: 720px) {
   /* Collapse the selector to glyph + chevron; the menu still carries the copy. */
   .dl-ws__id { display: none; }
-  .dl-ws__trigger { gap: var(--space-1); padding: 6px 8px 6px 6px; }
+  /* keep specificity ≥ the base `.dl-app .dl-ws__trigger` (0,2,0) so this still wins */
+  .dl-app .dl-ws__trigger { gap: var(--space-1); padding: 6px 8px 6px 6px; }
 }
 
 @media (max-width: 560px) {

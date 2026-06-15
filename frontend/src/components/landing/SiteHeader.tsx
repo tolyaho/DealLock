@@ -69,7 +69,7 @@ export default function SiteHeader() {
           </ul>
         </nav>
 
-        <Link className="launch-button" to="/app">
+        <Link className="launch-button" to="/app/home">
           Launch App
         </Link>
       </div>

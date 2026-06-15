@@ -21,12 +21,15 @@ import {
   SearchInput,
   SegmentedControl,
   SkeletonCircle,
+  SplineObject,
   StatusChip,
   TableShell,
+  useRoleConfig,
   usePageLoading,
   type ChipTone,
   type Column,
 } from "../../components/app";
+import { SPLINE_SCENES } from "../../splineScenes";
 import { IconAgreements, IconPlus } from "../../components/app/icons";
 import {
   AGREEMENTS,
@@ -123,6 +126,7 @@ function AgreementsSkeletonRow() {
 
 export default function AgreementsPage() {
   const [params, setParams] = useSearchParams();
+  const cfg = useRoleConfig(); // role-aware creation wording: agreement (client) vs proposal (provider)
   const loading = usePageLoading();
   const urlFilter = params.get("status") as Filter | null;
   const [filter, setFilter] = useState<Filter>(
@@ -157,7 +161,11 @@ export default function AgreementsPage() {
         title="All agreements"
         subtitle="Track and manage your secured agreements."
         actions={
-          <MetalCTA icon={<IconPlus />}>New agreement</MetalCTA>
+          /* Empty state owns the single primary CTA (centered in the card), so the
+           * header action is hidden when there are no agreements — no duplicate CTA.
+           * Restored once populated. Label is role-aware: "New agreement" (client) /
+           * "New proposal" (provider) — a provider never creates an agreement. */
+          source.length > 0 ? <MetalCTA icon={<IconPlus />}>{cfg.primaryAction.label}</MetalCTA> : undefined
         }
       />
 
@@ -261,10 +269,10 @@ export default function AgreementsPage() {
       ) : source.length === 0 ? (
         <Card flush>
           <EmptyState
-            icon={<IconAgreements />}
-            title="No agreements yet"
-            text="Create your first escrow agreement to start protecting a deal."
-            action={<MetalCTA icon={<IconPlus />}>New agreement</MetalCTA>}
+            object={<SplineObject scene={SPLINE_SCENES.agreements} float />}
+            title={cfg.emptyList.title}
+            text={cfg.emptyList.text}
+            action={<MetalCTA className="dl-metal-cta--lg" icon={<IconPlus />}>{cfg.primaryAction.label}</MetalCTA>}
           />
         </Card>
       ) : (

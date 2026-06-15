@@ -47,7 +47,7 @@ export const MILESTONE_STATUS_LABEL: Record<string, string> = {
   completed: "Completed",
 };
 
-export const AGREEMENTS: Agreement[] = [
+const AGREEMENTS_SEED: Agreement[] = [
   {
     id: "agr-001",
     title: "Master Services Agreement",
@@ -318,7 +318,7 @@ export const AGREEMENTS: Agreement[] = [
 ];
 
 // ---- activity feed ---------------------------------------------------------
-export const ACTIVITY: ActivityEvent[] = [
+const ACTIVITY_SEED: ActivityEvent[] = [
   { id: "ev1", agreementId: "agr-001", agreementTitle: "Master Services Agreement", kind: "submitted", label: "Design deliverables submitted", actor: "Summit Ventures", when: "1 day ago" },
   { id: "ev2", agreementId: "agr-002", agreementTitle: "Website Redesign Project", kind: "released", label: "Milestone released", actor: "to Meliora Studio", when: "2 days ago", value: { amount: 3125, asset: "USDC" } },
   { id: "ev3", agreementId: "agr-003", agreementTitle: "Brand Refresh", kind: "revision_requested", label: "Revision requested", actor: "NorthRidge LLC", when: "3 days ago" },
@@ -328,6 +328,15 @@ export const ACTIVITY: ActivityEvent[] = [
   { id: "ev7", agreementId: "agr-006", agreementTitle: "Content System Migration", kind: "completed", label: "Agreement completed", actor: "Brightwork Studio", when: "1 week ago" },
   { id: "ev8", agreementId: "agr-002", agreementTitle: "Website Redesign Project", kind: "message", label: "New message", actor: "Meliora Studio", when: "1 week ago" },
 ];
+
+// ---- new-client experience toggle -----------------------------------------
+/* Flip NEW_CLIENT_EMPTY to `false` to restore the demo fixtures. When `true`,
+ * every data read is empty (no agreements / no activity), so Home, Agreements,
+ * Counterparties and Statistics all render their first-run / empty states — the
+ * brand-new-client experience. Temporary preview switch, not a real auth state. */
+export const NEW_CLIENT_EMPTY = true;
+export const AGREEMENTS: Agreement[] = NEW_CLIENT_EMPTY ? [] : AGREEMENTS_SEED;
+export const ACTIVITY: ActivityEvent[] = NEW_CLIENT_EMPTY ? [] : ACTIVITY_SEED;
 
 // ---- selectors -------------------------------------------------------------
 /** Which side of an agreement the signed-in user is on. */

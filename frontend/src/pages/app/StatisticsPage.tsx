@@ -4,7 +4,7 @@
  * stays calm until there's data to chart.
  */
 import { useState } from "react";
-import { EmptyStatePage, PageToolbar, SegmentedControl, SplineObject } from "../../components/app";
+import { EmptyStatePage, PageToolbar, SegmentedControl, SplineObject, useRoleConfig } from "../../components/app";
 import { IconPlus } from "../../components/app/icons";
 import { SPLINE_SCENES } from "../../splineScenes";
 
@@ -15,6 +15,7 @@ const RANGES = [
 ];
 
 export default function StatisticsPage() {
+  const cfg = useRoleConfig();
   const [range, setRange] = useState("30d");
 
   return (
@@ -30,7 +31,7 @@ export default function StatisticsPage() {
       object={<SplineObject scene={SPLINE_SCENES.statistics} />}
       emptyTitle="No statistics yet"
       emptyDescription="Charts and insights appear once your first agreements start moving — escrowed value, releases, and milestone completion in one calm view."
-      primaryAction={{ label: "Create agreement", to: "/app/agreements", icon: <IconPlus /> }}
+      primaryAction={{ label: cfg.primaryAction.label, to: "/app/agreements", icon: <IconPlus /> }}
     />
   );
 }
