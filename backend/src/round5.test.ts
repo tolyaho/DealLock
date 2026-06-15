@@ -18,20 +18,61 @@ const PRIVATE_KEYS = [
 
 let server: Server;
 let baseUrl = "";
+const previousDisableRateLimits = process.env.DISABLE_RATE_LIMITS;
+
+const SAFE_METHODS = new Set(["GET", "HEAD", "OPTIONS"]);
 
 class TestClient {
   private cookie = "";
+  private csrfToken = "";
 
-  async request(path: string, init?: RequestInit): Promise<{ status: number; body: Record<string, any> }> {
-    const headers = new Headers(init?.headers);
-    headers.set("Content-Type", "application/json");
-    if (this.cookie) headers.set("Cookie", this.cookie);
-
-    const res = await fetch(`${baseUrl}${path}`, { ...init, headers });
+  private storeCookie(res: Response) {
     const setCookie = res.headers.get("set-cookie");
     if (setCookie) this.cookie = setCookie.split(";")[0] ?? "";
-    const body = (await res.json().catch(() => ({}))) as Record<string, any>;
-    return { status: res.status, body };
+  }
+
+  private async ensureCsrfToken() {
+    if (this.csrfToken) return;
+    const headers = new Headers();
+    if (this.cookie) headers.set("Cookie", this.cookie);
+
+    const res = await fetch(`${baseUrl}/auth/csrf`, { headers });
+    this.storeCookie(res);
+    const body = (await res.json().catch(() => ({}))) as { csrfToken?: unknown };
+    if (typeof body.csrfToken === "string") this.csrfToken = body.csrfToken;
+  }
+
+  async request(
+    path: string,
+    init?: RequestInit,
+    options: { csrf?: boolean } = {},
+  ): Promise<{ status: number; body: Record<string, any> }> {
+    const method = (init?.method ?? "GET").toUpperCase();
+    const needsCsrf = options.csrf !== false && !SAFE_METHODS.has(method);
+
+    const send = async () => {
+      const headers = new Headers(init?.headers);
+      headers.set("Content-Type", "application/json");
+      if (this.cookie) headers.set("Cookie", this.cookie);
+      if (this.csrfToken) headers.set("x-csrf-token", this.csrfToken);
+
+      const res = await fetch(`${baseUrl}${path}`, { ...init, headers });
+      this.storeCookie(res);
+      const body = (await res.json().catch(() => ({}))) as Record<string, any>;
+      return { status: res.status, body };
+    };
+
+    if (needsCsrf) {
+      await this.ensureCsrfToken();
+    }
+
+    const first = await send();
+    if (needsCsrf && first.status === 403 && first.body.error === "Invalid or missing CSRF token") {
+      this.csrfToken = "";
+      await this.ensureCsrfToken();
+      return send();
+    }
+    return first;
   }
 }
 
@@ -50,7 +91,7 @@ async function signIn(privateKey: (typeof PRIVATE_KEYS)[number]) {
     method: "POST",
     body: JSON.stringify({ address: account.address, chainId: CHAIN_ID }),
   });
-  assert.equal(nonce.status, 200);
+  assert.equal(nonce.status, 200, JSON.stringify(nonce.body));
   const signature = await account.signMessage({ message: String(nonce.body.message) });
   const verified = await client.request("/auth/verify", {
     method: "POST",
@@ -60,7 +101,7 @@ async function signIn(privateKey: (typeof PRIVATE_KEYS)[number]) {
       signature,
     }),
   });
-  assert.equal(verified.status, 200);
+  assert.equal(verified.status, 200, JSON.stringify(verified.body));
   return {
     client,
     address: account.address.toLowerCase(),
@@ -71,9 +112,14 @@ async function signIn(privateKey: (typeof PRIVATE_KEYS)[number]) {
 async function captureVerificationToken(client: TestClient, email: string): Promise<string> {
   const lines: string[] = [];
   const originalInfo = console.info;
+  const originalWrite = process.stdout.write;
   console.info = (...args: unknown[]) => {
     lines.push(args.map(String).join(" "));
   };
+  process.stdout.write = ((chunk: unknown) => {
+    lines.push(String(chunk));
+    return true;
+  }) as typeof process.stdout.write;
 
   try {
     const started = await client.request("/email/start-verification", {
@@ -83,6 +129,7 @@ async function captureVerificationToken(client: TestClient, email: string): Prom
     assert.equal(started.status, 200);
   } finally {
     console.info = originalInfo;
+    process.stdout.write = originalWrite;
   }
 
   const match = lines.join("\n").match(/verifyEmail=([^\s]+)/);
@@ -92,11 +139,14 @@ async function captureVerificationToken(client: TestClient, email: string): Prom
 
 async function withMutedConsoleEmail<T>(fn: () => Promise<T>): Promise<T> {
   const originalInfo = console.info;
+  const originalWrite = process.stdout.write;
   console.info = () => {};
+  process.stdout.write = (() => true) as typeof process.stdout.write;
   try {
     return await fn();
   } finally {
     console.info = originalInfo;
+    process.stdout.write = originalWrite;
   }
 }
 
@@ -117,6 +167,7 @@ async function createAgreement(clientAddress: string, providerAddress: string) {
 
 before(
   async () => {
+    process.env.DISABLE_RATE_LIMITS = "true";
     await new Promise<void>((resolve) => {
       server = createApp().listen(0, () => {
         const address = server.address();
@@ -148,6 +199,8 @@ after(
         closeConfiguredSessionStores()
           .then(() => db.$disconnect())
           .then(() => {
+            if (previousDisableRateLimits === undefined) delete process.env.DISABLE_RATE_LIMITS;
+            else process.env.DISABLE_RATE_LIMITS = previousDisableRateLimits;
             if (err) reject(err);
             else resolve();
           })
@@ -156,7 +209,27 @@ after(
     }),
 );
 
-test("email verification stores only hashes, rejects expired tokens, and prevents duplicate verified emails", async () => {
+test("CSRF protection rejects missing tokens and accepts session-bound tokens", { concurrency: false }, async () => {
+  const account = privateKeyToAccount(PRIVATE_KEYS[0]);
+  const missing = await new TestClient().request(
+    "/auth/nonce",
+    {
+      method: "POST",
+      body: JSON.stringify({ address: account.address, chainId: CHAIN_ID }),
+    },
+    { csrf: false },
+  );
+  assert.equal(missing.status, 403);
+
+  const valid = await new TestClient().request("/auth/nonce", {
+    method: "POST",
+    body: JSON.stringify({ address: account.address, chainId: CHAIN_ID }),
+  });
+  assert.equal(valid.status, 200);
+  assert.equal(typeof valid.body.nonceId, "string");
+});
+
+test("email verification stores only hashes, rejects expired tokens, and prevents duplicate verified emails", { concurrency: false }, async () => {
   const userA = await signIn(PRIVATE_KEYS[0]);
   const token = await captureVerificationToken(userA.client, "USER@example.com");
 
@@ -207,7 +280,7 @@ test("email verification stores only hashes, rejects expired tokens, and prevent
   assert.equal(duplicate.status, 409);
 });
 
-test("notification preferences and agreement contacts are editable only by involved accounts", async () => {
+test("notification preferences and agreement contacts are editable only by involved accounts", { concurrency: false }, async () => {
   const clientUser = await signIn(PRIVATE_KEYS[0]);
   const providerUser = await signIn(PRIVATE_KEYS[1]);
   const outsider = await signIn(PRIVATE_KEYS[2]);
@@ -239,7 +312,7 @@ test("notification preferences and agreement contacts are editable only by invol
   assert.equal(rejected.status, 404);
 });
 
-test("contract action notifications skip, send, respect preferences, and dedupe", async () => {
+test("contract action notifications skip, send, respect preferences, and dedupe", { concurrency: false }, async () => {
   const clientUser = await signIn(PRIVATE_KEYS[0]);
   const providerUser = await signIn(PRIVATE_KEYS[1]);
   await createAgreement(clientUser.address, providerUser.address);
@@ -303,7 +376,7 @@ test("contract action notifications skip, send, respect preferences, and dedupe"
   assert.equal(logs.some((log) => log.status === "skipped"), true);
 });
 
-test("activity API is private to involved accounts and returns newest indexed events first", async () => {
+test("activity API is private to involved accounts and returns newest indexed events first", { concurrency: false }, async () => {
   const clientUser = await signIn(PRIVATE_KEYS[0]);
   const providerUser = await signIn(PRIVATE_KEYS[1]);
   const outsider = await signIn(PRIVATE_KEYS[2]);
