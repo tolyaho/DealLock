@@ -348,19 +348,43 @@ export default function HomePage() {
             </Button>
           }
         >
-          <div className="dl-feed">
-            {activity.map((e) => (
-              <FeedItem key={e.id} e={e} />
-            ))}
-          </div>
+          {activity.length ? (
+            <div className="dl-feed">
+              {activity.map((e) => (
+                <FeedItem key={e.id} e={e} />
+              ))}
+            </div>
+          ) : (
+            <div className="dl-mini-empty">
+              <span className="dl-mini-empty__icon" aria-hidden="true">
+                <IconMessages />
+              </span>
+              <div className="dl-mini-empty__title">Nothing yet</div>
+              <div className="dl-mini-empty__text">
+                Milestone updates, submissions, and releases will show up here as your agreements move.
+              </div>
+            </div>
+          )}
         </Card>
 
         <Card label="Milestone progress" className="dl-card--instrument">
-          <div className="dl-progress">
-            {progress.map((a) => (
-              <ProgressRow key={a.id} a={a} />
-            ))}
-          </div>
+          {progress.length ? (
+            <div className="dl-progress">
+              {progress.map((a) => (
+                <ProgressRow key={a.id} a={a} />
+              ))}
+            </div>
+          ) : (
+            <div className="dl-mini-empty">
+              <span className="dl-mini-empty__icon" aria-hidden="true">
+                <IconLock />
+              </span>
+              <div className="dl-mini-empty__title">No active milestones</div>
+              <div className="dl-mini-empty__text">
+                Once an agreement is funded, its milestone progress tracks here.
+              </div>
+            </div>
+          )}
         </Card>
 
         <Card label="Quick actions">

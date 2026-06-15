@@ -10,11 +10,11 @@ export const SPLINE_SCENES = {
   /** Landing hero — the metallic vault sculpture (HeroVaultSpline). */
   heroVault: "https://prod.spline.design/AGe6U1U5GtmgortZ/scene.splinecode",
 
-  /** Landing › Workflow section emblem — connected-contract object. */
-  workflowContract: "https://prod.spline.design/lHrkG8Sg4T3EkOol/scene.splinecode",
-
   /** Landing › Security section emblem — shield object. */
   securityShield: "https://prod.spline.design/0j3KAYUN-S5VN299/scene.splinecode",
+
+  /** App › Agreements empty state — agreements object. */
+  agreements: "https://prod.spline.design/kU4vYYR2InQzunLA/scene.splinecode",
 
   /** App › Activity empty state — feed-card object. */
   activity: "https://prod.spline.design/fyNa-9Clg0MPhIdY/scene.splinecode",

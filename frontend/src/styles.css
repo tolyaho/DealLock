@@ -343,7 +343,7 @@ a {
   z-index: 0;
   top: 50%;
   transform: translateY(-50%);
-  left: calc(var(--page-padding-x) - 14px);
+  left: calc(var(--page-padding-x) - 24px);
   right: var(--page-padding-x);
   height: 52px;
   border-radius: 18px;
@@ -449,7 +449,7 @@ a {
   z-index: 1;
   display: flex;
   align-items: center;
-  gap: clamp(20px, 2.4vw, 38px);
+  gap: clamp(28px, 3vw, 48px);
   list-style: none;
   margin: 0;
   padding: 0;
@@ -1235,7 +1235,9 @@ a {
   position: relative;
   width: 132px;
   aspect-ratio: 1 / 1;
-  margin: 0 auto clamp(20px, 3vh, 30px);
+  /* A firm minimum gap (≥24px) below the emblem so it never crowds the heading,    */
+  /* on tall or short viewports alike (the old 3vh floor went too tight when short). */
+  margin: 0 auto clamp(24px, 3vh, 32px);
   pointer-events: none;
   display: grid;
   place-items: center;
@@ -1340,9 +1342,24 @@ a {
   display: none !important;
 }
 
-@media (max-width: 639px) {
+/* Responsive size steps — desktop 132 · tablet ~116 · mobile ~104 · very narrow ~92, */
+/* always centered, never overlapping text (the gap below scales with the box).        */
+@media (max-width: 1199px) {
   .dl-emblem {
-    width: 100px;
+    width: 116px;
+  }
+}
+
+@media (max-width: 767px) {
+  .dl-emblem {
+    width: 104px;
+    margin-bottom: clamp(18px, 5vw, 24px);
+  }
+}
+
+@media (max-width: 479px) {
+  .dl-emblem {
+    width: 92px;
   }
 }
 
@@ -2488,19 +2505,17 @@ a {
     gap: 16px;
   }
 
-  /* Central card sticks to the top; stacked action cards scroll past beneath it.   */
-  /* Solid matte backing (top padding clears the fixed navbar) with a short bottom  */
-  /* fade so cards dissolve in as they enter from below rather than overlapping.     */
+  /* Small width: NO sticky-overlap. The pinned-contract model made the big contract
+   * card cover the numbered action cards scrolling behind it (they read as hidden, not
+   * "dissolving"). Here the scene is a plain vertical flow — the contract scrolls
+   * normally at the top, then the 01–06 action cards follow, each fully in the
+   * foreground with nothing overlapping. */
   .dl-workflow__center {
-    position: sticky;
-    top: 0;
-    z-index: 3;
+    position: static;
+    z-index: auto;
     width: 100%;
-    padding: clamp(58px, 9vh, 78px) 0 26px;
-    /* Opaque backing in the shared wall tone so stacked cards dissolve in beneath it */
-    /* rather than overlapping; fades out at the foot so the wall continues.          */
-    background:
-      linear-gradient(180deg, var(--surface-1) 0%, var(--surface-1) 84%, rgba(238, 238, 234, 0) 100%);
+    padding: 0 0 8px;
+    background: none;
   }
 
   /* On mobile the stacked cards carry the narrative text — the typed line would     */
@@ -3824,6 +3839,10 @@ a {
   position: relative;
   isolation: isolate;
   min-height: 100dvh;
+  /* Safety net only (the layout itself is overflow-free): clip, never hidden, so a   */
+  /* stray decorative/Spline bleed can't add a horizontal scrollbar — `clip` doesn't   */
+  /* create a scroll container, so the workflow's position:sticky still pins normally. */
+  overflow-x: clip;
   background:
     /* soft key light, upper right (strongest at the top, fades over the first panels) */
     radial-gradient(135% 80% at 86% -6%, rgba(255, 255, 255, 0.88) 0%, rgba(255, 255, 255, 0) 42%),

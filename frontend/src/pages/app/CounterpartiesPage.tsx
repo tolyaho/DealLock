@@ -6,7 +6,7 @@
  * Agreements table uses, at the larger `md` size.
  */
 import { useSearchParams } from "react-router-dom";
-import { Button, Card, EmptyStatePage, Identity, PageContainer, PageHeader, SkeletonRow, SplineObject, usePageLoading } from "../../components/app";
+import { Button, Card, EmptyStatePage, Identity, PageContainer, PageHeader, SkeletonRow, SplineObject, useRoleConfig, usePageLoading } from "../../components/app";
 import { IconArrowRight, IconPlus } from "../../components/app/icons";
 import { counterparties } from "../../fixtures/agreements";
 import { formatMoney } from "../../fixtures/format";
@@ -14,6 +14,7 @@ import { SPLINE_SCENES } from "../../splineScenes";
 
 export default function CounterpartiesPage() {
   const [params] = useSearchParams();
+  const cfg = useRoleConfig();
   // `?empty=1` previews the onboarding empty state for design review.
   const rows = params.get("empty") === "1" ? [] : counterparties();
   const loading = usePageLoading();
@@ -29,7 +30,7 @@ export default function CounterpartiesPage() {
         object={<SplineObject scene={SPLINE_SCENES.counterparties} scale={1.15} zoomOut={0.75} float />}
         emptyTitle="No counterparties yet"
         emptyDescription="People and companies you lock agreements with will appear here once your first agreement is underway."
-        primaryAction={{ label: "Create agreement", to: "/app/agreements", icon: <IconPlus /> }}
+        primaryAction={{ label: cfg.primaryAction.label, to: "/app/agreements", icon: <IconPlus /> }}
       />
     );
   }
