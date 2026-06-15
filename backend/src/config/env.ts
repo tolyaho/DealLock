@@ -29,6 +29,8 @@ export interface AppConfig {
   factoryContracts: string | null;
   factoryV2Contracts: string | null;
   factoryV3Contracts: string | null;
+  usdcSepoliaAddress: string | null;
+  usdcHardhatAddress: string | null;
 }
 
 const ERRORS: string[] = [];
@@ -171,6 +173,8 @@ export function validateEnv(): AppConfig {
     factoryContracts: process.env.FACTORY_CONTRACTS ?? null,
     factoryV2Contracts: process.env.FACTORY_V2_CONTRACTS ?? null,
     factoryV3Contracts: process.env.FACTORY_V3_CONTRACTS ?? null,
+    usdcSepoliaAddress: process.env.USDC_SEPOLIA_ADDRESS ?? null,
+    usdcHardhatAddress: process.env.USDC_HARDHAT_ADDRESS ?? null,
   };
 }
 
