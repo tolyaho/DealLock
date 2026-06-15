@@ -4,6 +4,7 @@ import { db } from "../db.js";
 import { buildSigninMessage, NONCE_TTL_MS } from "../auth.js";
 import { generateNonce, asyncRoute } from "../utils.js";
 import { requireAuth, type AuthenticatedRequest } from "../middleware/requireAuth.js";
+import { getOrCreateCsrfToken } from "../middleware/csrf.js";
 
 const router = Router();
 
@@ -14,6 +15,12 @@ function publicUser(user: { id: string; email: string | null; emailVerifiedAt: D
     emailVerifiedAt: user.emailVerifiedAt?.toISOString() ?? null,
   };
 }
+
+// GET /auth/csrf
+// Returns a session-bound token required by mutating cookie-session routes.
+router.get("/csrf", (req, res) => {
+  res.json({ csrfToken: getOrCreateCsrfToken(req) });
+});
 
 // POST /auth/nonce
 // Returns a sign-in message for the given wallet address.

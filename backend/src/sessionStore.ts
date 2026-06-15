@@ -1,6 +1,7 @@
 import session from "express-session";
 import connectPgSimple from "connect-pg-simple";
 import pg from "pg";
+import { getConfig } from "./config/env.js";
 
 const sessionPools: pg.Pool[] = [];
 
@@ -30,7 +31,7 @@ export function sessionCookieConfig(): session.CookieOptions {
     httpOnly: true,
     secure,
     sameSite: sameSiteValue(),
-    maxAge: 7 * 24 * 60 * 60 * 1000,
+    maxAge: getConfig().sessionMaxAgeMs,
   };
 }
 
