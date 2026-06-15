@@ -1,6 +1,8 @@
 import { runIndexerOnce, startIndexerLoop } from "./indexer/runner.js";
 import { indexerConfig } from "./indexer/config.js";
+import { validateEnv } from "./config/env.js";
 
+validateEnv();
 const config = indexerConfig();
 
 if (process.env.INDEXER_ONCE === "true") {

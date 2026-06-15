@@ -17,6 +17,11 @@ function provider(): "console" | "smtp" {
   return "console";
 }
 
+function timeoutMs(name: string, fallback: number): number {
+  const value = Number(process.env[name]);
+  return Number.isInteger(value) && value > 0 ? value : fallback;
+}
+
 function fromHeader(): string {
   return process.env.EMAIL_FROM ?? "DealLock <no-reply@localhost>";
 }
@@ -57,9 +62,15 @@ function buildMessage(message: EmailMessage): string {
 
 function connectSmtp(host: string, port: number, secure: boolean): Promise<SmtpSocket> {
   return new Promise((resolve, reject) => {
+    const connectTimeoutMs = timeoutMs("SMTP_CONNECTION_TIMEOUT_MS", 10_000);
     const socket = secure
       ? tls.connect({ host, port, servername: host })
       : net.connect({ host, port });
+
+    socket.setTimeout(connectTimeoutMs, () => {
+      socket.destroy();
+      reject(new Error(`SMTP connection timed out after ${connectTimeoutMs}ms`));
+    });
 
     const onError = (err: Error) => {
       socket.destroy();
@@ -69,6 +80,7 @@ function connectSmtp(host: string, port: number, secure: boolean): Promise<SmtpS
     socket.once("error", onError);
     socket.once(secure ? "secureConnect" : "connect", () => {
       socket.off("error", onError);
+      socket.setTimeout(0);
       socket.setEncoding("utf8");
       resolve(socket);
     });
@@ -79,7 +91,13 @@ function smtpReader(socket: SmtpSocket): () => Promise<string> {
   let buffer = "";
   return () =>
     new Promise((resolve, reject) => {
+      const readTimeoutMs = timeoutMs("SMTP_READ_TIMEOUT_MS", 10_000);
+      const timer = setTimeout(() => {
+        cleanup();
+        reject(new Error(`SMTP read timed out after ${readTimeoutMs}ms`));
+      }, readTimeoutMs);
       const cleanup = () => {
+        clearTimeout(timer);
         socket.off("data", onData);
         socket.off("error", onError);
         socket.off("close", onClose);
@@ -109,7 +127,12 @@ function smtpReader(socket: SmtpSocket): () => Promise<string> {
 
 function upgradeToTls(socket: SmtpSocket, host: string): Promise<tls.TLSSocket> {
   return new Promise((resolve, reject) => {
+    const connectTimeoutMs = timeoutMs("SMTP_CONNECTION_TIMEOUT_MS", 10_000);
     const tlsSocket = tls.connect({ socket, servername: host });
+    tlsSocket.setTimeout(connectTimeoutMs, () => {
+      tlsSocket.destroy();
+      reject(new Error(`SMTP TLS upgrade timed out after ${connectTimeoutMs}ms`));
+    });
     const onError = (err: Error) => {
       tlsSocket.destroy();
       reject(err);
@@ -117,6 +140,7 @@ function upgradeToTls(socket: SmtpSocket, host: string): Promise<tls.TLSSocket> 
     tlsSocket.once("error", onError);
     tlsSocket.once("secureConnect", () => {
       tlsSocket.off("error", onError);
+      tlsSocket.setTimeout(0);
       tlsSocket.setEncoding("utf8");
       resolve(tlsSocket);
     });
@@ -129,7 +153,17 @@ async function sendCommand(
   command: string,
   allowedCodes: number[],
 ): Promise<string> {
-  socket.write(`${command}\r\n`);
+  await new Promise<void>((resolve, reject) => {
+    const writeTimeoutMs = timeoutMs("SMTP_WRITE_TIMEOUT_MS", 10_000);
+    const timer = setTimeout(() => {
+      reject(new Error(`SMTP write timed out after ${writeTimeoutMs}ms`));
+    }, writeTimeoutMs);
+    socket.write(`${command}\r\n`, (err) => {
+      clearTimeout(timer);
+      if (err) reject(err);
+      else resolve();
+    });
+  });
   const response = await read();
   const code = Number(response.slice(0, 3));
   if (!allowedCodes.includes(code)) {

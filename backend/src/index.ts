@@ -12,6 +12,7 @@ import emailRouter from "./routes/email.js";
 import notificationPreferencesRouter from "./routes/notificationPreferences.js";
 import notificationsRouter from "./routes/notifications.js";
 import factoryRouter from "./routes/factory.js";
+import paymentAssetsRouter from "./routes/paymentAssets.js";
 import { requireAuth, type AuthenticatedRequest } from "./middleware/requireAuth.js";
 import { db } from "./db.js";
 import { asyncRoute } from "./utils.js";
@@ -22,8 +23,11 @@ import {
 } from "./sessionStore.js";
 import { indexerStatus } from "./indexer/status.js";
 import { startIndexerLoop } from "./indexer/runner.js";
+import { stopIndexerLoop } from "./indexer/runner.js";
 import { validateEnv } from "./config/env.js";
 import { logger } from "./logger.js";
+import { csrfProtection } from "./middleware/csrf.js";
+import { closeConfiguredSessionStores } from "./sessionStore.js";
 
 function publicUser(user: { id: string; email: string | null; emailVerifiedAt: Date | null }) {
   return {
@@ -89,6 +93,8 @@ export function createApp() {
     }),
   );
 
+  app.use(csrfProtection);
+
   // Health — no auth, no rate limit.
   app.get("/health", (_req, res) => {
     res.json({ ok: true });
@@ -150,6 +156,7 @@ export function createApp() {
   app.use("/notifications", requireAuth, notifyLimiter, notificationsRouter);
 
   app.use("/factory", factoryRouter);
+  app.use("/payment-assets", paymentAssetsRouter);
 
   // Global error handler — never leak stack traces in production.
   app.use((err: Error, _req: Request, res: Response, _next: NextFunction) => {
@@ -181,8 +188,27 @@ if (isMainModule) {
   });
 
   const app = createApp();
-  app.listen(PORT, () => {
+  const server = app.listen(PORT, () => {
     logger.info(`Listening on http://localhost:${PORT}`);
   });
   startIndexerLoop();
+
+  const shutdown = (signal: NodeJS.Signals) => {
+    logger.info("DealLock backend shutting down", { signal });
+    stopIndexerLoop();
+    server.close((err) => {
+      if (err) logger.error("HTTP server close failed", { message: err.message });
+      Promise.all([db.$disconnect(), closeConfiguredSessionStores()])
+        .then(() => process.exit(err ? 1 : 0))
+        .catch((closeErr: unknown) => {
+          logger.error("Shutdown cleanup failed", {
+            message: closeErr instanceof Error ? closeErr.message : String(closeErr),
+          });
+          process.exit(1);
+        });
+    });
+  };
+
+  process.once("SIGTERM", shutdown);
+  process.once("SIGINT", shutdown);
 }
