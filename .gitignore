@@ -41,6 +41,10 @@ frontend/.screenshots/
 # Local coursework notes
 notes/
 
+# Local agent / private files
+private_tokens.py
+.codex/
+
 # LaTeX build intermediates
 report/*.aux
 report/*.fdb_latexmk
