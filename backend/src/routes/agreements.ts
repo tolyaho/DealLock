@@ -5,12 +5,12 @@ import { db } from "../db.js";
 import { isValidEmail, normalizeOptionalEmail } from "../email/validation.js";
 import { asyncRoute } from "../utils.js";
 import { type AuthenticatedRequest } from "../middleware/requireAuth.js";
+import { resolvePaymentAsset, snapshotPaymentAsset } from "../paymentAssets.js";
 
 const router = Router();
 const TX_HASH_RE = /^0x[0-9a-fA-F]{64}$/;
 const ADDR_RE = /^0x[0-9a-fA-F]{40}$/;
 const BYTES32_RE = /^0x[0-9a-fA-F]{64}$/;
-const ZERO_ADDRESS = "0x0000000000000000000000000000000000000000";
 
 // All agreement routes require authentication (enforced in index.ts).
 
@@ -50,30 +50,20 @@ function parseContractVersion(value: unknown): number | undefined {
   return typeof value === "number" && [1, 2, 3, 4, 5, 6].includes(value) ? value : undefined;
 }
 
-function parsePaymentMetadata(input: Record<string, unknown>) {
-  const tokenRaw = typeof input.paymentTokenAddress === "string" ? input.paymentTokenAddress.toLowerCase() : null;
-  const tokenAddress = tokenRaw && ADDR_RE.test(tokenRaw) && tokenRaw !== ZERO_ADDRESS ? tokenRaw : null;
-  const kind = input.paymentAssetKind === "erc20" || tokenAddress ? "erc20" : "native";
-  const decimals =
-    typeof input.paymentDecimals === "number" &&
-    Number.isInteger(input.paymentDecimals) &&
-    input.paymentDecimals >= 0 &&
-    input.paymentDecimals <= 36
-      ? input.paymentDecimals
-      : kind === "erc20"
-        ? 18
-        : 18;
-  const symbol =
-    typeof input.paymentSymbol === "string" && input.paymentSymbol.trim()
-      ? input.paymentSymbol.trim().slice(0, 16)
-      : kind === "erc20"
-        ? "ERC-20"
-        : "ETH";
+function parseChainId(value: unknown): number | null {
+  return typeof value === "number" && Number.isInteger(value) && value > 0 ? value : null;
+}
+
+function editableAgreementData(input: Record<string, unknown>) {
   return {
-    paymentAssetKind: kind,
-    paymentTokenAddress: kind === "erc20" ? tokenAddress : null,
-    paymentSymbol: symbol,
-    paymentDecimals: decimals,
+    ...(typeof input.projectTitle === "string" && { projectTitle: input.projectTitle.slice(0, 160) }),
+    ...(typeof input.serviceTemplate === "string" && { serviceTemplate: input.serviceTemplate.slice(0, 80) }),
+    ...(input.metadataJson != null && {
+      metadataJson:
+        typeof input.metadataJson === "string"
+          ? input.metadataJson.slice(0, 32_000)
+          : JSON.stringify(input.metadataJson).slice(0, 32_000),
+    }),
   };
 }
 
@@ -146,11 +136,14 @@ router.post(
       factoryLogIndex,
       factoryVersion,
       metadataHash,
+      paymentAssetKey,
+      paymentTokenAddress,
     } = req.body as Record<string, unknown>;
+    const parsedChainId = parseChainId(chainId);
 
     if (
       typeof contractAddress !== "string" ||
-      typeof chainId !== "number" ||
+      parsedChainId === null ||
       typeof clientAddress !== "string" ||
       typeof providerAddress !== "string"
     ) {
@@ -176,7 +169,31 @@ router.post(
     }
 
     const wallets = await db.wallet.findMany({ where: { userId } });
-    const addresses = wallets.map((w) => w.address);
+    const addresses = wallets.map((w) => w.address.toLowerCase());
+
+    const existing = await db.agreement.findUnique({
+      where: { chainId_contractAddress: { chainId: parsedChainId, contractAddress: normContract } },
+    });
+
+    if (existing) {
+      if (!addresses.includes(existing.clientAddress) && !addresses.includes(existing.providerAddress)) {
+        res.status(403).json({ error: "Agreement must involve one of your linked wallets" });
+        return;
+      }
+
+      const updated = await db.agreement.update({
+        where: { id: existing.id },
+        data: {
+          ...editableAgreementData(req.body as Record<string, unknown>),
+          lastSyncedAt: new Date(),
+          ...(parsedClientEmail.value !== undefined && { clientEmail: parsedClientEmail.value }),
+          ...(parsedProviderEmail.value !== undefined && { providerEmail: parsedProviderEmail.value }),
+        },
+      });
+
+      res.json({ agreement: publicAgreement(updated) });
+      return;
+    }
 
     if (!addresses.includes(normClient) && !addresses.includes(normProvider)) {
       res.status(403).json({ error: "Agreement must involve one of your linked wallets" });
@@ -191,7 +208,16 @@ router.post(
         : "{}";
 
     const cvNumber = parseContractVersion(contractVersion);
-    const payment = parsePaymentMetadata(req.body as Record<string, unknown>);
+    const paymentAsset = resolvePaymentAsset({
+      chainId: parsedChainId,
+      assetKey: paymentAssetKey,
+      tokenAddress: paymentTokenAddress,
+    });
+    if (!paymentAsset) {
+      res.status(400).json({ error: "Unsupported payment asset for chain" });
+      return;
+    }
+    const payment = snapshotPaymentAsset(paymentAsset);
     const parsedDeploymentTxHash =
       typeof deploymentTxHash === "string" && TX_HASH_RE.test(deploymentTxHash)
         ? deploymentTxHash.toLowerCase()
@@ -221,30 +247,10 @@ router.post(
         ? metadataHash.toLowerCase()
         : undefined;
 
-    const agreement = await db.agreement.upsert({
-      where: { chainId_contractAddress: { chainId, contractAddress: normContract } },
-      update: {
-        projectTitle: typeof projectTitle === "string" ? projectTitle : undefined,
-        serviceTemplate: typeof serviceTemplate === "string" ? serviceTemplate : undefined,
-        metadataJson: metaStr,
-        lastSyncedAt: new Date(),
-        ...(cvNumber !== undefined && { contractVersion: cvNumber }),
-        ...payment,
-        ...(parsedDeploymentTxHash !== undefined && { deploymentTxHash: parsedDeploymentTxHash }),
-        ...(parsedDeploymentBlock !== undefined && { deploymentBlockNumber: parsedDeploymentBlock }),
-        ...(parsedIndexingStartBlock !== undefined && { indexingStartBlock: parsedIndexingStartBlock }),
-        ...(parsedClientEmail.value !== undefined && { clientEmail: parsedClientEmail.value }),
-        ...(parsedProviderEmail.value !== undefined && { providerEmail: parsedProviderEmail.value }),
-        ...(parsedCreationSource !== undefined && { creationSource: parsedCreationSource }),
-        ...(parsedFactoryAddress !== undefined && { factoryAddress: parsedFactoryAddress }),
-        ...(parsedFactoryVersion !== undefined && { factoryVersion: parsedFactoryVersion }),
-        ...(parsedFactoryTxHash !== undefined && { factoryTxHash: parsedFactoryTxHash }),
-        ...(parsedFactoryLogIndex !== undefined && { factoryLogIndex: parsedFactoryLogIndex }),
-        ...(parsedMetadataHash !== undefined && { metadataHash: parsedMetadataHash }),
-      },
-      create: {
+    const agreement = await db.agreement.create({
+      data: {
         contractAddress: normContract,
-        chainId,
+        chainId: parsedChainId,
         clientAddress: normClient,
         providerAddress: normProvider,
         clientEmail: parsedClientEmail.value ?? null,
@@ -279,7 +285,9 @@ router.patch(
     const contractAddress = req.params.contractAddress;
     const { chainId, clientEmail, providerEmail } = req.body as Record<string, unknown>;
 
-    if (!isAddress(contractAddress) || typeof chainId !== "number") {
+    const parsedChainId = parseChainId(chainId);
+
+    if (!isAddress(contractAddress) || parsedChainId === null) {
       res.status(400).json({ error: "Valid contractAddress and chainId are required" });
       return;
     }
@@ -298,7 +306,7 @@ router.patch(
     const normContract = contractAddress.toLowerCase();
 
     const agreement = await db.agreement.findUnique({
-      where: { chainId_contractAddress: { chainId, contractAddress: normContract } },
+      where: { chainId_contractAddress: { chainId: parsedChainId, contractAddress: normContract } },
     });
 
     if (
@@ -406,8 +414,7 @@ router.patch(
   asyncRoute(async (req, res) => {
     const { userId } = req as AuthenticatedRequest;
     const normContract = req.params.contractAddress.toLowerCase();
-    const { projectTitle, serviceTemplate, metadataJson, lastAccessedAt, contractVersion, clientEmail, providerEmail } =
-      req.body as Record<string, unknown>;
+    const { lastAccessedAt, clientEmail, providerEmail } = req.body as Record<string, unknown>;
     const parsedClientEmail = parseContactEmail(clientEmail, "Client email");
     const parsedProviderEmail = parseContactEmail(providerEmail, "Provider email");
 
@@ -432,28 +439,20 @@ router.patch(
       return;
     }
 
-    const cvNumber = parseContractVersion(contractVersion);
-    const payment = parsePaymentMetadata(req.body as Record<string, unknown>);
+    let parsedLastAccessedAt: Date | undefined;
+    if (typeof lastAccessedAt === "string") {
+      parsedLastAccessedAt = new Date(lastAccessedAt);
+      if (Number.isNaN(parsedLastAccessedAt.getTime())) {
+        res.status(400).json({ error: "lastAccessedAt must be a valid date" });
+        return;
+      }
+    }
 
     const updated = await db.agreement.update({
       where: { id: agreement.id },
       data: {
-        ...(typeof projectTitle === "string" && { projectTitle }),
-        ...(typeof serviceTemplate === "string" && { serviceTemplate }),
-        ...(metadataJson != null && {
-          metadataJson:
-            typeof metadataJson === "string" ? metadataJson : JSON.stringify(metadataJson),
-        }),
-        ...(typeof lastAccessedAt === "string" && {
-          lastAccessedAt: new Date(lastAccessedAt),
-        }),
-        ...(cvNumber !== undefined && { contractVersion: cvNumber }),
-        ...(req.body.paymentAssetKind !== undefined ||
-        req.body.paymentTokenAddress !== undefined ||
-        req.body.paymentSymbol !== undefined ||
-        req.body.paymentDecimals !== undefined
-          ? payment
-          : {}),
+        ...editableAgreementData(req.body as Record<string, unknown>),
+        ...(parsedLastAccessedAt !== undefined && { lastAccessedAt: parsedLastAccessedAt }),
         ...(parsedClientEmail.value !== undefined && { clientEmail: parsedClientEmail.value }),
         ...(parsedProviderEmail.value !== undefined && { providerEmail: parsedProviderEmail.value }),
       },
