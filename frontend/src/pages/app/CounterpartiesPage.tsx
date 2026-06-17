@@ -30,7 +30,7 @@ export default function CounterpartiesPage() {
         object={<SplineObject scene={SPLINE_SCENES.counterparties} scale={1.15} zoomOut={0.75} float />}
         emptyTitle="No counterparties yet"
         emptyDescription="People and companies you lock agreements with will appear here once your first agreement is underway."
-        primaryAction={{ label: cfg.primaryAction.label, to: "/app/agreements", icon: <IconPlus /> }}
+        primaryAction={{ label: cfg.primaryAction.label, to: "/app/create", icon: <IconPlus /> }}
       />
     );
   }

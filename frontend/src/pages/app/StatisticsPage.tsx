@@ -31,7 +31,7 @@ export default function StatisticsPage() {
       object={<SplineObject scene={SPLINE_SCENES.statistics} />}
       emptyTitle="No statistics yet"
       emptyDescription="Charts and insights appear once your first agreements start moving — escrowed value, releases, and milestone completion in one calm view."
-      primaryAction={{ label: cfg.primaryAction.label, to: "/app/agreements", icon: <IconPlus /> }}
+      primaryAction={{ label: cfg.primaryAction.label, to: "/app/create", icon: <IconPlus /> }}
     />
   );
 }

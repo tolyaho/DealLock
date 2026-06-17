@@ -218,6 +218,9 @@ export default function HomePage() {
   const loading = usePageLoading();
   const go = (status?: string) =>
     navigate(status ? `/app/agreements?status=${status}` : "/app/agreements");
+  // The role's CREATE action opens the guided wizard (client → agreement,
+  // provider → proposal), carrying the workspace in the URL for deep links.
+  const goCreate = () => navigate(`/app/create?workspace=${workspace}`);
 
   const isClient = workspace === "client";
   const c = clientMetrics();
@@ -248,7 +251,7 @@ export default function HomePage() {
   // navigation target stay here, bound by the config `key`.
   const quickView: Record<string, { icon: ReactNode; onClick: () => void }> = isClient
     ? {
-        newAgreement: { icon: <IconPlus />, onClick: () => go() },
+        newAgreement: { icon: <IconPlus />, onClick: goCreate },
         reviewMilestone: { icon: <IconShield />, onClick: () => go("in_review") },
         message: { icon: <IconMessages />, onClick: () => navigate("/app/messages") },
       }
@@ -273,7 +276,7 @@ export default function HomePage() {
         title={`${greeting()}, ${ME}.`}
         subtitle={cfg.greetingSubtitle}
         actions={
-          <MetalCTA icon={primaryIcon} onClick={() => go()}>
+          <MetalCTA icon={primaryIcon} onClick={goCreate}>
             {cfg.primaryAction.label}
           </MetalCTA>
         }

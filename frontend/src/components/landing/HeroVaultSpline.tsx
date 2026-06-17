@@ -35,6 +35,7 @@ import { lazy, Suspense, useCallback, useEffect, useState } from "react";
 import type { Application } from "@splinetool/runtime";
 import VaultObject from "./VaultObject";
 import { SPLINE_SCENES } from "../../splineScenes";
+import { useStableSplineReveal } from "../../splineReveal";
 
 const Spline = lazy(() => import("@splinetool/react-spline"));
 
@@ -108,23 +109,22 @@ export default function HeroVaultSpline() {
   const reducedMotion = usePrefersReducedMotion();
   const [sealed, setSealed] = useState(false);
   const [pulseKey, setPulseKey] = useState(0);
-  // The premium metallic placeholder holds the (fixed) slot until the scene's
-  // onLoad fires; then the placeholder fades out and the canvas fades in (~550ms).
-  const [loaded, setLoaded] = useState(false);
+  // The static vault poster holds the (fixed) slot until the scene has loaded AND
+  // rendered a stable frame; only then does the canvas fade in and the poster
+  // fade out (see useStableSplineReveal + the crossfade in styles.css).
+  const { loaded, reveal } = useStableSplineReveal();
 
-  const onSplineLoad = useCallback((app: Application) => {
-    frameFullFigure(app);
-    // Re-assert once in case the scene runs an intro camera transition on start.
-    window.setTimeout(() => frameFullFigure(app), 600);
-    setLoaded(true);
-  }, []);
-
-  // Timeout fallback: if onLoad never fires (slow/blocked Spline), reveal anyway
-  // so the placeholder never lingers and the page stays usable.
-  useEffect(() => {
-    const t = window.setTimeout(() => setLoaded(true), 9000);
-    return () => window.clearTimeout(t);
-  }, []);
+  const onSplineLoad = useCallback(
+    (app: Application) => {
+      frameFullFigure(app);
+      // Re-assert once in case the scene runs an intro camera transition on start.
+      window.setTimeout(() => frameFullFigure(app), 600);
+      // Reveal only after the transparent clear colour has painted and the figure
+      // has settled — the poster covers every frame until then.
+      reveal();
+    },
+    [reveal],
+  );
 
   // Click TOGGLES the vault seal: seal → unseal → seal. The scene plays its own
   // authored lock animation; we add the DOM-only confirmation the 3D scene can't
@@ -150,9 +150,11 @@ export default function HeroVaultSpline() {
       className={`dl-spline-vault${sealed ? " is-sealed" : ""}${loaded ? " is-loaded" : ""}`}
       onClick={handleSeal}
     >
-      {/* premium metallic placeholder — a frosted vault aperture + light sweep,
-       *  visible until the scene's onLoad fires, then crossfades to the canvas */}
-      <div className="dl-spline-vault__skeleton" aria-hidden="true">
+      {/* Simple loading state — a quiet "Loading secure vault…" label that holds
+       *  the (fixed) slot until the scene is stably rendered, then fades out
+       *  beneath the live canvas. No backup sculpture, no spinner, no orb (see
+       *  .dl-spline-vault__poster in styles.css). */}
+      <div className="dl-spline-vault__poster" aria-hidden="true">
         <span className="dl-spline-vault__loadlabel">Loading secure vault…</span>
       </div>
 
@@ -160,7 +162,8 @@ export default function HeroVaultSpline() {
         <Spline
           scene={SCENE_URL}
           onLoad={onSplineLoad}
-          onError={() => setLoaded(true)}
+          // On error keep the poster: never flip to a blank/failed canvas.
+          onError={() => {}}
           className="dl-spline-vault__canvas"
         />
       </Suspense>
