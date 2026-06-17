@@ -2534,3 +2534,248 @@
     animation-iteration-count: 1 !important;
   }
 }
+
+/* ==========================================================================
+ * Create flow — the guided wizard (pages/app/create). The recessed-satin field
+ * language (TextInput/TextArea/Field), the calm centred wizard card + stepper,
+ * the collapsible milestone editor, the ETH/USDC pickers, the review summary,
+ * and the success seal. All silver/pearl on the existing tokens — no new
+ * palette, no shell changes. Reduced-motion is handled by the global block above.
+ * ========================================================================== */
+
+/* ── Form fields ──────────────────────────────────────────────────────────── */
+.dl-field { display: flex; flex-direction: column; gap: var(--space-2); min-width: 0; }
+.dl-field__label { font-family: var(--font-ui); font-size: var(--text-sm); font-weight: var(--weight-medium); color: var(--ink-soft); }
+.dl-field__req { color: var(--accent-review-ink); margin-left: 2px; }
+.dl-field__hint { font-size: var(--text-sm); color: var(--ink-muted); line-height: var(--leading-snug); }
+.dl-field__error { font-size: var(--text-sm); color: var(--accent-danger-ink); line-height: var(--leading-snug); }
+
+/* the recessed satin field — same groove as SearchInput, block-level. Scoped
+ * under .dl-app so the silver focus ring outranks the global graphite one. */
+.dl-app .dl-input {
+  width: 100%; min-height: 44px; padding: 0 var(--space-4);
+  border-radius: var(--radius-control);
+  background: var(--surface-sunken); border: 1px solid var(--border);
+  box-shadow: var(--shadow-inset), inset 0 -1px 0 rgba(255, 255, 255, 0.6);
+  font-family: var(--font-ui); font-size: var(--text-base); color: var(--ink);
+  outline: none; -webkit-appearance: none; appearance: none;
+  transition: border-color var(--dur-2) var(--ease-standard), box-shadow var(--dur-2) var(--ease-out);
+}
+.dl-app .dl-input--area { min-height: 88px; padding: var(--space-3) var(--space-4); line-height: var(--leading-normal); resize: vertical; }
+.dl-app .dl-input::placeholder { color: var(--ink-faint); }
+.dl-app .dl-input:hover { border-color: var(--border-strong); }
+.dl-app .dl-input:focus,
+.dl-app .dl-input:focus-visible {
+  border-color: var(--rail-medium);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7), 0 0 0 3px rgba(185, 190, 180, 0.22), var(--shadow-2);
+}
+.dl-app .dl-input[aria-invalid="true"] { border-color: color-mix(in srgb, var(--accent-danger) 50%, var(--border-strong)); }
+.dl-app .dl-input[aria-invalid="true"]:focus { box-shadow: inset 0 1px 0 rgba(255,255,255,.6), 0 0 0 3px var(--accent-danger-soft), var(--shadow-2); }
+.dl-app .dl-input[type="date"] { padding-right: var(--space-3); }
+.dl-app .dl-input[type="date"]::-webkit-calendar-picker-indicator { opacity: .5; cursor: pointer; }
+.dl-app .dl-input[type="date"]::-webkit-calendar-picker-indicator:hover { opacity: .8; }
+.dl-app .dl-input[type="number"] { -moz-appearance: textfield; }
+.dl-app .dl-input[type="number"]::-webkit-outer-spin-button,
+.dl-app .dl-input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+.dl-amount { position: relative; }
+.dl-amount .dl-input { padding-right: 56px; font-variant-numeric: tabular-nums; }
+.dl-amount__suffix {
+  position: absolute; right: var(--space-4); top: 50%; transform: translateY(-50%);
+  font-family: var(--font-mono); font-size: var(--text-sm); color: var(--ink-muted); pointer-events: none; letter-spacing: .02em;
+}
+
+/* ── Wizard frame ─────────────────────────────────────────────────────────── */
+.dl-wizard { width: 100%; max-width: 720px; margin: 0 auto; display: flex; flex-direction: column; gap: var(--space-6); }
+.dl-wizard__top { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-4); }
+.dl-wizard__lede { display: flex; flex-direction: column; gap: var(--space-3); min-width: 0; }
+.dl-wizard__kicker { font-family: var(--font-mono); font-size: var(--text-2xs); text-transform: uppercase; letter-spacing: var(--tracking-label); color: var(--ink-muted); }
+/* keep the top-bar Cancel dainty (compact secondary control, not a loud pill) */
+.dl-wizard__top .dl-btn svg { width: 15px; height: 15px; }
+
+/* The card is a raised satin-metal TRAY: the same cool brushed-silver plate as
+ * the dashboard cards (grain over the cool plate gradient), but lifted higher and
+ * framed by a full machined rim — a bright top edge over a dark lower edge — with
+ * a crisp top light-catch. --wiz-pad keeps the edge padding and the bled action
+ * zone in sync (re-set at the mobile breakpoint).                                */
+.dl-wizard__card {
+  --wiz-pad: var(--space-8);
+  position: relative;
+  background: var(--metal-grain-v), var(--surface-plate-cool-raised);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-panel);
+  box-shadow: var(--shadow-card-hover), var(--edge-highlight), var(--edge-shadow);
+  padding: var(--wiz-pad);
+  overflow: hidden;
+}
+.dl-wizard__card::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 46%; background: var(--sheen-plate-strong); opacity: .9; pointer-events: none; }
+.dl-wizard__head { position: relative; z-index: 1; margin-bottom: var(--space-5); }
+.dl-wizard__eyebrow { font-family: var(--font-mono); font-size: var(--text-2xs); text-transform: uppercase; letter-spacing: var(--tracking-label); color: var(--ink-muted); }
+.dl-wizard__title { font-family: var(--font-ui); font-size: var(--text-xl); font-weight: var(--weight-semibold); color: var(--ink); margin-top: 6px; letter-spacing: var(--tracking-tight); }
+.dl-wizard__sub { font-size: var(--text-md); color: var(--ink-muted); margin-top: 6px; line-height: var(--leading-normal); max-width: 52ch; }
+
+/* the form sits in a calmer pearl well, recessed into the tray. min-height keeps
+ * short steps (e.g. step 1) from leaving the tray looking empty on desktop.      */
+.dl-wizard__panel {
+  position: relative; z-index: 1;
+  background: var(--surface-sunken-cool);
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-inner);
+  box-shadow: var(--shadow-inset), inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  padding: var(--space-6);
+  min-height: 196px;
+}
+.dl-wizard__body { display: flex; flex-direction: column; gap: var(--space-5); }
+@media (prefers-reduced-motion: no-preference) { .dl-wizard__body { animation: dl-wizard-step var(--dur-3) var(--ease-out) both; } }
+@keyframes dl-wizard-step { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+/* action zone — bleeds to the tray edges as a machined base plate, cut from the
+ * form by an engraved divider (a dark hairline with a light catch just beneath). */
+.dl-wizard__foot {
+  position: relative; z-index: 1;
+  display: flex; align-items: center; justify-content: space-between; gap: var(--space-3);
+  margin: var(--space-6) calc(-1 * var(--wiz-pad)) calc(-1 * var(--wiz-pad));
+  padding: var(--space-5) var(--wiz-pad);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0) 0%, rgba(28, 28, 22, 0.028) 100%);
+  border-top: 1px solid var(--border-strong);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+.dl-wizard__foot .dl-btn svg { width: 16px; height: 16px; }
+
+/* ── Stepper — a machined silver progress rail ────────────────────────────────
+ * Three disc states: future = recessed pale well · current = raised pearl disc
+ * with a strong rim + soft silver halo · complete = a filled brushed-silver coin
+ * with a check. Connectors are thin engraved rails. Only the current step shows
+ * its label (the card eyebrow always states "Step n of 5 · Title").             */
+.dl-stepper { display: flex; align-items: center; gap: var(--space-2); list-style: none; margin: 0; padding: 0; }
+.dl-stepper__item { display: inline-flex; }
+.dl-stepper__line {
+  flex: 1 1 auto; min-width: 14px; height: 2px; border-radius: 2px;
+  background: var(--rail-soft); box-shadow: 0 1px 0 rgba(255, 255, 255, 0.6);
+  transition: background var(--dur-2) var(--ease-standard);
+}
+.dl-stepper__line[data-filled="true"] { background: var(--rail-strong); }
+.dl-stepper__step { display: inline-flex; align-items: center; gap: var(--space-2); padding: 3px 5px; border: 0; background: none; border-radius: var(--radius-sm); font-family: var(--font-ui); color: var(--ink-muted); cursor: pointer; }
+.dl-stepper__step:disabled { cursor: default; }
+.dl-app .dl-stepper__step:not(:disabled):hover { color: var(--ink-soft); }
+.dl-app .dl-stepper__step:not(:disabled):hover .dl-stepper__dot { border-color: var(--rail-strong); }
+/* future (default) — a recessed pale well with a faint number */
+.dl-stepper__dot {
+  width: 26px; height: 26px; flex: 0 0 auto; border-radius: var(--radius-pill); display: grid; place-items: center;
+  font-family: var(--font-mono); font-size: var(--text-xs); color: var(--ink-faint);
+  background: var(--surface-sunken-cool); border: 1px solid var(--border-hairline); box-shadow: var(--shadow-inset);
+  transition: background var(--dur-2) var(--ease-out), box-shadow var(--dur-2) var(--ease-out),
+    border-color var(--dur-2) var(--ease-out), color var(--dur-2) var(--ease-out);
+}
+.dl-stepper__dot svg { width: 14px; height: 14px; }
+.dl-stepper__label { display: none; font-size: var(--text-sm); white-space: nowrap; }
+.dl-stepper__step.is-current { color: var(--ink); }
+.dl-stepper__step.is-current .dl-stepper__label { display: inline; }
+/* current — raised pearl disc, strong rim, soft silver halo */
+.dl-stepper__step.is-current .dl-stepper__dot {
+  background: var(--orb-surface-deep); color: var(--ink); border-color: var(--rail-strong);
+  box-shadow: var(--orb-shadow), 0 0 0 3px rgba(185, 190, 180, 0.30);
+}
+/* complete — a filled brushed-silver coin with a graphite check */
+.dl-stepper__step.is-complete .dl-stepper__dot {
+  background: var(--metal-keycap); color: var(--ink); border-color: var(--border-strong);
+  box-shadow: var(--shadow-1), var(--edge-highlight-disc);
+}
+
+/* ── Milestone editor (step 3) ────────────────────────────────────────────── */
+.dl-ms-list { display: flex; flex-direction: column; gap: var(--space-3); }
+.dl-ms-edit { border: 1px solid var(--border); border-radius: var(--radius-card); background: var(--surface-card); box-shadow: var(--shadow-1); overflow: hidden; transition: box-shadow var(--dur-2) var(--ease-out), border-color var(--dur-2) var(--ease-out); }
+.dl-ms-edit:hover { box-shadow: var(--shadow-2); }
+.dl-ms-edit.is-open { border-color: var(--border-strong); box-shadow: var(--shadow-2); }
+.dl-ms-edit__head { display: flex; align-items: center; }
+.dl-ms-edit__toggle { flex: 1; min-width: 0; display: flex; align-items: center; gap: var(--space-3); padding: var(--space-3) var(--space-4); border: 0; background: none; cursor: pointer; text-align: left; }
+.dl-ms-edit__index { width: 26px; height: 26px; flex: 0 0 auto; border-radius: var(--radius-pill); display: grid; place-items: center; font-family: var(--font-mono); font-size: var(--text-xs); color: var(--ink-soft); background: var(--orb-surface); border: 1px solid var(--orb-rim); box-shadow: var(--orb-shadow); }
+.dl-ms-edit__title { flex: 1; min-width: 0; font-size: var(--text-base); font-weight: var(--weight-medium); color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dl-ms-edit__amount { font-size: var(--text-sm); color: var(--ink-muted); flex: 0 0 auto; }
+.dl-ms-edit__chevron { flex: 0 0 auto; color: var(--ink-muted); display: grid; place-items: center; transition: transform var(--dur-2) var(--ease-out); }
+.dl-ms-edit__chevron svg { width: 16px; height: 16px; }
+.dl-ms-edit.is-open .dl-ms-edit__chevron { transform: rotate(90deg); }
+.dl-ms-edit__remove { flex: 0 0 auto; width: 36px; height: 36px; margin-right: var(--space-2); display: grid; place-items: center; border: 0; background: none; border-radius: var(--radius-sm); color: var(--ink-muted); cursor: pointer; transition: color var(--dur-1) var(--ease-standard), background var(--dur-2) var(--ease-out); }
+.dl-ms-edit__remove svg { width: 16px; height: 16px; }
+.dl-app .dl-ms-edit__remove:hover { color: var(--accent-danger-ink); background: var(--accent-danger-soft); }
+.dl-ms-edit__body { display: grid; grid-template-rows: 0fr; transition: grid-template-rows var(--dur-3) var(--ease-out); }
+.dl-ms-edit.is-open .dl-ms-edit__body { grid-template-rows: 1fr; }
+.dl-ms-edit__bodyinner { overflow: hidden; min-height: 0; }
+.dl-ms-edit__fields { display: flex; flex-direction: column; gap: var(--space-4); padding: 0 var(--space-4) var(--space-4); }
+.dl-ms-edit__row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); }
+
+.dl-ms-add { width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2); padding: var(--space-4); border: 1.5px dashed var(--border-strong); border-radius: var(--radius-card); background: var(--surface-sunken); color: var(--ink-soft); font-family: var(--font-ui); font-size: var(--text-base); font-weight: var(--weight-medium); cursor: pointer; transition: border-color var(--dur-2) var(--ease-standard), background var(--dur-2) var(--ease-out), color var(--dur-2) var(--ease-out), transform var(--dur-1) var(--ease-out); }
+.dl-ms-add svg { width: 16px; height: 16px; }
+.dl-app .dl-ms-add:hover { border-color: var(--rail-strong); background: var(--surface-hover); color: var(--ink); }
+.dl-app .dl-ms-add:active { transform: translateY(1px); }
+.dl-ms-subtotal { display: flex; align-items: baseline; justify-content: space-between; padding: 0 var(--space-1); font-size: var(--text-sm); color: var(--ink-muted); }
+.dl-ms-subtotal .dl-num { font-size: var(--text-base); font-weight: var(--weight-medium); color: var(--ink); }
+
+/* ── Payment (step 4) ─────────────────────────────────────────────────────── */
+.dl-asset-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); }
+.dl-asset { position: relative; display: flex; align-items: center; gap: var(--space-3); padding: var(--space-4); border: 1px solid var(--border); border-radius: var(--radius-card); background: var(--surface-card); box-shadow: var(--shadow-1); cursor: pointer; text-align: left; transition: border-color var(--dur-2) var(--ease-standard), box-shadow var(--dur-2) var(--ease-out), transform var(--dur-2) var(--ease-out), background var(--dur-2) var(--ease-out); }
+.dl-app .dl-asset:hover { border-color: var(--border-strong); box-shadow: var(--shadow-2); transform: translateY(-1px); }
+.dl-asset__icon { width: 40px; height: 40px; flex: 0 0 auto; border-radius: var(--radius-pill); display: grid; place-items: center; background: var(--orb-surface); border: 1px solid var(--orb-rim); box-shadow: var(--orb-shadow); color: var(--ink-soft); }
+.dl-asset__icon svg { width: 20px; height: 20px; }
+.dl-asset__text { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.dl-asset__name { font-family: var(--font-ui); font-size: var(--text-base); font-weight: var(--weight-semibold); color: var(--ink); }
+.dl-asset__desc { font-size: var(--text-sm); color: var(--ink-muted); }
+.dl-asset__check { position: absolute; top: var(--space-3); right: var(--space-3); width: 20px; height: 20px; border-radius: var(--radius-pill); display: grid; place-items: center; background: var(--accent-secure); color: var(--ink-on-accent); opacity: 0; transform: scale(.7); transition: opacity var(--dur-2) var(--ease-out), transform var(--dur-2) var(--ease-spring); }
+.dl-asset__check svg { width: 13px; height: 13px; }
+.dl-asset.is-active { border-color: var(--rail-strong); background: var(--surface-selected); box-shadow: 0 0 0 1px var(--rail-strong), 0 0 0 4px rgba(185, 190, 180, 0.22), var(--shadow-2); }
+.dl-asset.is-active .dl-asset__check { opacity: 1; transform: none; }
+.dl-asset.is-active .dl-asset__icon { color: var(--ink); border-color: var(--orb-rim-strong); }
+
+.dl-readonly { display: inline-flex; align-items: center; gap: var(--space-2); padding: 0 var(--space-4); height: 44px; border-radius: var(--radius-control); background: var(--surface-inset); border: 1px solid var(--border-hairline); color: var(--ink-soft); font-family: var(--font-ui); font-size: var(--text-base); }
+.dl-readonly__dot { width: 8px; height: 8px; border-radius: var(--radius-pill); background: var(--accent-secure); box-shadow: var(--glow-secure); flex: 0 0 auto; }
+.dl-readonly__note { font-size: var(--text-sm); color: var(--ink-muted); margin-left: var(--space-3); }
+
+.dl-paytotal { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); padding: var(--space-4) var(--space-5); border-radius: var(--radius-card); background: var(--surface-sunken); border: 1px solid var(--border); box-shadow: var(--shadow-inset); }
+.dl-paytotal__text { display: flex; flex-direction: column; gap: 2px; }
+.dl-paytotal__sub { font-size: var(--text-sm); color: var(--ink-muted); }
+.dl-paytotal__value { font-family: var(--font-mono); font-size: var(--text-2xl); color: var(--ink); font-variant-numeric: tabular-nums; }
+.dl-paynote { display: flex; align-items: center; gap: var(--space-2); font-size: var(--text-sm); color: var(--ink-muted); }
+.dl-paynote svg { width: 15px; height: 15px; color: var(--accent-secure); flex: 0 0 auto; }
+
+/* ── Review (step 5) ──────────────────────────────────────────────────────── */
+.dl-review { display: flex; flex-direction: column; gap: var(--space-4); }
+.dl-review__section { border: 1px solid var(--border); border-radius: var(--radius-card); background: var(--surface-card); padding: var(--space-4) var(--space-5); box-shadow: var(--shadow-1); }
+.dl-review__head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); margin-bottom: var(--space-3); }
+.dl-review__row { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-5); padding: 5px 0; }
+.dl-review__row dt { font-size: var(--text-sm); color: var(--ink-muted); flex: 0 0 auto; }
+.dl-review__row dd { font-size: var(--text-base); color: var(--ink); text-align: right; min-width: 0; word-break: break-word; }
+.dl-review__ms { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.dl-review__msrow { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-4); padding: 6px 0; border-top: 1px solid var(--border-hairline); }
+.dl-review__msrow:first-child { border-top: 0; }
+.dl-review__msname { font-size: var(--text-base); color: var(--ink); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dl-review__msmeta { display: inline-flex; align-items: baseline; gap: var(--space-4); color: var(--ink-muted); font-size: var(--text-sm); flex: 0 0 auto; }
+.dl-review__msmeta .dl-num { color: var(--ink); font-weight: var(--weight-medium); }
+.dl-review__total { font-size: var(--text-lg); font-weight: var(--weight-semibold); }
+
+/* ── Success seal (final) ─────────────────────────────────────────────────── */
+.dl-create-done { max-width: 540px; margin: 0 auto; text-align: center; display: flex; flex-direction: column; align-items: center; gap: var(--space-5); padding: var(--space-10) var(--space-6); }
+.dl-create-done__seal { width: 84px; height: 84px; border-radius: var(--radius-pill); display: grid; place-items: center; background: var(--orb-surface-deep); border: 1px solid var(--orb-rim-strong); box-shadow: var(--orb-shadow), var(--glow-secure); color: var(--accent-secure-ink); }
+.dl-create-done__seal svg { width: 38px; height: 38px; }
+@media (prefers-reduced-motion: no-preference) { .dl-create-done__seal { animation: dl-seal-in var(--dur-4) var(--ease-spring) both; } }
+@keyframes dl-seal-in { from { opacity: 0; transform: scale(.8); } to { opacity: 1; transform: none; } }
+.dl-create-done__title { font-family: var(--font-ui); font-size: var(--text-2xl); font-weight: var(--weight-semibold); color: var(--ink); letter-spacing: var(--tracking-tight); }
+.dl-create-done__text { font-size: var(--text-md); color: var(--ink-muted); line-height: var(--leading-normal); max-width: 46ch; }
+.dl-create-done__actions { display: flex; flex-wrap: wrap; gap: var(--space-3); justify-content: center; margin-top: var(--space-2); }
+
+/* ── Return-from-create banner (Agreements) ───────────────────────────────── */
+.dl-flash { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-3) var(--space-4); border-radius: var(--radius-card); background: var(--accent-secure-soft); border: 1px solid color-mix(in srgb, var(--accent-secure) 28%, var(--border)); color: var(--accent-secure-ink); }
+.dl-flash__icon { width: 24px; height: 24px; flex: 0 0 auto; border-radius: var(--radius-pill); display: grid; place-items: center; background: var(--accent-secure); color: var(--ink-on-accent); }
+.dl-flash__icon svg { width: 14px; height: 14px; }
+.dl-flash__text { flex: 1; min-width: 0; font-size: var(--text-sm); line-height: var(--leading-snug); }
+.dl-flash__close { flex: 0 0 auto; width: 30px; height: 30px; display: grid; place-items: center; border: 0; background: none; border-radius: var(--radius-sm); color: var(--accent-secure-ink); cursor: pointer; opacity: .7; transition: opacity var(--dur-1) var(--ease-standard); }
+.dl-flash__close svg { width: 15px; height: 15px; }
+.dl-app .dl-flash__close:hover { opacity: 1; }
+
+/* ── Responsive ───────────────────────────────────────────────────────────── */
+@media (max-width: 720px) {
+  .dl-wizard__card { --wiz-pad: var(--space-6); }
+  .dl-wizard__panel { padding: var(--space-5); }
+  .dl-wizard__top { flex-direction: column; gap: var(--space-3); }
+  .dl-asset-grid { grid-template-columns: 1fr; }
+  .dl-ms-edit__row { grid-template-columns: 1fr; }
+}

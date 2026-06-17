@@ -40,7 +40,7 @@ export default function MessagesPage() {
       emptyTitle="No conversations yet"
       emptyDescription={`Messages with ${counterparties} will appear here when an agreement starts — every thread scoped to its contract and milestone.`}
       primaryAction={{ label: "Open agreement", to: "/app/agreements", icon: <IconArrowRight /> }}
-      secondaryAction={{ label: cfg.primaryAction.label, to: "/app/agreements" }}
+      secondaryAction={{ label: cfg.primaryAction.label, to: "/app/create" }}
     />
   );
 }

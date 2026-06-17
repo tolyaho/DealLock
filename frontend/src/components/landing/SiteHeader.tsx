@@ -13,9 +13,9 @@ const NAV_LINKS = [
 
 /**
  * SiteHeader — the one fixed site header: DealLock wordmark (left), a center nav
- * rail, and the Launch App button (right), laid out on the shared page grid
- * (--page-max-width / --page-padding-x) so its edges line up with the hero and
- * every section.
+ * rail, and the auth actions (right) — a ghost-metal "Log in" + a brushed-metal
+ * "Sign up" — laid out on the shared page grid (--page-max-width /
+ * --page-padding-x) so its edges line up with the hero and every section.
  *
  * Two visual states:
  *   top      — almost backgroundless; logo, links and button float on the matte wall.
@@ -69,9 +69,14 @@ export default function SiteHeader() {
           </ul>
         </nav>
 
-        <Link className="launch-button" to="/app/home">
-          Launch App
-        </Link>
+        <div className="nav-auth">
+          <Link className="nav-auth-login" to="/login">
+            Log in
+          </Link>
+          <Link className="nav-auth-signup" to="/signup">
+            Sign up
+          </Link>
+        </div>
       </div>
     </header>
   );

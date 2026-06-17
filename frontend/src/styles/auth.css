@@ -1,0 +1,611 @@
+/* ============================================================================
+ * DealLock — auth surface (/login, /signup)
+ * ----------------------------------------------------------------------------
+ * A standalone composed scene modelled on the product reference render:
+ *   LEFT  — a light brushed-metal wall: a fluted side panel, an engraved caption,
+ *           and the escrow vault (safe-on-plinth Spline scene) set into a recessed
+ *           niche lit by a bottom light-strip, with a soft floor glow.
+ *   RIGHT — a clean light panel carrying the wallet-first sign-in form.
+ *
+ * It lives under `.dl-app` so the form reuses the dashboard's pearl primitives and
+ * tokens (tokens.css). `.dl-auth` re-specifies the `.dl-app` shell for this full-
+ * page surface. Wallet-first only — no email/password login, no role dropdown.
+ * ========================================================================== */
+
+/* ── Page root: undo the fixed dashboard-shell layout, light base ───────────── */
+.dl-app.dl-auth {
+  position: relative;
+  inset: auto;
+  display: block;
+  min-height: 100dvh;
+  padding: 0;
+  overflow-x: hidden;
+  overflow-y: auto;
+  color: var(--ink);
+  background: #e9ebec;
+}
+/* drop the dashboard `.dl-app` grain overlay — the wall paints its own */
+.dl-app.dl-auth::after { display: none; }
+
+/* ── ← Home (dark glyph on the light metal wall) ───────────────────────────── */
+.dl-auth__home {
+  position: absolute;
+  z-index: 4;
+  top: clamp(18px, 3vh, 30px);
+  left: clamp(18px, 3vw, 40px);
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: rgba(40, 44, 48, 0.6);
+  padding: 8px 12px 8px 8px;
+  border-radius: var(--radius-pill);
+  transition: color var(--dur-2) var(--ease-out), background var(--dur-2) var(--ease-out);
+}
+.dl-auth__home svg { width: 15px; height: 15px; }
+.dl-auth__home:hover { color: rgba(28, 30, 32, 0.95); background: rgba(255, 255, 255, 0.5); }
+.dl-auth__home:focus-visible { outline: 2px solid rgba(40, 44, 48, 0.55); outline-offset: 2px; }
+
+/* ── Split: vault wall LEFT, form panel RIGHT ──────────────────────────────── */
+.dl-auth__split {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  min-height: 100dvh;
+  display: grid;
+  grid-template-columns: minmax(0, 1.12fr) minmax(0, 0.88fr);
+}
+
+/* ============================================================================
+ * LEFT — the brushed-metal wall
+ * ========================================================================== */
+.dl-auth__vault-side {
+  position: relative;
+  overflow: hidden;
+  isolation: isolate;
+  min-height: 100dvh;
+  background:
+    /* soft key light, upper centre */
+    radial-gradient(120% 70% at 58% 2%, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0) 46%),
+    /* faint cool fill lower-left to round the surface */
+    radial-gradient(90% 60% at 12% 104%, rgba(120, 126, 130, 0.16) 0%, rgba(120, 126, 130, 0) 52%),
+    /* brushed vertical sheen across the aluminium */
+    linear-gradient(102deg, #b2b6b9 0%, #c4c8cb 24%, #d2d6d8 49%, #c3c7ca 73%, #abafb2 100%);
+}
+/* very fine vertical brush grain */
+.dl-auth__vault-side::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background-image: repeating-linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.05) 0 1px,
+    rgba(80, 84, 88, 0.04) 1px 3px
+  );
+  opacity: 0.5;
+  pointer-events: none;
+}
+/* large, soft architectural panel seams (horizontal) — sit behind everything */
+.dl-auth__vault-side::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  background:
+    linear-gradient(180deg, transparent calc(22% - 1px), rgba(255, 255, 255, 0.4) calc(22% - 1px) 22%, rgba(0, 0, 0, 0.12) 22% calc(22% + 1px), transparent calc(22% + 1px)),
+    linear-gradient(180deg, transparent calc(78% - 1px), rgba(255, 255, 255, 0.4) calc(78% - 1px) 78%, rgba(0, 0, 0, 0.12) 78% calc(78% + 1px), transparent calc(78% + 1px));
+  pointer-events: none;
+}
+
+/* Fluted vertical panel at the far left (ribbed pilaster) */
+.dl-auth__flute {
+  position: absolute;
+  z-index: 1;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: clamp(54px, 11%, 116px);
+  background:
+    /* shadow groove where the flutes meet the main wall */
+    linear-gradient(90deg, rgba(0, 0, 0, 0) 86%, rgba(0, 0, 0, 0.16) 100%),
+    /* the ribs: bright crest → mid → dark valley, repeating */
+    repeating-linear-gradient(
+      90deg,
+      rgba(255, 255, 255, 0.62) 0,
+      rgba(214, 218, 220, 0.2) 3px,
+      rgba(110, 114, 118, 0.32) 7px,
+      rgba(214, 218, 220, 0.2) 11px,
+      rgba(255, 255, 255, 0.62) 13px
+    );
+  box-shadow: inset -1px 0 0 rgba(0, 0, 0, 0.1);
+}
+
+/* Wall content column (right of the flute): caption above, niche below */
+.dl-auth__wall {
+  position: absolute;
+  z-index: 2;
+  inset: 0;
+  padding-left: clamp(54px, 11%, 116px);
+  display: grid;
+  place-content: center;
+  justify-items: start;
+  gap: clamp(16px, 3vh, 30px);
+}
+
+/* engraved caption — debossed into the metal (dark fill + light underline relief) */
+.dl-auth__wall-caption {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-left: 4px;
+  max-width: clamp(260px, 30vw, 400px);
+}
+.dl-auth__wall-caption-title {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-weight: 600;
+  letter-spacing: 0.22em;
+  text-transform: uppercase;
+  color: rgba(46, 50, 54, 0.7);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.55);
+}
+.dl-auth__wall-caption-body {
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  line-height: 1.6;
+  letter-spacing: 0.06em;
+  color: rgba(58, 62, 66, 0.52);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+
+/* The vault display — a soft brushed-silver inset well machined into the wall.
+ * NOT a black box: the interior is the same metal family as the wall, just a
+ * touch deeper (a satin pewter recess), with a soft silver glow behind the vault
+ * and a machined bezel (pearl top rim + graphite — never black — recess walls).
+ * The reflective safe reads as embedded in a polished niche, not pasted on top. */
+.dl-auth__niche {
+  position: relative;
+  width: clamp(320px, 42vw, 560px);
+  aspect-ratio: 1 / 1;
+  border-radius: 40px;
+  overflow: visible;
+  background:
+    /* the soft silver glow sitting behind the vault */
+    radial-gradient(58% 54% at 50% 45%, rgba(248, 250, 251, 0.66) 0%, rgba(248, 250, 251, 0) 60%),
+    /* a gentle floor vignette to ground the object (graphite, soft) */
+    radial-gradient(110% 72% at 50% 116%, rgba(70, 74, 78, 0.24) 0%, rgba(70, 74, 78, 0) 60%),
+    /* the satin pewter base — deeper than the wall so the silver safe separates */
+    linear-gradient(165deg, #c0c4c6 0%, #aeb3b6 40%, #9da2a6 72%, #b4b9bc 100%);
+  box-shadow:
+    /* seat the well into the wall: pearl catch on the lip, soft drop below */
+    0 1px 0 rgba(255, 255, 255, 0.85),
+    0 30px 56px -34px rgba(40, 44, 48, 0.4),
+    /* machined bezel: bright top inner rim + graphite (soft) recess walls */
+    inset 0 2px 2px rgba(255, 255, 255, 0.7),
+    inset 0 20px 34px -22px rgba(78, 84, 88, 0.42),
+    inset 26px 0 44px -36px rgba(78, 84, 88, 0.34),
+    inset -26px 0 44px -36px rgba(78, 84, 88, 0.34),
+    /* a faint lit sill so the bottom edge catches light (no laser strip) */
+    inset 0 -3px 2px rgba(255, 255, 255, 0.34),
+    inset 0 -18px 28px -20px rgba(96, 102, 106, 0.3);
+}
+/* a faint vertical brush so the recess reads as the same brushed metal */
+.dl-auth__niche::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  border-radius: inherit;
+  background-image: repeating-linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.05) 0 1px,
+    rgba(96, 100, 104, 0.04) 1px 3px
+  );
+  opacity: 0.5;
+  pointer-events: none;
+}
+/* the safe sits centred in the well with comfortable, even padding */
+.dl-auth__niche-inner {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  display: grid;
+  place-items: center;
+  padding: 14%;
+}
+
+/* soft floor glow along the bottom of the wall (the wall meeting a lit floor) */
+.dl-auth__floor {
+  position: absolute;
+  z-index: 1;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: clamp(40px, 9vh, 96px);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.34) 64%, rgba(255, 255, 255, 0.62) 100%);
+  pointer-events: none;
+}
+
+/* ── Vault scene — passive; fades in over a quiet label inside the silver well ─── */
+.dl-auth-vault {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+  height: 100%;
+  display: grid;
+  place-items: center;
+  pointer-events: none;
+}
+.dl-auth-vault__canvas {
+  position: relative;
+  z-index: 1;
+  width: 100% !important;
+  height: 100% !important;
+  opacity: 0;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .dl-auth-vault__canvas { transition: opacity 620ms var(--ease-out); }
+}
+.dl-auth-vault.is-loaded .dl-auth-vault__canvas { opacity: 1; }
+
+/* Simple loading state — a quiet "Loading secure vault…" label inside the well
+ * (debossed graphite on the light silver recess), NOT a backup sculpture or orb. */
+.dl-auth-vault__poster {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  opacity: 1;
+  pointer-events: none;
+}
+.dl-auth-vault__loadlabel {
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(54, 58, 62, 0.5);
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.6);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .dl-auth-vault__poster { transition: opacity 460ms var(--ease-out) 160ms; }
+  .dl-auth-vault__loadlabel { animation: dl-auth-loadpulse 1.9s ease-in-out infinite; }
+}
+@keyframes dl-auth-loadpulse {
+  0%, 100% { opacity: 0.5; }
+  50%      { opacity: 0.95; }
+}
+.dl-auth-vault.is-loaded .dl-auth-vault__poster { opacity: 0; }
+/* reduced-motion fallback: the static sculpture, sized to the niche */
+.dl-auth-vault--static .dl-auth-vault__svg { width: 78%; }
+.dl-auth-vault--static .dl-auth-vault__svg svg { width: 100%; height: auto; }
+
+/* ============================================================================
+ * RIGHT — the form panel
+ * ========================================================================== */
+.dl-auth__form-side {
+  position: relative;
+  z-index: 2;
+  min-height: 100dvh;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(40px, 6vh, 88px) clamp(28px, 5vw, 88px);
+  background: linear-gradient(180deg, #fbfbfc 0%, #f1f2f3 100%);
+  /* a soft shadow seam where the form panel meets the metal wall */
+  box-shadow: -22px 0 60px -36px rgba(0, 0, 0, 0.35), inset 1px 0 0 rgba(255, 255, 255, 0.7);
+}
+.dl-auth__form-inner {
+  width: 100%;
+  max-width: 420px;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+
+.dl-auth__topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: var(--space-2);
+}
+.dl-auth__brand {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+}
+.dl-auth__brand-mark {
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-sm);
+  background: var(--orb-surface-deep);
+  border: 1px solid var(--orb-rim);
+  box-shadow: var(--orb-shadow);
+  color: var(--ink-soft);
+}
+.dl-auth__brand-mark svg { width: 17px; height: 17px; }
+.dl-auth__brand-name {
+  font-family: var(--font-brand);
+  font-weight: 700;
+  font-size: var(--text-lg);
+  letter-spacing: -0.02em;
+  color: var(--ink);
+}
+
+.dl-auth__head {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+.dl-auth__title {
+  font-family: var(--font-ui);
+  font-weight: 700;
+  font-size: var(--text-3xl);
+  line-height: 1.08;
+  letter-spacing: var(--tracking-tight);
+  color: var(--ink);
+  margin: 0;
+}
+.dl-auth__sub {
+  font-size: var(--text-md);
+  line-height: var(--leading-normal);
+  color: var(--ink-muted);
+  margin: 0;
+  max-width: 42ch;
+}
+
+/* section eyebrow ("Wallet-first sign in") */
+.dl-auth__eyebrow {
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  font-weight: 600;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+/* ── Steps (connect / sign / email) ─────────────────────────────────────────*/
+.dl-auth__steps {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+.dl-auth__wallet {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  background: var(--surface-sunken-cool);
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-control);
+  box-shadow: var(--shadow-inset), inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+.dl-auth__wallet-orb {
+  flex: 0 0 auto;
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-sm);
+  background: var(--orb-surface);
+  border: 1px solid var(--orb-rim);
+  box-shadow: var(--orb-shadow);
+  color: var(--ink-soft);
+}
+.dl-auth__wallet-orb svg { width: 16px; height: 16px; }
+.dl-auth__wallet-addr {
+  font-family: var(--font-mono);
+  font-size: var(--text-sm);
+  color: var(--ink-soft);
+  letter-spacing: 0.01em;
+}
+.dl-auth__wallet .dl-chip { margin-left: auto; }
+
+/* a working button breathes (no spinner) */
+@media (prefers-reduced-motion: no-preference) {
+  .dl-auth .dl-btn.is-working { animation: dl-auth-working 1.4s ease-in-out infinite; }
+}
+@keyframes dl-auth-working {
+  0%, 100% { filter: brightness(1); }
+  50% { filter: brightness(1.07); }
+}
+
+/* ── Wallet CTAs ──────────────────────────────────────────────────────────────
+ * The global `.dl-app button { background:none; border:0; color:inherit }` reset
+ * (0,1,1) strips the resting `.dl-btn--primary`/`--metal` fill (0,1,0). Re-assert
+ * the silver-key surface at `.dl-auth` scope (0,2,0 wins) + hover (0,3,0). */
+.dl-auth .dl-btn--primary {
+  background: var(--metal-keycap);
+  color: var(--ink);
+  border: 1px solid var(--border-strong);
+}
+.dl-auth .dl-btn--metal {
+  background: var(--metal-keycap);
+  color: var(--ink);
+  border: 1px solid var(--border);
+}
+.dl-auth .dl-btn--primary:hover,
+.dl-auth .dl-btn--metal:hover {
+  background: var(--metal-keycap-hover);
+  border-color: var(--border-strong);
+}
+.dl-auth .dl-btn:disabled,
+.dl-auth .dl-btn[aria-disabled="true"] { opacity: 0.6; }
+
+.dl-auth__hint {
+  font-size: var(--text-sm);
+  line-height: var(--leading-snug);
+  color: var(--ink-muted);
+  margin: 0;
+}
+.dl-auth__error {
+  font-size: var(--text-sm);
+  line-height: var(--leading-snug);
+  color: var(--accent-danger-ink);
+  margin: 0;
+}
+.dl-auth__note {
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  color: var(--ink-faint);
+  margin: 0;
+}
+.dl-auth__alt {
+  font-size: var(--text-sm);
+  color: var(--ink-muted);
+  margin: 0;
+  text-align: center;
+}
+.dl-auth__alt a {
+  color: var(--ink);
+  font-weight: var(--weight-medium);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-decoration-color: var(--border-strong);
+}
+.dl-auth__alt a:hover { text-decoration-color: var(--ink); }
+
+.dl-auth .dl-auth__linkbtn {
+  align-self: center;
+  font-family: var(--font-ui);
+  font-size: var(--text-sm);
+  color: var(--ink-muted);
+  text-decoration: underline;
+  text-underline-offset: 2px;
+  text-decoration-color: var(--border-strong);
+}
+.dl-auth .dl-auth__linkbtn:hover { color: var(--ink); }
+
+/* ── "Check your email" success state ───────────────────────────────────────*/
+.dl-auth__sent {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--space-3);
+}
+.dl-auth__sent-seal {
+  width: 60px;
+  height: 60px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-pill);
+  background: var(--orb-surface-deep);
+  border: 1px solid var(--orb-rim-strong);
+  box-shadow: var(--orb-shadow), var(--glow-secure);
+  color: var(--accent-secure-ink);
+  margin-bottom: var(--space-1);
+}
+.dl-auth__sent-seal svg { width: 28px; height: 28px; }
+@media (prefers-reduced-motion: no-preference) {
+  .dl-auth__sent-seal { animation: dl-auth-seal var(--dur-4) var(--ease-spring) both; }
+}
+@keyframes dl-auth-seal {
+  from { opacity: 0; transform: scale(0.8); }
+  to { opacity: 1; transform: none; }
+}
+.dl-auth__sent-title {
+  font-family: var(--font-ui);
+  font-weight: var(--weight-semibold);
+  font-size: var(--text-xl);
+  color: var(--ink);
+  margin: 0;
+}
+.dl-auth__sent-text {
+  font-size: var(--text-md);
+  line-height: var(--leading-normal);
+  color: var(--ink-muted);
+  margin: 0;
+  max-width: 40ch;
+}
+.dl-auth__sent .dl-btn { margin-top: var(--space-2); }
+
+/* ── "Enterprise-grade security" reassurance card ───────────────────────────── */
+.dl-auth__security {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: var(--surface-sunken-cool);
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-control);
+  box-shadow: var(--shadow-inset), inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+.dl-auth__security-icon {
+  flex: 0 0 auto;
+  width: 34px;
+  height: 34px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-sm);
+  background: var(--orb-surface);
+  border: 1px solid var(--orb-rim);
+  box-shadow: var(--orb-shadow);
+  color: var(--ink-soft);
+}
+.dl-auth__security-icon svg { width: 16px; height: 16px; }
+.dl-auth__security-text {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+.dl-auth__security-text strong {
+  font-size: var(--text-sm);
+  font-weight: var(--weight-semibold);
+  color: var(--ink);
+}
+.dl-auth__security-text > span {
+  font-size: var(--text-xs);
+  line-height: var(--leading-snug);
+  color: var(--ink-muted);
+}
+.dl-auth__security-status {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 2px;
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  letter-spacing: 0.04em;
+  color: var(--accent-secure-ink) !important;
+}
+.dl-auth__security-status::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #2f8f5b;
+  box-shadow: 0 0 0 3px rgba(47, 143, 91, 0.16);
+}
+
+/* ── Responsive ──────────────────────────────────────────────────────────────
+ * tablet: narrow the form panel. mobile: stack — vault wall on top (shorter),
+ * form below in one centred column. */
+@media (max-width: 1100px) {
+  .dl-auth__split { grid-template-columns: minmax(0, 1fr) minmax(0, 0.92fr); }
+  .dl-auth__form-side { padding: clamp(40px, 6vh, 72px) clamp(24px, 4vw, 56px); }
+}
+@media (max-width: 820px) {
+  .dl-auth__split { grid-template-columns: minmax(0, 1fr); }
+  .dl-auth__vault-side { min-height: 46vh; order: -1; }
+  .dl-auth__wall { place-content: center; }
+  .dl-auth__form-side {
+    min-height: auto;
+    box-shadow: 0 -22px 50px -36px rgba(0, 0, 0, 0.3);
+    padding: clamp(36px, 6vh, 64px) clamp(24px, 7vw, 56px) clamp(48px, 8vh, 72px);
+  }
+  .dl-auth__niche { width: clamp(220px, 46vw, 320px); }
+}
+@media (max-width: 480px) {
+  .dl-auth__vault-side { min-height: 38vh; }
+  .dl-auth__flute { width: 44px; }
+  .dl-auth__wall { padding-left: 44px; }
+  .dl-auth__niche { width: clamp(190px, 60vw, 260px); }
+  .dl-auth__title { font-size: var(--text-2xl); }
+}

@@ -40,7 +40,7 @@ export default function ActivityPage() {
       object={<SplineObject scene={SPLINE_SCENES.activity} scale={3.46} float />}
       emptyTitle="No activity yet"
       emptyDescription="Once agreements move forward, every submission, review, release, and message will appear here in one calm feed."
-      primaryAction={{ label: cfg.primaryAction.label, to: "/app/agreements", icon: <IconPlus /> }}
+      primaryAction={{ label: cfg.primaryAction.label, to: "/app/create", icon: <IconPlus /> }}
     />
   );
 }

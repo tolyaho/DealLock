@@ -9,7 +9,7 @@
  * are presentational until the agreement-detail flow lands in a later phase.
  */
 import { useMemo, useState } from "react";
-import { useSearchParams } from "react-router-dom";
+import { useLocation, useNavigate, useSearchParams } from "react-router-dom";
 import {
   Button,
   Card,
@@ -26,11 +26,12 @@ import {
   TableShell,
   useRoleConfig,
   usePageLoading,
+  useWorkspace,
   type ChipTone,
   type Column,
 } from "../../components/app";
 import { SPLINE_SCENES } from "../../splineScenes";
-import { IconAgreements, IconPlus } from "../../components/app/icons";
+import { IconAgreements, IconCheck, IconClose, IconPlus } from "../../components/app/icons";
 import {
   AGREEMENTS,
   STATUS_LABEL,
@@ -127,7 +128,15 @@ function AgreementsSkeletonRow() {
 export default function AgreementsPage() {
   const [params, setParams] = useSearchParams();
   const cfg = useRoleConfig(); // role-aware creation wording: agreement (client) vs proposal (provider)
+  const { workspace } = useWorkspace();
+  const navigate = useNavigate();
+  const location = useLocation();
   const loading = usePageLoading();
+  // Creation CTAs open the guided wizard for the active workspace.
+  const goCreate = () => navigate(`/app/create?workspace=${workspace}`);
+  // One-time confirmation after returning from a successful create.
+  const created = (location.state as { created?: { title?: string } } | null)?.created;
+  const [flash, setFlash] = useState<{ title: string } | null>(created ? { title: created.title ?? "" } : null);
   const urlFilter = params.get("status") as Filter | null;
   const [filter, setFilter] = useState<Filter>(
     urlFilter && FILTERS.some((f) => f.value === urlFilter) ? urlFilter : "all",
@@ -165,9 +174,24 @@ export default function AgreementsPage() {
            * header action is hidden when there are no agreements — no duplicate CTA.
            * Restored once populated. Label is role-aware: "New agreement" (client) /
            * "New proposal" (provider) — a provider never creates an agreement. */
-          source.length > 0 ? <MetalCTA icon={<IconPlus />}>{cfg.primaryAction.label}</MetalCTA> : undefined
+          source.length > 0 ? (
+            <MetalCTA icon={<IconPlus />} onClick={goCreate}>{cfg.primaryAction.label}</MetalCTA>
+          ) : undefined
         }
       />
+
+      {flash && (
+        <div className="dl-flash" role="status" aria-live="polite">
+          <span className="dl-flash__icon" aria-hidden="true"><IconCheck /></span>
+          <span className="dl-flash__text">
+            {workspace === "client" ? "Agreement created" : "Proposal sent"}
+            {flash.title ? ` — “${flash.title}”` : ""}. It’ll appear here once it’s accepted and funded.
+          </span>
+          <button type="button" className="dl-flash__close" aria-label="Dismiss" onClick={() => setFlash(null)}>
+            <IconClose />
+          </button>
+        </div>
+      )}
 
       {source.length > 0 && (
         <div className="dl-toolbar">
@@ -272,7 +296,7 @@ export default function AgreementsPage() {
             object={<SplineObject scene={SPLINE_SCENES.agreements} float />}
             title={cfg.emptyList.title}
             text={cfg.emptyList.text}
-            action={<MetalCTA className="dl-metal-cta--lg" icon={<IconPlus />}>{cfg.primaryAction.label}</MetalCTA>}
+            action={<MetalCTA className="dl-metal-cta--lg" icon={<IconPlus />} onClick={goCreate}>{cfg.primaryAction.label}</MetalCTA>}
           />
         </Card>
       ) : (

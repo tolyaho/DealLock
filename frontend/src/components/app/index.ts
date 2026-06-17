@@ -20,6 +20,7 @@ export { Card, MetricCard } from "./Card";
 export { StatusChip, type ChipTone } from "./StatusChip";
 export { SegmentedControl } from "./SegmentedControl";
 export { SearchInput } from "./SearchInput";
+export { Field, TextInput, TextArea } from "./FormField";
 export { ActionTile } from "./ActionTile";
 export { TableShell, type Column } from "./TableShell";
 export { EmptyState } from "./EmptyState";

@@ -10,6 +10,9 @@ export const SPLINE_SCENES = {
   /** Landing hero — the metallic vault sculpture (HeroVaultSpline). */
   heroVault: "https://prod.spline.design/AGe6U1U5GtmgortZ/scene.splinecode",
 
+  /** Auth (/login, /signup) — the metallic vault-door safe object (AuthVaultSpline). */
+  authVault: "https://prod.spline.design/6KyIzrlSu23OcuRj/scene.splinecode",
+
   /** Landing › Security section emblem — shield object. */
   securityShield: "https://prod.spline.design/0j3KAYUN-S5VN299/scene.splinecode",
 
