@@ -1,7 +1,13 @@
 import HeroVaultSpline from "./HeroVaultSpline";
 import HeroBackground from "./HeroBackground";
+import { useMediaQuery } from "./useMediaQuery";
 
 export default function Hero() {
+  // Drop the hero vault entirely on phones — it reads poorly when shrunk and the
+  // copy stands on its own. Skipping the mount also avoids loading the Spline WebGL
+  // canvas on mobile. Tablets (≥640px) keep it below the copy.
+  const isPhone = useMediaQuery("(max-width: 639px)");
+
   return (
     <div className="dl-hero-v2">
 
@@ -39,9 +45,11 @@ export default function Hero() {
           </ul>
         </div>
 
-        <div className="dl-vault-wrap dl-vault-wrap--spline" aria-hidden="true">
-          <HeroVaultSpline />
-        </div>
+        {!isPhone && (
+          <div className="dl-vault-wrap dl-vault-wrap--spline" aria-hidden="true">
+            <HeroVaultSpline />
+          </div>
+        )}
 
         {/* Progressive blur fading in toward the hero's bottom edge. Six stacked   */}
         {/* layers, each with a stronger backdrop blur and a mask that fades in      */}

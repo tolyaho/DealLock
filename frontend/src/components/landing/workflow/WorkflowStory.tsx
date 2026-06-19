@@ -29,6 +29,7 @@ import WorkflowContractStage from "./WorkflowContractStage";
 import TypewriterText from "./TypewriterText";
 import MetalOrbitLines from "../MetalOrbitLines";
 import MetalSheen from "../MetalSheen";
+import { useMediaQuery } from "../useMediaQuery";
 
 // Position is the card's DISTANCE from the active step, not its absolute index — so
 // only the active card (+ its immediate neighbours) is ever placed/visible. This is
@@ -70,6 +71,10 @@ export default function WorkflowStory() {
     stepCount: STEP_COUNT,
     stepWeights,
   });
+
+  // On phones the scene is a static stack and the narration is hidden, so drop the
+  // typed subtitle too — a partially-typed line + caret reads as a glitch on mobile.
+  const compact = useMediaQuery("(max-width: 767px)");
 
   // Latch the header reveal the first time it scrolls meaningfully into view, then
   // disconnect — the title/subtitle reveal once and stay (no re-trigger on scroll-back).
@@ -136,6 +141,7 @@ export default function WorkflowStory() {
             start={headerInView}
             speed={WF_SUB_SPEED}
             startDelay={WF_SUB_DELAY}
+            disabled={compact}
           />
         </p>
       </header>

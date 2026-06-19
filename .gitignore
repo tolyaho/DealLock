@@ -37,6 +37,11 @@ pnpm-debug.log*
 
 # Local UI verification screenshots
 frontend/.screenshots/
+screenshots/
+
+# Local heavy reference assets (kept out of git)
+docs/prompts/
+moodboard/
 
 # Local coursework notes
 notes/

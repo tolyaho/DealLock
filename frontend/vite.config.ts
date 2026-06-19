@@ -94,6 +94,7 @@ function hardhatRpcProxyPlugin(): Plugin {
 export default defineConfig({
   plugins: [react(), hardhatRpcProxyPlugin()],
   server: {
+    host: true,
     port: 5173,
   },
 });

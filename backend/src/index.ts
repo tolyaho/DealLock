@@ -14,6 +14,7 @@ import notificationsRouter from "./routes/notifications.js";
 import factoryRouter from "./routes/factory.js";
 import paymentAssetsRouter from "./routes/paymentAssets.js";
 import { requireAuth, type AuthenticatedRequest } from "./middleware/requireAuth.js";
+import { requireVerified } from "./middleware/requireVerified.js";
 import { db } from "./db.js";
 import { asyncRoute } from "./utils.js";
 import {
@@ -71,10 +72,15 @@ export function createApp() {
     }),
   );
 
-  // CORS — strict allowlist from env.
+  // CORS — strict allowlist from env; in dev also allow localhost so Mac browser still works.
+  const frontendOrigin = process.env.FRONTEND_ORIGIN ?? "http://localhost:5173";
+  const corsOrigin =
+    process.env.NODE_ENV === "production"
+      ? frontendOrigin
+      : [frontendOrigin, "http://localhost:5173", "http://127.0.0.1:5173"];
   app.use(
     cors({
-      origin: process.env.FRONTEND_ORIGIN ?? "http://localhost:5173",
+      origin: corsOrigin,
       credentials: true,
     }),
   );
@@ -153,15 +159,17 @@ export function createApp() {
     walletsRouter,
   );
 
-  app.use("/agreements", requireAuth, agreementsRouter);
+  // Product data — requires a verified email on top of a wallet session.
+  app.use("/agreements", requireAuth, requireVerified, agreementsRouter);
 
-  // Email — rate limited.
+  // Email — rate limited. Stays on requireAuth only: this is how an account
+  // reaches the verified state, so it must be reachable beforehand.
   app.use("/email", requireAuth, emailLimiter, emailRouter);
 
-  app.use("/notification-preferences", requireAuth, notificationPreferencesRouter);
+  app.use("/notification-preferences", requireAuth, requireVerified, notificationPreferencesRouter);
 
-  // Notifications — rate limited.
-  app.use("/notifications", requireAuth, notifyLimiter, notificationsRouter);
+  // Notifications — rate limited; also gated on a verified email.
+  app.use("/notifications", requireAuth, requireVerified, notifyLimiter, notificationsRouter);
 
   app.use("/factory", factoryRouter);
   app.use("/payment-assets", paymentAssetsRouter);
@@ -196,8 +204,8 @@ if (isMainModule) {
   });
 
   const app = createApp();
-  const server = app.listen(PORT, () => {
-    logger.info(`Listening on http://localhost:${PORT}`);
+  const server = app.listen(PORT, "0.0.0.0", () => {
+    logger.info(`Listening on http://0.0.0.0:${PORT}`);
   });
   startIndexerLoop();
 

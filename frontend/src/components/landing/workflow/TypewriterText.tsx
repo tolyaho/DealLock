@@ -24,6 +24,9 @@ interface Props {
   start?: boolean;
   /** ms to wait after `start` is true before the first character (for sequencing). */
   startDelay?: number;
+  /** Skip the animation entirely — render the full line, no caret (like reduced motion).
+   *  Used on phones, where a partially-typed line during scroll-in looks glitchy. */
+  disabled?: boolean;
 }
 
 function prefersReducedMotion() {
@@ -39,12 +42,14 @@ export default function TypewriterText({
   className,
   start = true,
   startDelay = 0,
+  disabled = false,
 }: Props) {
   // Start empty whenever we will animate, so a remount (e.g. the narration's
   // key={activeStep}) never paints the full line for one frame before typing — that
-  // flash read as a per-step stutter. Reduced motion still shows the line instantly.
+  // flash read as a per-step stutter. Reduced motion (and `disabled`) shows the line
+  // instantly.
   const [shown, setShown] = useState(() =>
-    start && prefersReducedMotion() ? text : "",
+    start && (disabled || prefersReducedMotion()) ? text : "",
   );
   const [typing, setTyping] = useState(false);
   const timers = useRef<number[]>([]);
@@ -62,7 +67,7 @@ export default function TypewriterText({
       return;
     }
 
-    if (prefersReducedMotion()) {
+    if (disabled || prefersReducedMotion()) {
       setShown(text);
       setTyping(false);
       return;
@@ -86,7 +91,7 @@ export default function TypewriterText({
     timers.current.push(window.setTimeout(begin, startDelay));
 
     return clear;
-  }, [text, speed, start, startDelay]);
+  }, [text, speed, start, startDelay, disabled]);
 
   return (
     <span className={className} aria-label={text}>

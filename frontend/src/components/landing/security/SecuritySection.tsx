@@ -23,6 +23,7 @@ import { useInView } from "./useInView";
 import TypewriterText from "../workflow/TypewriterText";
 import MetalSheen from "../MetalSheen";
 import SecurityShieldSpline from "../SecurityShieldSpline";
+import { useMediaQuery } from "../useMediaQuery";
 
 // Subtitle types in (like the workflow subtitle) once the section scrolls into
 // view — a short beat after the title fades up. rAF-driven, so it stays smooth.
@@ -39,6 +40,9 @@ interface Props {
 export default function SecuritySection({ repoUrl = REPO_URL }: Props) {
   const [tab, setTab] = useState<TabKey>("nativeEth");
   const { ref, inView } = useInView<HTMLElement>({ threshold: 0.16 });
+  // Phones: render the subtitle in full rather than typing it (avoids a glitchy
+  // partial line + caret while the section scrolls into view).
+  const compact = useMediaQuery("(max-width: 767px)");
 
   return (
     <section
@@ -66,6 +70,7 @@ export default function SecuritySection({ repoUrl = REPO_URL }: Props) {
                 start={inView}
                 speed={SEC_SUB_SPEED}
                 startDelay={SEC_SUB_DELAY}
+                disabled={compact}
               />
             </p>
           </div>
