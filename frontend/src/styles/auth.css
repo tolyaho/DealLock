@@ -3,8 +3,9 @@
  * ----------------------------------------------------------------------------
  * A standalone composed scene modelled on the product reference render:
  *   LEFT  — a light brushed-metal wall: a fluted side panel, an engraved caption,
- *           and the escrow vault (safe-on-plinth Spline scene) set into a recessed
- *           niche lit by a bottom light-strip, with a soft floor glow.
+ *           and the escrow vault (safe-on-plinth Spline scene) mounted into a machined
+ *           wall socket (a carved pocket behind + a rim/lip in front), with a soft
+ *           floor glow.
  *   RIGHT — a clean light panel carrying the wallet-first sign-in form.
  *
  * It lives under `.dl-app` so the form reuses the dashboard's pearl primitives and
@@ -27,27 +28,43 @@
 /* drop the dashboard `.dl-app` grain overlay — the wall paints its own */
 .dl-app.dl-auth::after { display: none; }
 
-/* ── ← Home (dark glyph on the light metal wall) ───────────────────────────── */
+/* ── ← Home — a quiet frosted control, clear of the fluted strip ────────────────
+ * Positioned just right of the flute (so it never sits ON the ribs) with a soft
+ * frosted-glass pill so the secondary back-link reads cleanly on the busy metal
+ * instead of floating as bare text. ≥44px tap target. */
 .dl-auth__home {
   position: absolute;
   z-index: 4;
-  top: clamp(18px, 3vh, 30px);
-  left: clamp(18px, 3vw, 40px);
+  top: clamp(20px, 3.4vh, 36px);
+  left: calc(clamp(54px, 11%, 116px) + 22px);
   display: inline-flex;
   align-items: center;
-  gap: 6px;
+  gap: 9px;
+  min-height: 44px;
+  box-sizing: border-box;
   font-family: var(--font-mono);
   font-size: var(--text-xs);
   letter-spacing: var(--tracking-label);
   text-transform: uppercase;
-  color: rgba(40, 44, 48, 0.6);
-  padding: 8px 12px 8px 8px;
+  color: rgba(42, 46, 50, 0.82);
+  padding: 11px 18px;
   border-radius: var(--radius-pill);
-  transition: color var(--dur-2) var(--ease-out), background var(--dur-2) var(--ease-out);
+  background: rgba(255, 255, 255, 0.34);
+  border: 1px solid rgba(255, 255, 255, 0.62);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55), 0 6px 16px -11px rgba(40, 44, 48, 0.45);
+  backdrop-filter: blur(10px) saturate(1.08);
+  -webkit-backdrop-filter: blur(10px) saturate(1.08);
+  transition: color var(--dur-2) var(--ease-out), background var(--dur-2) var(--ease-out),
+    border-color var(--dur-2) var(--ease-out), box-shadow var(--dur-2) var(--ease-out);
 }
-.dl-auth__home svg { width: 15px; height: 15px; }
-.dl-auth__home:hover { color: rgba(28, 30, 32, 0.95); background: rgba(255, 255, 255, 0.5); }
-.dl-auth__home:focus-visible { outline: 2px solid rgba(40, 44, 48, 0.55); outline-offset: 2px; }
+.dl-auth__home svg { width: 16px; height: 16px; }
+.dl-auth__home:hover {
+  color: rgba(24, 26, 30, 0.98);
+  background: rgba(255, 255, 255, 0.62);
+  border-color: rgba(255, 255, 255, 0.85);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.65), 0 10px 24px -12px rgba(40, 44, 48, 0.5);
+}
+.dl-auth__home:focus-visible { outline: 2px solid rgba(40, 44, 48, 0.6); outline-offset: 3px; }
 
 /* ── Split: vault wall LEFT, form panel RIGHT ──────────────────────────────── */
 .dl-auth__split {
@@ -63,6 +80,29 @@
  * LEFT — the brushed-metal wall
  * ========================================================================== */
 .dl-auth__vault-side {
+  /* ── ONE source of truth for the whole left composition ──────────────────────
+   * Everything below (inset, safe, copy width, the background rules) is DERIVED
+   * from these — nothing is placed by eye. The geometry contract:
+   *   inset (socket) size  = safe size + 2·pad      (REQUIRED GEOMETRY rule #4)
+   *   stage                = the inset (a square)    → aspect-ratio 1 / 1
+   *   safe + socket + lip   all share the SAME centre → equal pad on all 4 sides
+   *   copy block width      = stage size             → its left edge = socket left
+   *   the two bg rules       are anchored to the safe's top & bottom edges
+   * The Spline canvas is treated as a CENTRED visual box (per the brief): we do NOT
+   * read the 3D object's real bounds; --vault-safe-k is just the visible safe width
+   * at scale 1 inside the fixed canvas, used to size the socket around it. */
+  --vault-inset-pad: clamp(20px, 2.4vw, 34px);    /* equal padding, all 4 sides */
+  --vault-safe-k: 327px;          /* visible safe @ scale 1 in the fixed 460 canvas */
+  --vault-spline-w: 460px;        /* FIXED canvas px — never reframes (see object) */
+  --vault-spline-scale: 1;        /* the only per-breakpoint knob; geometry follows */
+  --vault-spline-x: 0px;          /* optical-centre nudge, canvas-local + auto-scaled */
+  --vault-spline-y: 7px;          /* nudge the safe a touch DOWN — its optical centre sits
+                                     slightly high, so resting at 0 leaves more gap below */
+  --vault-safe-size: calc(var(--vault-safe-k) * var(--vault-spline-scale));
+  --vault-stage-size: calc(var(--vault-safe-size) + var(--vault-inset-pad) * 2);
+  --vault-socket-radius: clamp(34px, 3vw, 46px);
+  --vault-top-offset: clamp(24px, 3.4vh, 40px);
+
   position: relative;
   overflow: hidden;
   isolation: isolate;
@@ -89,17 +129,6 @@
   opacity: 0.5;
   pointer-events: none;
 }
-/* large, soft architectural panel seams (horizontal) — sit behind everything */
-.dl-auth__vault-side::after {
-  content: "";
-  position: absolute;
-  inset: 0;
-  z-index: 0;
-  background:
-    linear-gradient(180deg, transparent calc(22% - 1px), rgba(255, 255, 255, 0.4) calc(22% - 1px) 22%, rgba(0, 0, 0, 0.12) 22% calc(22% + 1px), transparent calc(22% + 1px)),
-    linear-gradient(180deg, transparent calc(78% - 1px), rgba(255, 255, 255, 0.4) calc(78% - 1px) 78%, rgba(0, 0, 0, 0.12) 78% calc(78% + 1px), transparent calc(78% + 1px));
-  pointer-events: none;
-}
 
 /* Fluted vertical panel at the far left (ribbed pilaster) */
 .dl-auth__flute {
@@ -124,25 +153,35 @@
   box-shadow: inset -1px 0 0 rgba(0, 0, 0, 0.1);
 }
 
-/* Wall content column (right of the flute): caption above, niche below */
+/* Wall content column (right of the flute): a single centred column holding the
+ * caption above the vault stage. align-items:center centres the column in the panel;
+ * because the caption and the stage are BOTH --vault-stage-size wide, centring them
+ * also lines up their LEFT edges exactly — so the heading's left edge sits on the same
+ * vertical axis as the socket's left edge. No by-eye left offset. */
 .dl-auth__wall {
   position: absolute;
   z-index: 2;
   inset: 0;
   padding-left: clamp(54px, 11%, 116px);
-  display: grid;
-  place-content: center;
-  justify-items: start;
-  gap: clamp(16px, 3vh, 30px);
-}
-
-/* engraved caption — debossed into the metal (dark fill + light underline relief) */
-.dl-auth__wall-caption {
   display: flex;
   flex-direction: column;
-  gap: 8px;
-  padding-left: 4px;
-  max-width: clamp(260px, 30vw, 400px);
+  align-items: center;
+  justify-content: center;
+  gap: clamp(20px, 3.4vh, 40px);
+}
+
+/* engraved caption — debossed into the metal (dark fill + light underline relief).
+ * Width is locked to the stage and the text is CENTRED, so the caption sits balanced
+ * on the same vertical axis as the centred safe below it (symmetry = beautiful, vs the
+ * text hugging left while the safe is centred). */
+.dl-auth__wall-caption {
+  width: var(--vault-stage-size);
+  max-width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: 10px;
 }
 .dl-auth__wall-caption-title {
   font-family: var(--font-mono);
@@ -162,43 +201,88 @@
   text-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
 }
 
-/* The vault display — a soft brushed-silver inset well machined into the wall.
- * NOT a black box: the interior is the same metal family as the wall, just a
- * touch deeper (a satin pewter recess), with a soft silver glow behind the vault
- * and a machined bezel (pearl top rim + graphite — never black — recess walls).
- * The reflective safe reads as embedded in a polished niche, not pasted on top. */
-.dl-auth__niche {
+/* ============================================================================
+ * The escrow vault — the safe MOUNTED INTO A MACHINED WALL SOCKET, sized by ONE
+ * geometry contract (vars on .dl-auth__vault-side). A 3-layer stack:
+ *   .dl-auth__vault-stage    a SQUARE sizing box == the inset (no clip)
+ *     .dl-auth__vault-socket   carved wall pocket BEHIND the safe (z 1) — inset:0
+ *     .dl-auth__vault-object   the Spline safe (z 2) — centred, NEVER cropped
+ *     .dl-auth__vault-lip      machined opening rim IN FRONT of the safe (z 3) — inset:0
+ *   + ::before / ::after       the two background rules, anchored to the safe edges
+ *
+ * Equal padding is GUARANTEED by construction, not by eye:
+ *   stage size = safe size + 2·pad   (so the safe, centred, leaves exactly `pad` all round)
+ *   socket & lip = inset:0           (they fill the stage exactly → same centre as the safe)
+ *   safe (object) = top/left 50% + translate(-50%,-50%) → identical centre
+ * The socket is a real recess but kept tight + tonal (never a dark block). The lip is a
+ * rim-only overlay (transparent centre) so the wall edge reads as standing in front of
+ * the safe's outer perimeter — the cue that it's set THROUGH the wall, not pasted on. */
+.dl-auth__vault-stage {
   position: relative;
-  width: clamp(320px, 42vw, 560px);
+  width: var(--vault-stage-size);
+  height: var(--vault-stage-size);
   aspect-ratio: 1 / 1;
-  border-radius: 40px;
-  overflow: visible;
-  background:
-    /* the soft silver glow sitting behind the vault */
-    radial-gradient(58% 54% at 50% 45%, rgba(248, 250, 251, 0.66) 0%, rgba(248, 250, 251, 0) 60%),
-    /* a gentle floor vignette to ground the object (graphite, soft) */
-    radial-gradient(110% 72% at 50% 116%, rgba(70, 74, 78, 0.24) 0%, rgba(70, 74, 78, 0) 60%),
-    /* the satin pewter base — deeper than the wall so the silver safe separates */
-    linear-gradient(165deg, #c0c4c6 0%, #aeb3b6 40%, #9da2a6 72%, #b4b9bc 100%);
-  box-shadow:
-    /* seat the well into the wall: pearl catch on the lip, soft drop below */
-    0 1px 0 rgba(255, 255, 255, 0.85),
-    0 30px 56px -34px rgba(40, 44, 48, 0.4),
-    /* machined bezel: bright top inner rim + graphite (soft) recess walls */
-    inset 0 2px 2px rgba(255, 255, 255, 0.7),
-    inset 0 20px 34px -22px rgba(78, 84, 88, 0.42),
-    inset 26px 0 44px -36px rgba(78, 84, 88, 0.34),
-    inset -26px 0 44px -36px rgba(78, 84, 88, 0.34),
-    /* a faint lit sill so the bottom edge catches light (no laser strip) */
-    inset 0 -3px 2px rgba(255, 255, 255, 0.34),
-    inset 0 -18px 28px -20px rgba(96, 102, 106, 0.3);
+  /* NO overflow clip — the fixed canvas is larger than the visible safe and overflows
+   * the stage harmlessly; clipping here would crop the safe. */
 }
-/* a faint vertical brush so the recess reads as the same brushed metal */
-.dl-auth__niche::before {
+
+/* the two background rules — DERIVED, not placed by eye: full-bleed hairlines anchored
+ * to the safe's top & bottom edges (= stage edge ± pad), so they always read as the
+ * machined rails the safe is mounted between, at any width. They sit BEHIND the socket
+ * (z below it) and fade out at the ends so they don't harshly cross the flute. */
+.dl-auth__vault-stage::before,
+.dl-auth__vault-stage::after {
+  content: "";
+  position: absolute;
+  left: -100vw;
+  right: -100vw;
+  height: 1px;
+  z-index: 0;
+  pointer-events: none;
+  background: linear-gradient(
+    90deg,
+    rgba(58, 64, 68, 0) 0%,
+    rgba(58, 64, 68, 0.16) 32%,
+    rgba(58, 64, 68, 0.16) 72%,
+    rgba(58, 64, 68, 0) 100%
+  );
+  box-shadow: 0 1px 0 rgba(255, 255, 255, 0.5);
+}
+.dl-auth__vault-stage::before { top: var(--vault-inset-pad); }     /* safe TOP edge */
+.dl-auth__vault-stage::after { bottom: var(--vault-inset-pad); }   /* safe BOTTOM edge */
+
+/* socket-back: the carved wall pocket BEHIND the safe. inset:0 → it IS the inset, so it
+ * shares the safe's centre exactly. Satin silver a touch deeper than the wall (tonal
+ * separation, never a dark block), centre glow, contact shadow, carved bevel.
+ * overflow:hidden clips only its OWN bg/brush — the safe is a sibling, not a child. */
+.dl-auth__vault-socket {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  border-radius: var(--vault-socket-radius);
+  overflow: hidden;
+  background:
+    /* soft centre glow behind the safe */
+    radial-gradient(56% 52% at 50% 42%, rgba(250, 252, 253, 0.72) 0%, rgba(250, 252, 253, 0) 60%),
+    /* soft contact shadow directly behind / under the safe (graphite, never black) */
+    radial-gradient(44% 16% at 50% 78%, rgba(48, 52, 56, 0.34) 0%, rgba(48, 52, 56, 0) 72%),
+    /* satin silver pocket base — slightly deeper than the wall, darker to lower-right */
+    linear-gradient(150deg, #c6cacc 0%, #b6babd 44%, #a4a9ac 74%, #999ea1 100%);
+  box-shadow:
+    /* outer wall shadow + pearl lip catch — seats the pocket into the wall */
+    0 26px 50px -32px rgba(40, 44, 48, 0.42),
+    0 1px 0 rgba(255, 255, 255, 0.7),
+    /* carved depth: bright top-left inner rim, graphite ambient occlusion lower-right */
+    inset 0 2px 2px rgba(255, 255, 255, 0.72),
+    inset 22px 18px 30px -24px rgba(255, 255, 255, 0.3),
+    inset 0 -22px 34px -20px rgba(60, 66, 70, 0.5),
+    inset -20px -16px 32px -22px rgba(58, 64, 68, 0.46);
+}
+/* faint vertical brush so the pocket reads as the same machined metal as the wall */
+.dl-auth__vault-socket::before {
   content: "";
   position: absolute;
   inset: 0;
-  z-index: 0;
   border-radius: inherit;
   background-image: repeating-linear-gradient(
     90deg,
@@ -208,14 +292,48 @@
   opacity: 0.5;
   pointer-events: none;
 }
-/* the safe sits centred in the well with comfortable, even padding */
-.dl-auth__niche-inner {
+/* the object layer: the Spline safe, BETWEEN socket (z1) and lip (z3). The canvas is a
+ * FIXED 460px (never reframes — a fluid canvas is what made earlier versions drift); the
+ * safe is resized only via transform:scale. Centred on the stage by top/left 50% +
+ * translate(-50%,-50%); the optional --vault-spline-x/y nudge is canvas-local (applied
+ * inside the scale) so it auto-scales and stays a single, clean centring knob. NO clip
+ * here ⇒ the safe is never cropped (it may overflow toward the lip — fine, the lip is a
+ * rim). Per the brief we treat the canvas as a centred box: x/y default 0. */
+.dl-auth__vault-object {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: var(--vault-spline-w);
+  height: var(--vault-spline-w);
+  transform: translate(-50%, -50%) scale(var(--vault-spline-scale))
+    translate(var(--vault-spline-x), var(--vault-spline-y));
+  transform-origin: center center;
+  z-index: 2;
+  pointer-events: none;
+}
+
+/* front-lip: the machined opening rim IN FRONT of the safe. Transparent centre (the
+ * safe shows through) — just a hairline border + an inset bevel, so the wall edge reads
+ * as standing in front of the safe's outer perimeter. Bright top-left rim highlight,
+ * graphite lower-right, soft inner occlusion where the lip meets the pocket. Same
+ * footprint as the socket, so it frames the opening without covering the safe's wheel. */
+.dl-auth__vault-lip {
   position: absolute;
   inset: 0;
-  z-index: 1;
-  display: grid;
-  place-items: center;
-  padding: 14%;
+  z-index: 3;
+  border-radius: var(--vault-socket-radius);
+  pointer-events: none;
+  background: transparent;
+  border: 1px solid rgba(255, 255, 255, 0.5);
+  box-shadow:
+    /* bright machined top-left rim highlight */
+    inset 0 1px 0 rgba(255, 255, 255, 0.85),
+    inset 2px 2px 4px rgba(255, 255, 255, 0.4),
+    /* ambient occlusion + graphite lower-right where the lip meets the pocket */
+    inset 0 -2px 10px rgba(70, 76, 80, 0.2),
+    inset -3px -4px 12px rgba(60, 66, 70, 0.18),
+    /* faint outer pearl catch on the wall surface */
+    0 1px 0 rgba(255, 255, 255, 0.5);
 }
 
 /* soft floor glow along the bottom of the wall (the wall meeting a lit floor) */
@@ -246,11 +364,29 @@
   width: 100% !important;
   height: 100% !important;
   opacity: 0;
+  /* sizing/centering is handled by .dl-auth__vault-object (fixed canvas + scale) */
 }
 @media (prefers-reduced-motion: no-preference) {
   .dl-auth-vault__canvas { transition: opacity 620ms var(--ease-out); }
 }
 .dl-auth-vault.is-loaded .dl-auth-vault__canvas { opacity: 1; }
+
+/* Premium idle float — the safe breathes very slightly up/down inside its socket.
+ * Lives on the inner scene wrapper (not .dl-auth__vault-object) so it never fights the
+ * object's centring/scale transform. The object has no overflow clip ⇒ never cropped;
+ * the ±5px amplitude stays well within the socket padding so it never meets the lip.
+ * Slow ease-in-out cycle = calm, expensive-feeling motion, not a bounce. */
+@media (prefers-reduced-motion: no-preference) {
+  .dl-auth-vault {
+    animation: dl-auth-vault-float 5.5s ease-in-out infinite;
+    will-change: transform;
+  }
+}
+@keyframes dl-auth-vault-float {
+  0%   { transform: translate3d(0, -5px, 0); }
+  50%  { transform: translate3d(0, 5px, 0); }
+  100% { transform: translate3d(0, -5px, 0); }
+}
 
 /* Simple loading state — a quiet "Loading secure vault…" label inside the well
  * (debossed graphite on the light silver recess), NOT a backup sculpture or orb. */
@@ -290,6 +426,7 @@
 .dl-auth__form-side {
   position: relative;
   z-index: 2;
+  min-width: 0; /* allow the grid item to shrink to its track — else it overflows */
   min-height: 100dvh;
   display: flex;
   align-items: center;
@@ -464,7 +601,7 @@
 }
 .dl-auth__alt a {
   color: var(--ink);
-  font-weight: var(--weight-medium);
+  font-weight: var(--weight-semibold);
   text-decoration: underline;
   text-underline-offset: 2px;
   text-decoration-color: var(--border-strong);
@@ -585,27 +722,48 @@
 }
 
 /* ── Responsive ──────────────────────────────────────────────────────────────
- * tablet: narrow the form panel. mobile: stack — vault wall on top (shorter),
- * form below in one centred column. */
+ * ≥901px: the two-column showcase. ≤900px: the wall can't be shown well without
+ * cramping both sides, so we DROP it entirely and show a clean, simple centred login
+ * (form only) — not a stacked vault-on-top. */
+/* ⚠ The scale override must land on .dl-auth__vault-side (where the geometry vars live)
+ * so --vault-safe-size / --vault-stage-size recompute. Overriding it on the stage would
+ * NOT flow back up to the side's calc. Geometry (inset/socket/lip/copy/rules) follows. */
 @media (max-width: 1100px) {
   .dl-auth__split { grid-template-columns: minmax(0, 1fr) minmax(0, 0.92fr); }
   .dl-auth__form-side { padding: clamp(40px, 6vh, 72px) clamp(24px, 4vw, 56px); }
+  /* narrower two-col column → scale the safe down; the whole composition follows. */
+  .dl-auth__vault-side { --vault-spline-scale: 0.86; }
 }
-@media (max-width: 820px) {
-  .dl-auth__split { grid-template-columns: minmax(0, 1fr); }
-  .dl-auth__vault-side { min-height: 46vh; order: -1; }
-  .dl-auth__wall { place-content: center; }
+/* Not wide enough for the showcase → hide the vault wall, show a simple centred login.
+ * Drop the grid to a plain block so the form panel just fills the viewport (padding
+ * internal, no track-sizing quirks / overflow). */
+@media (max-width: 900px) {
+  .dl-auth__split { display: block; }
+  .dl-auth__vault-side { display: none; }
+  /* Simple centred login. The form panel becomes a full-page backdrop, and the form
+   * card is centred against the VIEWPORT with position:fixed + inset:0 + margin:auto.
+   * This bypasses the two-column grid/flex container entirely, so there is no track-
+   * or flex-sizing path that can shift or overflow it. Width is capped under the
+   * viewport, so it can never run off the right edge. */
   .dl-auth__form-side {
-    min-height: auto;
-    box-shadow: 0 -22px 50px -36px rgba(0, 0, 0, 0.3);
-    padding: clamp(36px, 6vh, 64px) clamp(24px, 7vw, 56px) clamp(48px, 8vh, 72px);
+    display: block;
+    box-shadow: none;
+    background: linear-gradient(180deg, #fbfbfc 0%, #eef0f1 100%);
+    padding: 0;
   }
-  .dl-auth__niche { width: clamp(220px, 46vw, 320px); }
+  .dl-auth__form-inner {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    width: min(360px, calc(100vw - 48px));
+    max-height: calc(100dvh - 32px);
+    overflow-y: auto;
+  }
+  /* no flute to clear now → a clean top-left margin instead of the wall offset */
+  .dl-auth__home { left: clamp(20px, 5vw, 44px); }
 }
 @media (max-width: 480px) {
-  .dl-auth__vault-side { min-height: 38vh; }
-  .dl-auth__flute { width: 44px; }
-  .dl-auth__wall { padding-left: 44px; }
-  .dl-auth__niche { width: clamp(190px, 60vw, 260px); }
   .dl-auth__title { font-size: var(--text-2xl); }
+  .dl-auth__home { top: clamp(16px, 3vh, 24px); left: clamp(20px, 6vw, 32px); }
 }

@@ -208,6 +208,20 @@
     0 8px 32px  rgba(17, 19, 21, 0.12);
 }
 
+/* ── Mobile system retune — compact rhythm + lighter chrome ──────────────────────
+ * Mobile is a RECOMPOSED layout, not a scaled desktop. Override the two global
+ * vertical-rhythm tokens once, here, so every section inherits a tighter mobile
+ * cadence from one place: a shorter fixed header (less reserved space, lighter
+ * chrome) and a compact major-section gap that tops out at 64px (the mobile spacing
+ * scale: 16 / 20 / 24 / 32 / 48 / 64 — no 100px+ desktop gaps on a phone). Desktop
+ * (≥768px) keeps the full cinematic values defined above. */
+@media (max-width: 767px) {
+  .dl-root {
+    --dl-nav-height: 64px;
+    --dl-section-gap: clamp(48px, 8vh, 64px);
+  }
+}
+
 /* ── Base reset ─────────────────────────────────────────────────────────────── */
 
 *, *::before, *::after {
@@ -554,16 +568,22 @@ a {
   .nav-rail { display: none; }
 }
 
-@media (max-width: 639px) {
-  .deallock-wordmark { font-size: 21px; }
-  /* Keep the glass bar and the buttons the same height so they still cap the      */
-  /* bar's right end cleanly on small screens.                                      */
-  .site-header-inner::before { height: 46px; }
+/* Lighter mobile header: shorter (via --dl-nav-height), smaller wordmark, and a       */
+/* less dominant Sign-up pill. "Log in" stays a plain ghost link. Glass bar + buttons  */
+/* share one height so the bar's right end still caps cleanly under the pill.          */
+@media (max-width: 767px) {
+  .deallock-wordmark { font-size: 20px; }
+  .site-header-inner { gap: 14px; }
+  .site-header-inner::before { height: 42px; border-radius: 15px; }
   .nav-auth { gap: 6px; }
   .nav-auth-login,
-  .nav-auth-signup { height: 46px; font-size: 12px; }
+  .nav-auth-signup { height: 42px; font-size: 12px; border-radius: 15px; }
   .nav-auth-login { padding: 0 12px; }
   .nav-auth-signup { padding: 0 16px; }
+}
+
+@media (max-width: 479px) {
+  .deallock-wordmark { font-size: 18px; }
 }
 
 /* ── Hero v2 stage — Resend-style two-column composition ─────────────────────── */
@@ -781,15 +801,21 @@ a {
 /* ── Responsive — tablet ─────────────────────────────────────────────────────── */
 
 @media (max-width: 960px) {
+  /* Single-column stack that flows at CONTENT height — drop the full-viewport floor    */
+  /* so the hero is exactly as tall as eyebrow→headline→copy→CTA→chips→vault, with no    */
+  /* large dead band before/after the vault and no forced "showroom" empty screen.      */
+  .dl-hero-v2 { min-height: auto; }
+
   .dl-hero-v2__stage {
     grid-template-columns: 1fr;
-    gap: 56px;
-    padding: 130px 6vw 80px;
+    gap: clamp(24px, 4.5vh, 44px);
+    min-height: auto;
+    padding: calc(var(--dl-nav-height) + clamp(28px, 5vh, 48px)) var(--dl-shell-pad) clamp(48px, 8vh, 72px);
     align-items: start;
   }
 
   .dl-vault-wrap {
-    max-width: 360px;
+    max-width: 340px;
     justify-self: center;
     order: 2;
   }
@@ -807,22 +833,47 @@ a {
 /* ── Responsive — mobile ─────────────────────────────────────────────────────── */
 
 @media (max-width: 639px) {
+  /* Phone: a clean, focused stack. Tightened vertical rhythm (the desktop 24/32/44/52   */
+  /* margins were airy on a phone), a smaller-but-strong headline, controlled copy width, */
+  /* and the feature chips in a compact 2-column cluster instead of an uneven wrap.       */
   .dl-hero-v2__stage {
-    padding: 110px 20px 100px;
-    gap: 40px;
+    padding: calc(var(--dl-nav-height) + 22px) 20px clamp(40px, 7vh, 56px);
+    gap: clamp(22px, 5vw, 32px);
   }
 
-  .dl-vault-wrap {
-    max-width: 280px;
-  }
+  .dl-hero-copy { max-width: 100%; }
+  .dl-hero-brand { margin-bottom: 14px; }
 
   .dl-hero-h1 {
-    font-size: clamp(34px, 10vw, 48px);
+    font-size: clamp(30px, 8.5vw, 42px);
+    margin-bottom: 16px;
+  }
+
+  .dl-hero-sub {
+    font-size: 14px;
+    line-height: 1.58;
+    max-width: 40ch;
+    margin-bottom: 22px;
   }
 
   .dl-hero-cta-row {
     flex-wrap: wrap;
-    gap: 14px;
+    gap: 12px;
+    margin-bottom: 26px;
+  }
+
+  /* Compact 2-up cluster of natural-width pills (2 + 1, left-aligned) — reads as an     */
+  /* intentional grid, not the ragged flex-wrap the desktop row produced on narrow widths. */
+  .dl-hero-chips {
+    display: grid;
+    grid-template-columns: repeat(2, max-content);
+    gap: 9px 10px;
+  }
+
+  /* Contained vault — sits right under the chips (the stage gap is the only space        */
+  /* before it) and never dominates the fold; the figure is square + uncropped.           */
+  .dl-vault-wrap {
+    max-width: 260px;
   }
 
   .dl-scroll-cue {
@@ -1210,10 +1261,12 @@ a {
 
 @media (max-width: 639px) {
   /* Mobile: keep the single-column order (copy first, vault below) so the figure's */
-  /* soft bloom never collides with the fixed header. Stays square + centered.      */
+  /* soft bloom never collides with the fixed header. Square + centered + contained  */
+  /* (matches .dl-vault-wrap's 260 cap) so the vault supports the copy, never        */
+  /* dominates the fold or crops against the viewport.                               */
   .dl-vault-wrap--spline {
-    width: min(72vw, 300px);
-    max-width: 300px;
+    width: min(70vw, 260px);
+    max-width: 260px;
   }
 }
 
@@ -1362,15 +1415,17 @@ a {
 }
 
 @media (max-width: 767px) {
+  /* Compact intro emblem on mobile so the shield never pushes the heading down the    */
+  /* page — small and reassuring, not a hero object (per the mobile spline policy).     */
   .dl-emblem {
-    width: 104px;
-    margin-bottom: clamp(18px, 5vw, 24px);
+    width: 80px;
+    margin-bottom: clamp(14px, 4vw, 20px);
   }
 }
 
 @media (max-width: 479px) {
   .dl-emblem {
-    width: 92px;
+    width: 64px;
   }
 }
 
@@ -2488,9 +2543,12 @@ a {
     border-radius: 24px;
   }
 
+  /* Compact, narrative rhythm: the header is content-height (the old 24vh min-height +  */
+  /* 14vh top padding stranded the contract card ~a screen below the title) and the      */
+  /* static card track follows right under it — heading → card with one tight gap.       */
   .dl-workflow__header {
-    min-height: clamp(120px, 24vh, 220px);
-    padding-top: clamp(96px, 14vh, 150px);
+    min-height: 0;
+    padding-top: clamp(40px, 7vh, 64px);
   }
 
   .dl-workflow__scroll {
@@ -2501,8 +2559,8 @@ a {
     position: static;
     height: auto;
     overflow: visible;
-    padding: clamp(72px, 12vh, 110px) 0 clamp(56px, 9vh, 96px);
-    gap: clamp(28px, 5vh, 48px);
+    padding: clamp(20px, 4vh, 32px) 0 clamp(40px, 7vh, 64px);
+    gap: clamp(24px, 4.5vh, 40px);
   }
 
   .dl-workflow__sticky::before {
@@ -3166,6 +3224,13 @@ a {
   color: var(--tk-pl);
   tab-size: 2;
   animation: dl-sec-code-in 220ms ease both;
+  /* Mobile browsers (iOS Safari / Chrome Android) auto-inflate text blocks by their  */
+  /* own font-boosting heuristic, which sizes each <pre> line differently by its       */
+  /* width — so the snippet renders with inconsistent per-line font sizes on phones.   */
+  /* Pin the adjust to 100% (scoped to the code, inherited by the lines) so every line */
+  /* keeps the CSS size; user pinch-zoom still works.                                  */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
 }
 
 @keyframes dl-sec-code-in {
@@ -3379,6 +3444,40 @@ a {
 }
 
 @media (max-width: 640px) {
+  /* Content-height (not a forced full screen) + compact rhythm so the section reads as */
+  /* a tidy reassurance panel, not an endless stack. */
+  .dl-sec {
+    min-height: auto;
+    padding-top: clamp(28px, 5vh, 40px);
+  }
+
+  .dl-sec__header {
+    margin-bottom: clamp(16px, 3vh, 24px);
+  }
+
+  .dl-sec__title {
+    font-size: clamp(25px, 7vw, 32px);
+  }
+
+  /* Typing is disabled on mobile, so the 3-line reserve just added dead space. */
+  .dl-sec__sub {
+    font-size: 13.5px;
+    min-height: 0;
+  }
+
+  /* Slimmer proof cards — smaller icon wells + tighter padding so the trust list stays */
+  /* compact rather than three tall blocks. */
+  .dl-sec-proof-card {
+    padding: 13px 14px;
+    gap: 11px;
+  }
+
+  .dl-sec-proof-card__icon {
+    width: 30px;
+    height: 30px;
+    border-radius: 9px;
+  }
+
   /* Stack the proof cards one-up on phones. */
   .dl-sec-proof {
     flex-direction: column;
@@ -3805,12 +3904,46 @@ a {
 }
 
 @media (max-width: 639px) {
+  .dl-faq {
+    padding-top: clamp(24px, 4vh, 36px);
+  }
+
+  .dl-faq__title {
+    font-size: clamp(25px, 6.8vw, 32px);
+    max-width: 22ch;
+  }
+
+  /* Compress the lifecycle trust card — less padding, a tighter top gap, smaller        */
+  /* markers and step rhythm so it doesn't read as a big block above the questions.      */
+  .dl-faq-trust {
+    margin-top: clamp(18px, 3vh, 26px);
+    padding: 16px;
+    gap: 12px;
+  }
+
+  .dl-faq-lifecycle__step {
+    padding: 6px 0;
+    font-size: 12.5px;
+    gap: 11px;
+  }
+
+  .dl-faq-lifecycle__dot {
+    width: 9px;
+    height: 9px;
+  }
+
+  /* Slimmer accordion rows + reduced open-answer padding on phones. */
   .dl-faq-item__trigger {
-    padding: 15px 16px;
+    padding: 13px 16px;
+  }
+
+  .dl-faq-item__q {
+    font-size: 14.5px;
   }
 
   .dl-faq-item__a {
-    padding: 0 16px 18px;
+    padding: 0 16px 14px;
+    font-size: 14px;
   }
 }
 

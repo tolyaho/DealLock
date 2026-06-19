@@ -137,6 +137,22 @@ async function captureVerificationToken(client: TestClient, email: string): Prom
   return decodeURIComponent(match[1]!);
 }
 
+// A fully onboarded account: wallet sign-in + verified email. Use this for any
+// flow that touches a requireVerified route (agreements / notifications / prefs).
+async function signInVerified(
+  privateKey: (typeof PRIVATE_KEYS)[number],
+  email: string,
+) {
+  const session = await signIn(privateKey);
+  const token = await captureVerificationToken(session.client, email);
+  const confirmed = await session.client.request("/email/confirm", {
+    method: "POST",
+    body: JSON.stringify({ token }),
+  });
+  assert.equal(confirmed.status, 200, JSON.stringify(confirmed.body));
+  return session;
+}
+
 async function withMutedConsoleEmail<T>(fn: () => Promise<T>): Promise<T> {
   const originalInfo = console.info;
   const originalWrite = process.stdout.write;
@@ -280,10 +296,42 @@ test("email verification stores only hashes, rejects expired tokens, and prevent
   assert.equal(duplicate.status, 409);
 });
 
+test("product data routes require a verified email, not just a wallet session", { concurrency: false }, async () => {
+  const user = await signIn(PRIVATE_KEYS[0]); // wallet session, email not yet verified
+
+  // A wallet-only session is blocked from product data with a distinguishable code.
+  const blocked = await user.client.request("/agreements");
+  assert.equal(blocked.status, 403, JSON.stringify(blocked.body));
+  assert.equal(blocked.body.code, "EMAIL_VERIFICATION_REQUIRED");
+
+  const prefsBlocked = await user.client.request("/notification-preferences");
+  assert.equal(prefsBlocked.status, 403, JSON.stringify(prefsBlocked.body));
+
+  // The onboarding routes stay reachable — that's how the user gets verified.
+  const me = await user.client.request("/me");
+  assert.equal(me.status, 200, JSON.stringify(me.body));
+  const emailState = await user.client.request("/email");
+  assert.equal(emailState.status, 200, JSON.stringify(emailState.body));
+
+  // Complete the email step.
+  const token = await captureVerificationToken(user.client, "owner@example.com");
+  const confirmed = await user.client.request("/email/confirm", {
+    method: "POST",
+    body: JSON.stringify({ token }),
+  });
+  assert.equal(confirmed.status, 200, JSON.stringify(confirmed.body));
+
+  // Now the same session reaches product data.
+  const ok = await user.client.request("/agreements");
+  assert.equal(ok.status, 200, JSON.stringify(ok.body));
+  assert.ok(Array.isArray(ok.body.agreements));
+});
+
 test("notification preferences and agreement contacts are editable only by involved accounts", { concurrency: false }, async () => {
-  const clientUser = await signIn(PRIVATE_KEYS[0]);
-  const providerUser = await signIn(PRIVATE_KEYS[1]);
-  const outsider = await signIn(PRIVATE_KEYS[2]);
+  // clientUser + outsider both call requireVerified routes, so both need a verified email.
+  const clientUser = await signInVerified(PRIVATE_KEYS[0], "owner-a@example.com");
+  const providerUser = await signIn(PRIVATE_KEYS[1]); // only used for the agreement address
+  const outsider = await signInVerified(PRIVATE_KEYS[2], "owner-c@example.com");
   await createAgreement(clientUser.address, providerUser.address);
 
   const prefs = await clientUser.client.request("/notification-preferences", {
@@ -313,7 +361,9 @@ test("notification preferences and agreement contacts are editable only by invol
 });
 
 test("contract action notifications skip, send, respect preferences, and dedupe", { concurrency: false }, async () => {
-  const clientUser = await signIn(PRIVATE_KEYS[0]);
+  // clientUser posts the actions (requireVerified). providerUser is the recipient and
+  // must start with no email — its email is set mid-test to exercise the send path.
+  const clientUser = await signInVerified(PRIVATE_KEYS[0], "client-actor@example.com");
   const providerUser = await signIn(PRIVATE_KEYS[1]);
   await createAgreement(clientUser.address, providerUser.address);
 
@@ -377,9 +427,10 @@ test("contract action notifications skip, send, respect preferences, and dedupe"
 });
 
 test("activity API is private to involved accounts and returns newest indexed events first", { concurrency: false }, async () => {
-  const clientUser = await signIn(PRIVATE_KEYS[0]);
-  const providerUser = await signIn(PRIVATE_KEYS[1]);
-  const outsider = await signIn(PRIVATE_KEYS[2]);
+  // all three query the activity route (requireVerified), so all need a verified email.
+  const clientUser = await signInVerified(PRIVATE_KEYS[0], "owner-a@example.com");
+  const providerUser = await signInVerified(PRIVATE_KEYS[1], "owner-b@example.com");
+  const outsider = await signInVerified(PRIVATE_KEYS[2], "owner-c@example.com");
   const agreement = await createAgreement(clientUser.address, providerUser.address);
 
   await db.chainEvent.createMany({

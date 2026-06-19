@@ -4,8 +4,9 @@
  * scene modelled on the reference render:
  *
  *   LEFT  — a light brushed-metal wall with a fluted side panel, an engraved
- *           caption, and the escrow vault (the vault-door Spline scene) set into a
- *           soft brushed-silver inset well with a silver glow; a soft floor glow.
+ *           caption, and the escrow vault (the vault-door Spline scene) mounted into a
+ *           machined wall socket: a carved pocket behind it and a rim/lip in front, so
+ *           the safe reads as set THROUGH the wall; a soft floor glow.
  *   RIGHT — a clean light panel carrying the wallet-first sign-in form: brand,
  *           headline, subtitle, the {children} steps, and an "Enterprise-grade
  *           security" reassurance card. A {footer} slot sits at the very bottom.
@@ -50,10 +51,12 @@ export default function AuthLayout({ title, subtitle, children, footer }: AuthLa
                 until milestones are met and approved.
               </span>
             </div>
-            <div className="dl-auth__niche">
-              <div className="dl-auth__niche-inner">
+            <div className="dl-auth__vault-stage">
+              <span className="dl-auth__vault-socket" />
+              <div className="dl-auth__vault-object">
                 <AuthVaultSpline />
               </div>
+              <span className="dl-auth__vault-lip" />
             </div>
           </div>
           <span className="dl-auth__floor" />
