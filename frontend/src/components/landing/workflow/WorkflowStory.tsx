@@ -47,10 +47,12 @@ function cardPosition(index: number, activeStep: number): CardPosition {
 // per-character re-laid-out a big text node on every keystroke while the header was
 // still scrolling through the viewport, and that concurrent relayout stuttered. So the
 // title just fades in with the eyebrow; a short beat later the subtitle types out in
-// small mono — which reveals as smoothly as the pinned contract narration does.
-const WF_TITLE = "The Milestone Flow";
+// small mono. The copy is product-explanatory — it teaches the model (one agreement,
+// five steps, funds locked the whole way) before the visitor touches anything.
+const WF_EYEBROW = "The Milestone Flow";
+const WF_TITLE = "One agreement. Five steps. Funds locked the whole way.";
 const WF_SUB =
-  "DealLock secures each milestone. Funds stay locked until work is approved.";
+  "Money is held by the escrow contract — never by DealLock — and moves only as each milestone step is met.";
 const WF_SUB_SPEED = 15;
 const WF_SUB_DELAY = 520;
 
@@ -65,7 +67,7 @@ export default function WorkflowStory() {
     [],
   );
 
-  const { activeStep } = useWorkflowStep({
+  const { activeStep, scrollToStep } = useWorkflowStep({
     trackRef,
     cardRefs,
     stepCount: STEP_COUNT,
@@ -110,8 +112,6 @@ export default function WorkflowStory() {
     [],
   );
 
-  const narration = WORKFLOW_STEPS[Math.min(activeStep, STEP_COUNT - 1)].typewriter;
-
   return (
     <section id="workflow" className="dl-workflow" aria-labelledby="dl-workflow-title">
       <div className="dl-workflow__bg" aria-hidden="true">
@@ -127,7 +127,7 @@ export default function WorkflowStory() {
       {/* contract-card scene takes over and pins as the central focal object.        */}
       <header className="dl-workflow__header" ref={headerRef}>
         <span className={`dl-workflow__eyebrow${headerInView ? " is-in" : ""}`}>
-          Workflow
+          {WF_EYEBROW}
         </span>
         <h2
           id="dl-workflow-title"
@@ -158,9 +158,10 @@ export default function WorkflowStory() {
           <div className="dl-workflow__scene">
             <div className="dl-workflow__center">
               <WorkflowContractStage activeStep={activeStep} />
-              <p className="dl-workflow__narration">
-                <TypewriterText key={activeStep} text={narration} />
-              </p>
+              {/* The card carries the current-state narrative now (its CURRENT STEP   */}
+              {/* block), so this is just the interaction hint — the flow walks on      */}
+              {/* scroll, and any step card can be tapped to jump there.                */}
+              <p className="dl-workflow__hint">Scroll — or tap a step — to walk the flow</p>
             </div>
 
             {WORKFLOW_STEPS.map((step, i) => (
@@ -173,6 +174,7 @@ export default function WorkflowStory() {
                 index={i}
                 position={cardPosition(i, activeStep)}
                 done={i < activeStep}
+                onSelect={scrollToStep}
                 // Desktop grid column; ignored once the scene switches to flex on mobile.
                 style={placement[i]}
               />

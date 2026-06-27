@@ -1,18 +1,22 @@
 /*
- * ContractCardOverlay — the readable contract UI rendered as crisp HTML/CSS on
- * top of the CSS metal/glass material plate (see WorkflowContractStage). The
- * important text lives here (not in the plate) so it stays sharp, updates
- * instantly per scroll step, and is responsive.
+ * ContractCardOverlay — the readable contract UI and the "source of truth" for the
+ * escrow state. Rendered as crisp HTML/CSS over the metal/glass material plate (see
+ * WorkflowContractStage), it answers, at a glance, the three questions a first-time
+ * visitor has:
  *
- * Everything it shows is derived from a single `activeStep` index:
- *   - the status chip text + tone follow step.cardStatus
- *   - exactly one row carries the soft purple "active" highlight (step.activeRow)
- *   - the Created→Released timeline fills to step.progressIndex
- *   - the provider wallet stays masked until the provider has accepted (step 2)
- *   - the amount panel narrates pending → locked → released
+ *   What happened?  → the status chip + CURRENT STEP block
+ *   Where is the money? → the Client → Escrow → Provider capsule + the amount lock pill
+ *   Who acts next?  → the CURRENT STEP sentence
  *
- * The overlay is decorative/illustrative (the action cards carry the accessible
- * narrative), so the stage wrapper marks it aria-hidden.
+ * Everything is derived from a single `activeStep` index:
+ *   - the status chip text + tone follow step.cardStatus / step.statusTone
+ *   - the escrow capsule lock + amount lock pill narrate pending → locked → released
+ *   - exactly one region carries the soft purple "active" highlight (step.activeRow)
+ *   - the Created→Released escrow rail fills to step.progressIndex (1:1 with the step)
+ *   - the CURRENT STEP block restates the active step in plain language (step.caption)
+ *
+ * The overlay is decorative/illustrative (the clickable action cards carry the
+ * accessible narrative), so the stage wrapper marks it aria-hidden.
  */
 
 import { memo } from "react";
@@ -20,17 +24,7 @@ import {
   CONTRACT,
   PROGRESS_LABELS,
   WORKFLOW_STEPS,
-  type CardStatus,
 } from "./workflowSteps";
-
-const STATUS_TONE: Record<CardStatus, string> = {
-  Draft: "draft",
-  Accepted: "accepted",
-  Funded: "funded",
-  Submitted: "submitted",
-  Approved: "approved",
-  Released: "released",
-};
 
 interface Props {
   activeStep: number;
@@ -38,28 +32,35 @@ interface Props {
 
 function ContractCardOverlay({ activeStep }: Props) {
   const step = WORKFLOW_STEPS[Math.min(activeStep, WORKFLOW_STEPS.length - 1)];
-  const { activeRow, cardStatus, progressIndex } = step;
+  const { activeRow, cardStatus, statusTone, caption, progressIndex } = step;
 
-  const providerRevealed = activeStep >= 1; // provider accepted
-  const amountState =
-    activeStep >= 5 ? "released" : activeStep >= 2 ? "locked" : "pending";
+  // Money state drives the escrow lock + amount pill: nothing locked at step 0,
+  // locked while work is in flight, released once the contract pays out (step 5).
+  const moneyState =
+    activeStep >= 4 ? "released" : activeStep >= 1 ? "locked" : "pending";
 
-  const rowActive = (...rows: string[]) =>
-    rows.includes(activeRow) ? " is-active" : "";
+  const lockText =
+    moneyState === "released"
+      ? "Released to provider"
+      : moneyState === "locked"
+        ? "Locked in escrow"
+        : "Not yet funded";
+
+  const rowActive = (row: string) => (row === activeRow ? " is-active" : "");
 
   return (
     <div className="dl-contract">
       {/* Brand + live status chip */}
       <header className="dl-contract__top">
         <span className="dl-contract__brand">DEALLOCK</span>
-        <span className={`dl-contract__chip dl-contract__chip--${STATUS_TONE[cardStatus]}`}>
+        <span className={`dl-contract__chip dl-contract__chip--${statusTone}`}>
           <span className="dl-contract__chip-dot" />
           {cardStatus}
         </span>
       </header>
 
-      {/* Agreement title */}
-      <div className={`dl-contract__title-row${rowActive("agreement")}`}>
+      {/* Agreement title + network */}
+      <div className="dl-contract__title-row">
         <span className="dl-contract__eyebrow">Milestone Agreement</span>
         <span className="dl-contract__net">
           <span className="dl-contract__net-dot" />
@@ -67,22 +68,37 @@ function ContractCardOverlay({ activeStep }: Props) {
         </span>
       </div>
 
-      {/* Parties */}
-      <div className={`dl-contract__parties${rowActive("provider")}`}>
-        <div className="dl-contract__party">
+      {/* Parties + escrow capsule — Client → Escrow contract → Provider. The escrow */}
+      {/* lock in the middle is where the money sits; it lights up while funds locked. */}
+      <div className={`dl-contract__parties${rowActive("parties")}`}>
+        <div className="dl-contract__party dl-contract__party--client">
           <span className="dl-contract__party-label">Client</span>
           <span className="dl-contract__party-addr">{CONTRACT.client}</span>
         </div>
-        <span className="dl-contract__party-link" aria-hidden="true" />
-        <div
-          className={`dl-contract__party dl-contract__party--provider${
-            providerRevealed ? " is-revealed" : ""
-          }`}
-        >
-          <span className="dl-contract__party-label">Provider</span>
-          <span className="dl-contract__party-addr">
-            {providerRevealed ? CONTRACT.provider : "Awaiting…"}
+
+        <div className={`dl-contract__escrow dl-contract__escrow--${moneyState}`}>
+          <span className="dl-contract__escrow-flow">
+            <span className="dl-contract__escrow-arrow" aria-hidden="true">→</span>
+            <span className="dl-contract__escrow-icon" aria-hidden="true">
+              {moneyState === "released" ? (
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+                  <path d="M20 6 9 17l-5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+                </svg>
+              ) : (
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none">
+                  <rect x="5" y="11" width="14" height="9" rx="2" stroke="currentColor" strokeWidth="1.8" />
+                  <path d="M8 11V8a4 4 0 0 1 8 0" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+                </svg>
+              )}
+            </span>
+            <span className="dl-contract__escrow-arrow" aria-hidden="true">→</span>
           </span>
+          <span className="dl-contract__escrow-label">Escrow</span>
+        </div>
+
+        <div className="dl-contract__party dl-contract__party--provider">
+          <span className="dl-contract__party-label">Provider</span>
+          <span className="dl-contract__party-addr">{CONTRACT.provider}</span>
         </div>
       </div>
 
@@ -92,15 +108,17 @@ function ContractCardOverlay({ activeStep }: Props) {
         <span className="dl-contract__milestone-count">{CONTRACT.milestoneCount}</span>
       </div>
 
-      {/* Amount locked */}
-      <div className={`dl-contract__amount dl-contract__amount--${amountState}${rowActive("amount", "release")}`}>
+      {/* Amount locked — the financial anchor. The lock pill is part of this module */}
+      {/* (not a floating tag) so the "Locked in escrow" state reads as the value's    */}
+      {/* status, and it narrates pending → locked → released.                          */}
+      <div className={`dl-contract__amount dl-contract__amount--${moneyState}${rowActive("amount")}`}>
         <div className="dl-contract__amount-main">
           <span className="dl-contract__amount-eth">{CONTRACT.amount}</span>
           <span className="dl-contract__amount-usd">≈ {CONTRACT.usd} USD</span>
         </div>
-        <span className="dl-contract__amount-state">
+        <span className="dl-contract__lock">
           <svg width="12" height="12" viewBox="0 0 24 24" fill="none" aria-hidden="true">
-            {amountState === "released" ? (
+            {moneyState === "released" ? (
               <path d="M20 6 9 17l-5-5" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
             ) : (
               <>
@@ -109,16 +127,12 @@ function ContractCardOverlay({ activeStep }: Props) {
               </>
             )}
           </svg>
-          {amountState === "released"
-            ? "Released to provider"
-            : amountState === "locked"
-              ? "Locked in escrow"
-              : "Not yet locked"}
+          {lockText}
         </span>
       </div>
 
-      {/* Progress timeline */}
-      <div className={`dl-contract__progress${rowActive("submission", "approval", "release")}`}>
+      {/* Escrow rail — Created → Released, fills to the current step. */}
+      <div className={`dl-contract__progress${rowActive("progress")}`}>
         {PROGRESS_LABELS.map((label, i) => {
           const node =
             i < progressIndex ? "done" : i === progressIndex ? "current" : "pending";
@@ -137,10 +151,25 @@ function ContractCardOverlay({ activeStep }: Props) {
         })}
       </div>
 
-      {/* Contract address */}
+      {/* Current step — the plain-language "what's happening now" block. */}
+      <div className="dl-contract__current">
+        <span className="dl-contract__current-dot" aria-hidden="true" />
+        <div className="dl-contract__current-body">
+          <span className="dl-contract__current-label">Current step</span>
+          <span className="dl-contract__current-text">{caption}</span>
+        </div>
+      </div>
+
+      {/* Footer — on-chain verification + contract address. */}
       <footer className="dl-contract__addr">
-        <span className="dl-contract__addr-label">Contract</span>
-        <span className="dl-contract__addr-hash">{CONTRACT.address}</span>
+        <span className="dl-contract__verified">
+          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" aria-hidden="true">
+            <path d="M12 2.5l7.5 3v5.2c0 4.6-3.1 8.4-7.5 9.8-4.4-1.4-7.5-5.2-7.5-9.8V5.5l7.5-3z" stroke="currentColor" strokeWidth="1.6" strokeLinejoin="round" />
+            <path d="M9 12l2 2 4-4" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round" />
+          </svg>
+          Verified on-chain
+        </span>
+        <span className="dl-contract__addr-hash">Contract {CONTRACT.address}</span>
       </footer>
     </div>
   );

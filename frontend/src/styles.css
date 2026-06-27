@@ -1463,8 +1463,10 @@ a {
   --wf-card-w: min(42vw, 600px);
   /* The central card is the pinned focal object (the title scrolls through above it, */
   /* so the card gets the full pinned screen) — tall enough to dominate the flanking  */
-  /* action cards, which nestle within its height.                                    */
-  --wf-card-h: min(74vh, 720px);
+  /* action cards, which nestle within its height. The card now carries more product  */
+  /* detail (escrow capsule, current-step block, verified footer), so it's a touch    */
+  /* taller than before.                                                              */
+  --wf-card-h: min(80vh, 772px);
 
   position: relative;
   z-index: 1;
@@ -1617,26 +1619,37 @@ a {
 }
 
 .dl-workflow__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 11px;
   font-family: var(--dl-mono);
   font-size: 11px;
   font-weight: 500;
-  letter-spacing: 0.26em;
+  letter-spacing: 0.3em;
   text-transform: uppercase;
   color: var(--dl-muted);
 }
 
+/* Flanking hairlines, like a section divider — frames the eyebrow as a chapter mark. */
+.dl-workflow__eyebrow::before,
+.dl-workflow__eyebrow::after {
+  content: "";
+  width: 26px;
+  height: 1px;
+  background: var(--dl-hairline-strong);
+}
+
 .dl-workflow__title {
   font-family: var(--dl-display);
-  font-size: clamp(28px, 3.4vw, 46px);
+  /* The headline is now a product-explanatory sentence ("One agreement. Five steps.  */
+  /* Funds locked the whole way."), so it WRAPS to 2–3 balanced lines instead of one.  */
+  font-size: clamp(25px, 3vw, 40px);
   font-weight: 600;
   letter-spacing: -0.02em;
-  line-height: 1.04;
+  line-height: 1.14;
   color: var(--dl-ink);
-  /* One-line floor only. The title is FIXED (it fades in, never types), and on every */
-  /* supported width "The Milestone Flow" sits on one line — so reserving two lines    */
-  /* just left a dead band above the subtitle. min-height is a floor, so a narrow      */
-  /* phone that wraps the title still grows the box (no clipping); the sub follows it.  */
-  min-height: 1.1em;
+  max-width: 19ch;
+  text-wrap: balance;
 }
 
 /* A touch wider/blockier caret to suit the large display title. */
@@ -1684,14 +1697,17 @@ a {
   gap: clamp(16px, 2.4vh, 26px);
 }
 
-.dl-workflow__narration {
+/* Interaction hint under the card. The card's CURRENT STEP block now carries the    */
+/* current-state narrative, so this is purely the affordance cue: the flow walks on   */
+/* scroll, and any step can be tapped. Quiet, uppercase, tracked — like the comp.     */
+.dl-workflow__hint {
   font-family: var(--dl-mono);
-  font-size: clamp(13.5px, 1.15vw, 15.5px);
-  line-height: 1.58;
-  color: var(--dl-body);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--dl-muted);
   text-align: center;
-  max-width: 34ch;
-  min-height: 2.4em;
 }
 
 .dl-wf-caret {
@@ -1731,6 +1747,9 @@ a {
   width: min(100%, 326px);
   padding: 18px 20px;
   border-radius: 22px;
+  /* The whole card is a button (walks the flow to its step) — make that tappable. */
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
   will-change: opacity, transform;
   /* Near-opaque face over the uniform matte wall — no backdrop-filter. A live       */
   /* backdrop blur on six cards was a per-frame recomposite that made scrolling janky */
@@ -1776,6 +1795,26 @@ a {
     0 1px 2px rgba(17, 19, 21, 0.04),
     0 18px 40px rgba(17, 19, 21, 0.09),
     0 0 0 3px var(--dl-accent-surface);
+}
+
+/* Hover/focus affordance — the cards are buttons. Faint neighbours brighten so they  */
+/* read as reachable; the edge darkens; keyboard focus gets a clear accent ring.       */
+.dl-wf-card:hover {
+  border-color: rgba(17, 19, 21, 0.18);
+}
+
+.dl-wf-card.is-prev:hover,
+.dl-wf-card.is-next:hover {
+  opacity: 0.62;
+}
+
+.dl-wf-card:focus-visible {
+  outline: none;
+  border-color: var(--dl-accent-line);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.85),
+    0 0 0 3px var(--dl-accent-surface),
+    0 18px 40px rgba(17, 19, 21, 0.10);
 }
 
 /* Previous step — sits faint, just ABOVE the active/contract centre line. */
@@ -1851,6 +1890,38 @@ a {
 
 .dl-wf-card.is-active .dl-wf-card__role {
   color: var(--dl-accent-strong);
+}
+
+/* State tag — DONE / ACTIVE NOW / UPCOMING. Calm-confirmed, dominant, secondary, all */
+/* on one pill so the card's status is legible before any interaction.                 */
+.dl-wf-card__tag {
+  margin-left: auto;
+  font-family: var(--dl-mono);
+  font-size: 8.5px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  padding: 3px 8px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  transition: color 320ms ease, background 320ms ease, border-color 320ms ease;
+}
+
+.dl-wf-card__tag--active {
+  color: var(--dl-accent-strong);
+  background: var(--dl-accent-surface);
+  border-color: var(--dl-accent-line);
+}
+
+.dl-wf-card__tag--done {
+  color: var(--dl-success);
+  background: var(--dl-success-surface);
+}
+
+.dl-wf-card__tag--upcoming {
+  color: var(--dl-muted);
+  background: rgba(17, 19, 21, 0.045);
 }
 
 .dl-wf-card__num {
@@ -2048,11 +2119,14 @@ a {
   z-index: 1;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
+  /* Group from the top with a tight, even rhythm; the footer is pushed to the bottom  */
+  /* (margin-top:auto on .dl-contract__addr). This reads as deliberate grouping rather  */
+  /* than space-between loosely spreading every row apart on tall cards.                */
+  justify-content: flex-start;
   width: 68%;
   height: 76%;
-  gap: clamp(9px, 1.4vh, 15px);
-  padding: clamp(18px, 1.8vw, 28px);
+  gap: clamp(8px, 1.15vh, 13px);
+  padding: clamp(18px, 1.8vw, 26px);
   border-radius: 22px;
   font-variant-numeric: tabular-nums;
   /* Opaque satin panel inlaid into the metal housing: a soft top sheen over a warm     */
@@ -2109,32 +2183,14 @@ a {
   background: currentColor;
 }
 
-.dl-contract__chip--draft {
-  color: var(--dl-muted);
-  background: rgba(17, 19, 21, 0.05);
-  border-color: rgba(17, 19, 21, 0.08);
-}
-
-.dl-contract__chip--accepted {
-  color: var(--dl-steel-500);
-  background: rgba(109, 116, 116, 0.1);
-  border-color: rgba(109, 116, 116, 0.18);
-}
-
-.dl-contract__chip--funded {
+/* Two tones only: purple while the agreement is in flight, green once it's settled.   */
+.dl-contract__chip--progress {
   color: var(--dl-accent-strong);
   background: var(--dl-accent-surface);
   border-color: var(--dl-accent-line);
 }
 
-.dl-contract__chip--submitted {
-  color: var(--dl-info);
-  background: var(--dl-info-surface);
-  border-color: rgba(58, 94, 139, 0.2);
-}
-
-.dl-contract__chip--approved,
-.dl-contract__chip--released {
+.dl-contract__chip--done {
   color: var(--dl-success);
   background: var(--dl-success-surface);
   border-color: rgba(58, 125, 92, 0.22);
@@ -2153,10 +2209,13 @@ a {
   transition: background 360ms ease, box-shadow 360ms ease;
 }
 
+/* The progress rail is intentionally NOT in this set: its current node already glows  */
+/* "you are here", and a full-row wash there would stack against the purple CURRENT    */
+/* STEP block right below it — too much purple in the lower card. The rail stays a      */
+/* clean precision instrument; the parties capsule and amount module carry the wash.    */
 .is-active.dl-contract__title-row,
 .is-active.dl-contract__parties,
-.is-active.dl-contract__amount,
-.is-active.dl-contract__progress {
+.is-active.dl-contract__amount {
   --wf-ring: var(--dl-accent-line);
   --wf-wash: var(--dl-accent-surface);
 }
@@ -2201,12 +2260,15 @@ a {
   background: var(--dl-steel-400);
 }
 
-/* Recessed soft well — a genuine inset surface inside the panel, holding the parties. */
+/* Recessed soft well holding the money-flow model: Client → Escrow → Provider. The   */
+/* escrow capsule in the middle is where the funds actually sit, so it's the visual    */
+/* anchor of "DealLock never holds the money — the contract does".                     */
 .dl-contract__parties {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  gap: 10px;
-  padding: 11px 13px;
+  gap: clamp(8px, 1.1vw, 14px);
+  padding: clamp(11px, 1.3vw, 14px) clamp(13px, 1.4vw, 16px);
   border-radius: 14px;
   background:
     linear-gradient(var(--wf-wash), var(--wf-wash)),
@@ -2220,9 +2282,77 @@ a {
 .dl-contract__party {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  flex: 1;
+  gap: 3px;
   min-width: 0;
+}
+
+/* Provider mirrors the client on the far side of the escrow capsule. */
+.dl-contract__party--provider {
+  align-items: flex-end;
+  text-align: right;
+}
+
+/* Escrow capsule — the centre column. The lock icon lights lavender while funds are  */
+/* held and turns green (check) once released, so the money's location is always read. */
+.dl-contract__escrow {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+
+.dl-contract__escrow-flow {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.dl-contract__escrow-arrow {
+  color: var(--dl-steel-300);
+  font-size: 12px;
+  line-height: 1;
+  transition: color 320ms ease;
+}
+
+.dl-contract__escrow-icon {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: #fff;
+  border: 1px solid var(--dl-hairline-strong);
+  color: var(--dl-steel-500);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 1px 2px rgba(17, 19, 21, 0.06);
+  transition: color 320ms ease, border-color 320ms ease, box-shadow 320ms ease;
+}
+
+.dl-contract__escrow-label {
+  font-family: var(--dl-mono);
+  font-size: 8px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--dl-muted);
+}
+
+.dl-contract__escrow--locked .dl-contract__escrow-icon {
+  color: var(--dl-accent-strong);
+  border-color: var(--dl-accent-line);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 0 0 3px var(--dl-accent-surface),
+    0 1px 5px var(--dl-accent-glow);
+}
+
+.dl-contract__escrow--locked .dl-contract__escrow-arrow {
+  color: var(--dl-accent);
+}
+
+.dl-contract__escrow--released .dl-contract__escrow-icon {
+  color: var(--dl-success);
+  border-color: rgba(58, 125, 92, 0.3);
 }
 
 .dl-contract__party-label {
@@ -2241,23 +2371,6 @@ a {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-
-.dl-contract__party--provider .dl-contract__party-addr {
-  color: var(--dl-muted);
-  font-style: italic;
-}
-
-.dl-contract__party--provider.is-revealed .dl-contract__party-addr {
-  color: var(--dl-ink);
-  font-style: normal;
-}
-
-.dl-contract__party-link {
-  flex: none;
-  width: 18px;
-  height: 1px;
-  background: var(--dl-hairline-strong);
 }
 
 .dl-contract__milestone {
@@ -2340,7 +2453,7 @@ a {
 
 .dl-contract__amount-eth {
   font-family: var(--dl-mono);
-  font-size: clamp(27px, 2.8vw, 36px);
+  font-size: clamp(26px, 2.6vw, 33px);
   font-weight: 500;
   letter-spacing: -0.018em;
   line-height: 1;
@@ -2354,32 +2467,45 @@ a {
   color: var(--dl-muted);
 }
 
-.dl-contract__amount-state {
+/* The lock pill lives INSIDE the amount module, so "Locked in escrow" reads as the    */
+/* status of this value — not a floating tag. It narrates pending → locked → released. */
+.dl-contract__lock {
   display: inline-flex;
   align-items: center;
-  justify-content: flex-end;
-  gap: 4px;
-  flex: 1;
-  min-width: 0;
+  gap: 6px;
+  flex: none;
   font-family: var(--dl-mono);
-  font-size: 8.5px;
+  font-size: 10px;
+  font-weight: 500;
   letter-spacing: 0.02em;
-  text-align: right;
-  line-height: 1.3;
-  color: var(--dl-muted);
-  transition: color 320ms ease;
+  white-space: nowrap;
+  padding: 7px 12px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  transition: color 320ms ease, background 320ms ease, border-color 320ms ease;
 }
 
-.dl-contract__amount-state svg {
+.dl-contract__lock svg {
   flex: none;
 }
 
-.dl-contract__amount--locked .dl-contract__amount-state {
-  color: var(--dl-accent-strong);
+.dl-contract__amount--pending .dl-contract__lock {
+  color: var(--dl-muted);
+  background: rgba(17, 19, 21, 0.045);
+  border-color: rgba(17, 19, 21, 0.08);
 }
 
-.dl-contract__amount--released .dl-contract__amount-state {
+.dl-contract__amount--locked .dl-contract__lock {
+  color: var(--dl-accent-strong);
+  background: var(--dl-accent-surface);
+  border-color: var(--dl-accent-line);
+}
+
+.dl-contract__amount--released .dl-contract__lock {
   color: var(--dl-success);
+  background: var(--dl-success-surface);
+  border-color: rgba(58, 125, 92, 0.26);
 }
 
 .dl-contract__progress {
@@ -2501,41 +2627,113 @@ a {
   color: var(--dl-body);
 }
 
+/* CURRENT STEP — the plain-language "what's happening now" block. A permanent, gently */
+/* lavender-tinted module so the eye always has one place that says, in words, what    */
+/* the escrow just did and who acts next. This is the card's narrative voice.          */
+.dl-contract__current {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: clamp(10px, 1.25vw, 13px) clamp(12px, 1.35vw, 15px);
+  border-radius: 13px;
+  background: linear-gradient(180deg, rgba(111, 99, 189, 0.075) 0%, rgba(111, 99, 189, 0.04) 100%);
+  border: 1px solid var(--dl-accent-line);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55);
+}
+
+.dl-contract__current-dot {
+  flex: none;
+  position: relative;
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  display: grid;
+  place-items: center;
+  background: #fff;
+  border: 1px solid var(--dl-accent-line);
+}
+
+.dl-contract__current-dot::after {
+  content: "";
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 38% 32%, #8a7fd0 0%, var(--dl-accent) 72%);
+  box-shadow: 0 0 0 3px var(--dl-accent-surface);
+}
+
+.dl-contract__current-body {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.dl-contract__current-label {
+  font-family: var(--dl-mono);
+  font-size: 8px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--dl-accent-strong);
+}
+
+.dl-contract__current-text {
+  font-family: var(--dl-mono);
+  font-size: 11.5px;
+  line-height: 1.42;
+  color: var(--dl-ink);
+}
+
+/* Footer — on-chain verification (the trust signal) + the contract address. Pinned to */
+/* the card's bottom edge (margin-top:auto) so the content above can group tightly.    */
 .dl-contract__addr {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding-top: clamp(10px, 1.4vh, 16px);
+  gap: 10px;
+  margin-top: auto;
+  padding-top: clamp(10px, 1.4vh, 15px);
   border-top: 1px solid var(--dl-hairline);
 }
 
-.dl-contract__addr-label {
+.dl-contract__verified {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   font-family: var(--dl-mono);
-  font-size: 8.5px;
-  letter-spacing: 0.08em;
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--dl-muted);
+  color: var(--dl-success);
+}
+
+.dl-contract__verified svg {
+  flex: none;
 }
 
 .dl-contract__addr-hash {
   font-family: var(--dl-mono);
-  font-size: 11px;
-  color: var(--dl-body);
+  font-size: 10.5px;
+  color: var(--dl-muted);
+  white-space: nowrap;
 }
 
 /* ── Tablet / mobile: single-column stack with a sticky card ─────────────────── */
 
 @media (max-width: 960px) {
   .dl-workflow {
-    --wf-card-w: min(90vw, 430px);
-    --wf-card-h: min(124vw, 540px);
+    --wf-card-w: min(92vw, 440px);
+    /* Taller stage so the richer card (escrow capsule + current-step block + footer)  */
+    /* fits without clipping when it scrolls normally at the top of the mobile stack.   */
+    --wf-card-h: min(158vw, 668px);
   }
 
   /* The readable panel takes more of the (smaller) stage so text stays legible;     */
   /* the material plate sits tighter behind it.                                      */
   .dl-contract {
-    width: 84%;
-    height: 82%;
+    width: 86%;
+    height: 87%;
   }
 
   .dl-contract-stage__material {
@@ -2625,8 +2823,13 @@ a {
 
 @media (max-width: 540px) {
   .dl-workflow {
-    --wf-card-w: min(94vw, 380px);
-    --wf-card-h: min(128vw, 488px);
+    --wf-card-w: min(94vw, 390px);
+    --wf-card-h: min(176vw, 612px);
+  }
+
+  .dl-contract {
+    width: 90%;
+    height: 88%;
   }
 
   .dl-wf-card {
@@ -2644,13 +2847,19 @@ a {
 
 @media (min-width: 961px) and (max-height: 860px) {
   .dl-workflow {
-    --wf-card-h: min(70vh, 600px);
+    --wf-card-h: min(80vh, 690px);
   }
 }
 
 @media (min-width: 961px) and (max-height: 760px) {
   .dl-workflow {
-    --wf-card-h: min(66vh, 520px);
+    --wf-card-h: min(82vh, 612px);
+  }
+
+  /* Drop the least-essential row so the flow blocks (parties, amount, rail, current  */
+  /* step) keep room without crowding when the pinned area is short.                  */
+  .dl-contract__milestone {
+    display: none;
   }
 
   /* Only the active card — prev/next would fight the active card + contract for the   */
@@ -2681,7 +2890,13 @@ a {
 
 @media (min-width: 961px) and (max-height: 640px) {
   .dl-workflow {
-    --wf-card-h: min(70vh, 430px);
+    --wf-card-h: min(90vh, 540px);
+  }
+
+  /* Very short: also fold away the current-step block's roomy padding + the milestone */
+  /* (already hidden above) so the core escrow story still fits without clipping.      */
+  .dl-contract__current {
+    padding: 9px 11px;
   }
 
   /* Below ~640px tall the 560 min-height would center content in a box taller than the */

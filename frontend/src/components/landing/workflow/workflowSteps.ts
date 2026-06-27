@@ -1,40 +1,42 @@
 /*
- * Single source of truth for the workflow scrollytelling section. Mirrors
- * docs/deallock_workflow_agent_pack/workflow_steps.json, typed and enriched with
- * the derived fields the overlay needs (progressIndex) so the JSON stays a clean
- * authoring artifact and the component never parses it at runtime.
+ * Single source of truth for the workflow scrollytelling section — five steps that
+ * narrate the escrow lifecycle so a first-time visitor builds the mental model in a
+ * few seconds:
  *
- * Six steps narrate the escrow lifecycle: client actions render on the LEFT,
- * provider/system actions on the RIGHT (see `side`). The central contract card
- * reads `cardStatus` (status chip), `activeRow` (which overlay row glows) and
- * `progressIndex` (how far the Created→Released timeline has filled).
+ *   01 Client creates terms → 02 Client locks funds → 03 Provider submits work →
+ *   04 Client approves → 05 Smart contract releases payment.
+ *
+ * The central contract card is the "source of truth": every step drives its status
+ * chip (`cardStatus`/`statusTone`), the highlighted region (`activeRow`), the
+ * Created→Released escrow rail (`progressIndex`, now 1:1 with the step index), and
+ * the in-card CURRENT STEP block (`caption`) that answers "what happened / where is
+ * the money / who acts next".
+ *
+ * Client steps render on the LEFT column, the provider step continues the left
+ * column (client-side work), and the resolution steps (approve, release) move to the
+ * RIGHT — so the eye travels client work → resolution as the scene advances.
  */
 
 export type WorkflowSide = "left" | "right";
-export type WorkflowRole = "client" | "provider" | "escrow";
+export type WorkflowRole = "client" | "provider" | "contract";
 
 /** Status chip text shown on the contract overlay for each step. */
 export type CardStatus =
-  | "Draft"
-  | "Accepted"
-  | "Funded"
-  | "Submitted"
+  | "Created"
+  | "Funds locked"
+  | "Awaiting approval"
   | "Approved"
   | "Released";
 
+/** Status chip colour family: purple while in-flight, green once settled. */
+export type StatusTone = "progress" | "done";
+
 /** Which overlay region receives the soft purple "active" highlight. */
-export type HighlightRow =
-  | "agreement"
-  | "provider"
-  | "amount"
-  | "submission"
-  | "approval"
-  | "release";
+export type HighlightRow = "parties" | "amount" | "progress";
 
 /** Icon keys resolved in workflowIcons.tsx — monochrome stroke glyphs. */
 export type WorkflowIconKey =
   | "create"
-  | "accept"
   | "lock"
   | "submit"
   | "approve"
@@ -48,17 +50,21 @@ export interface WorkflowStep {
   icon: WorkflowIconKey;
   title: string;
   body: string;
+  /** Status chip text on the central card for this step. */
   cardStatus: CardStatus;
+  /** Status chip colour family. */
+  statusTone: StatusTone;
+  /** Which card region glows for this step (feed-forward: step → affected area). */
   activeRow: HighlightRow;
-  typewriter: string;
-  /* Index into PROGRESS_LABELS that this step has reached (0–4). Steps 1 & 2 both */
-  /* sit at "Created" — the escrow timeline only advances once funds move.          */
+  /** The in-card CURRENT STEP sentence — the plain-language "what's happening now". */
+  caption: string;
+  /* Index into PROGRESS_LABELS this step has reached (0–4), 1:1 with the step. */
   progressIndex: number;
-  /* Desktop pacing weight — how much of the pinned scroll track this step holds    */
-  /* before the next one takes over, relative to the others (default 1 = even). The  */
-  /* raw bands are mathematically even, but the fund-lock step (the pivotal "money   */
-  /* is now locked" beat) reads as too quick a hand-off into "Provider submits", so   */
-  /* it gets extra dwell. Only affects WHEN activeStep flips on desktop, not layout. */
+  /* Desktop pacing weight — how much of the pinned scroll track this step holds      */
+  /* before the next one takes over, relative to the others (default 1 = even). The   */
+  /* fund-lock step (the pivotal "money is now locked" beat) gets extra dwell so it    */
+  /* doesn't hand off into "Provider submits" too quickly. Only affects WHEN the       */
+  /* active step flips on desktop, not layout.                                         */
   scrollWeight?: number;
 }
 
@@ -69,85 +75,76 @@ export const WORKFLOW_STEPS: WorkflowStep[] = [
     role: "client",
     side: "left",
     icon: "create",
-    title: "Client creates agreement",
-    body: "The client defines the project, milestone, amount, deadline, and release condition.",
-    cardStatus: "Draft",
-    activeRow: "agreement",
-    typewriter: "Client defines the job and signs the first agreement state.",
-    progressIndex: 0,
-  },
-  {
-    id: "accept",
-    number: "02",
-    role: "provider",
-    side: "right",
-    icon: "accept",
-    title: "Provider accepts terms",
-    body: "The provider reviews the milestone and accepts the locked terms before work begins.",
-    cardStatus: "Accepted",
-    activeRow: "provider",
-    typewriter: "Provider accepts exactly what must be delivered.",
+    title: "Agreement created",
+    body: "Client sets the milestone, amount and release terms.",
+    cardStatus: "Created",
+    statusTone: "progress",
+    activeRow: "parties",
+    caption: "Client created the agreement and set the milestone terms.",
     progressIndex: 0,
   },
   {
     id: "fund",
-    number: "03",
+    number: "02",
     role: "client",
     side: "left",
     icon: "lock",
-    title: "Client locks ETH",
-    body: "Funds move into smart-contract escrow. The provider can see the money is actually locked.",
-    cardStatus: "Funded",
+    title: "Funds locked",
+    body: "Client deposits 2.5 ETH into the contract — held on-chain.",
+    cardStatus: "Funds locked",
+    statusTone: "progress",
     activeRow: "amount",
-    typewriter: "Client locks 2.5 ETH into escrow.",
+    caption: "2.5 ETH locked into the escrow contract — held on-chain.",
     progressIndex: 1,
-    /* Hold the "funds are now locked" beat ~30% longer before handing off to the    */
-    /* provider-submits step, so box 3 → box 4 no longer reads as the quickest        */
-    /* transition. Tune this one number to dial the dwell.                            */
+    /* Hold the "funds are now locked" beat ~30% longer before handing off to the     */
+    /* provider-submits step. Tune this one number to dial the dwell.                 */
     scrollWeight: 1.3,
   },
   {
     id: "submit",
-    number: "04",
+    number: "03",
     role: "provider",
-    side: "right",
+    side: "left",
     icon: "submit",
-    title: "Provider submits work",
-    body: "The provider delivers the milestone and submits proof for client review.",
-    cardStatus: "Submitted",
-    activeRow: "submission",
-    typewriter: "Provider submits the completed milestone for review.",
+    title: "Work submitted",
+    body: "Provider delivers the milestone and submits proof. Funds stay locked.",
+    cardStatus: "Awaiting approval",
+    statusTone: "progress",
+    activeRow: "progress",
+    caption: "Provider submitted the work — awaiting client approval.",
     progressIndex: 2,
   },
   {
     id: "approve",
-    number: "05",
+    number: "04",
     role: "client",
-    side: "left",
+    side: "right",
     icon: "approve",
     title: "Client approves",
-    body: "The client reviews the delivery and approves the milestone when the work matches the terms.",
+    body: "Client reviews the delivery and approves the release.",
     cardStatus: "Approved",
-    activeRow: "approval",
-    typewriter: "Client approves the submitted work.",
+    statusTone: "done",
+    activeRow: "progress",
+    caption: "Client approved the milestone delivery.",
     progressIndex: 3,
   },
   {
     id: "release",
-    number: "06",
-    role: "escrow",
+    number: "05",
+    role: "contract",
     side: "right",
     icon: "release",
-    title: "Funds release",
-    body: "Once approved, funds are released from escrow to the provider automatically.",
+    title: "Funds released",
+    body: "The contract sends 2.5 ETH to the provider automatically.",
     cardStatus: "Released",
-    activeRow: "release",
-    typewriter: "DealLock releases funds to the provider.",
+    statusTone: "done",
+    activeRow: "amount",
+    caption: "2.5 ETH released to the provider — agreement settled.",
     progressIndex: 4,
   },
 ];
 
-/** The escrow timeline rendered on the card (5 nodes, 6 steps — see progressIndex). */
+/** The escrow timeline rendered on the card (5 nodes, 1:1 with the 5 steps). */
 export const PROGRESS_LABELS = [
   "Created",
   "Funded",
