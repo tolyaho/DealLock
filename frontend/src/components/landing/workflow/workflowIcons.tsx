@@ -29,14 +29,6 @@ const ICONS: Record<WorkflowIconKey, ReactElement> = {
       <path d="M17.6 3.4a1.4 1.4 0 0 1 2 2L16 9l-2.6.6.6-2.6 3.6-3.6Z" />
     </svg>
   ),
-  // Provider accepts — document with a check.
-  accept: (
-    <svg {...COMMON}>
-      <path d="M14 3H7a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h10a2 2 0 0 0 2-2V8l-5-5Z" />
-      <path d="M14 3v5h5" />
-      <path d="M9 14.5l2 2 3.5-3.8" />
-    </svg>
-  ),
   // Client locks funds — padlock.
   lock: (
     <svg {...COMMON}>
