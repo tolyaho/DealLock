@@ -25,7 +25,7 @@
  * the single source of truth either way — clicks just move the scroll position.
  */
 
-import { useCallback, useEffect, useMemo, useState, type RefObject } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } from "react";
 
 const MOBILE_QUERY = "(max-width: 960px)";
 
@@ -55,6 +55,12 @@ export function useWorkflowStep({ trackRef, cardRefs, stepCount, stepWeights }: 
   const [isMobile, setIsMobile] = useState(
     () => typeof window !== "undefined" && window.matchMedia(MOBILE_QUERY).matches,
   );
+
+  // Mirror activeStep in a ref so scrollToStep can short-circuit a tap on the current
+  // step without taking `activeStep` as a dep (which would change its identity every
+  // step and defeat the memoized cards/step-nav).
+  const activeStepRef = useRef(activeStep);
+  activeStepRef.current = activeStep;
 
   // Track viewport mode so we can swap scroll strategies without a full remount.
   useEffect(() => {
@@ -155,6 +161,9 @@ export function useWorkflowStep({ trackRef, cardRefs, stepCount, stepWeights }: 
   // card to centre. Honours reduced-motion (jumps instead of smooth-scrolling).
   const scrollToStep = useCallback(
     (i: number) => {
+      // Tapping the step you're already on should do nothing — otherwise it snaps the
+      // free-scrolled position to the band midpoint, which reads as a jiggle.
+      if (i === activeStepRef.current) return;
       const behavior: ScrollBehavior = prefersReducedMotion() ? "auto" : "smooth";
 
       if (isMobile) {
@@ -172,7 +181,9 @@ export function useWorkflowStep({ trackRef, cardRefs, stepCount, stepWeights }: 
       const upper = bounds[i];
       const progress = (lower + upper) / 2;
       // To land progress P we need the track top at -(P*total) in the viewport, i.e.
-      // scroll to currentScrollY + rect.top + P*total.
+      // scroll to currentScrollY + rect.top + P*total. Native smooth scroll keeps the
+      // active step updating live as it passes each band (a brief "walk through the
+      // flow"), and the user can interrupt it at any time.
       const top = window.scrollY + rect.top + progress * total;
       window.scrollTo({ top, behavior });
     },

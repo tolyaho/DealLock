@@ -161,10 +161,26 @@ export async function syncFactory(args: {
       const occurredAt = await blockTimestamp(client, factory.chainId, blockNum);
       const version = Number(args.contractVersion);
       const pay = paymentMetadata(factory.chainId, args.paymentToken ?? null);
+      const existingAgreement = await db.agreement.findUnique({
+        where: {
+          chainId_contractAddress: {
+            chainId: factory.chainId,
+            contractAddress: agreementAddr,
+          },
+        },
+        select: {
+          deploymentTxHash: true,
+          clientAddress: true,
+          providerAddress: true,
+        },
+      });
+      const clientChanged = Boolean(existingAgreement && existingAgreement.clientAddress !== clientAddr);
+      const providerChanged = Boolean(existingAgreement && existingAgreement.providerAddress !== providerAddr);
 
       // Upsert the Agreement — merge factory metadata into any existing record.
-      // Do NOT overwrite user-edited metadata (projectTitle, serviceTemplate, metadataJson,
-      // clientEmail, providerEmail) if the record already exists.
+      // Factory events are chain truth for parties, version, provenance, and
+      // payment. Keep user-edited title/template/metadata, but clear stale
+      // contact emails if a pre-existing direct row had spoofed parties.
       let agreement;
       try {
         agreement = await db.agreement.upsert({
@@ -176,6 +192,8 @@ export async function syncFactory(args: {
           },
           update: {
             // Always update factory-sourced discovery fields.
+            clientAddress: clientAddr,
+            providerAddress: providerAddr,
             creationSource: "factory",
             factoryAddress: factoryAddr,
             factoryVersion: factory.factoryVersion,
@@ -184,11 +202,13 @@ export async function syncFactory(args: {
             metadataHash: args.metadataHash,
             ...pay,
             // Set deployment metadata only if not already set (don't overwrite frontend sync).
-            ...(await shouldSetDeployment(factory.chainId, agreementAddr)
+            ...(!existingAgreement?.deploymentTxHash
               ? { deploymentTxHash: txHash, deploymentBlockNumber: blockNum, indexingStartBlock: blockNum }
               : {}),
             // Update version from factory event if still at default/incomplete frontend sync.
             contractVersion: version,
+            ...(clientChanged ? { clientEmail: null } : {}),
+            ...(providerChanged ? { providerEmail: null } : {}),
           },
           create: {
             contractAddress: agreementAddr,
@@ -271,15 +291,4 @@ export async function syncFactory(args: {
   }
 
   return { eventsFound };
-}
-
-async function shouldSetDeployment(
-  chainId: number,
-  contractAddress: string,
-): Promise<boolean> {
-  const existing = await db.agreement.findUnique({
-    where: { chainId_contractAddress: { chainId, contractAddress } },
-    select: { deploymentTxHash: true },
-  });
-  return !existing?.deploymentTxHash;
 }

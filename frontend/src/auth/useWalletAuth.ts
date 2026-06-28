@@ -20,6 +20,9 @@ function describeError(e: unknown): string {
   if (/connector not found|no injected|getprovider|provider is not defined|window\.ethereum/i.test(message)) {
     return "No browser wallet detected. Install MetaMask or another injected wallet.";
   }
+  if (/failed to fetch|networkerror|load failed|fetch/i.test(message)) {
+    return "Backend API is not reachable. Make sure the backend is running and VITE_API_URL matches the page origin.";
+  }
   if (e instanceof ApiError && e.message) return e.message;
   return "Something went wrong. Please try again.";
 }

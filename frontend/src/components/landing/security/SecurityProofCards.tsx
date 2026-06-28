@@ -14,6 +14,7 @@ import {
   CoinsIcon,
   CodeGlyph,
 } from "./AssetIcons";
+import MetalIconDisc from "../MetalIconDisc";
 
 type ProofIcon = (p: { className?: string }) => ReactNode;
 
@@ -51,9 +52,9 @@ export default function SecurityProofCards() {
     <ul className="dl-sec-proof" role="list">
       {PROOF.map(({ Icon, title, copy }) => (
         <li className="dl-sec-proof-card" key={title}>
-          <span className="dl-sec-proof-card__icon">
+          <MetalIconDisc className="dl-sec-proof-card__icon">
             <Icon />
-          </span>
+          </MetalIconDisc>
           <div className="dl-sec-proof-card__body">
             <span className="dl-sec-proof-card__title">{title}</span>
             <span className="dl-sec-proof-card__copy">{copy}</span>

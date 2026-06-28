@@ -12,9 +12,10 @@
  * the in-card CURRENT STEP block (`caption`) that answers "what happened / where is
  * the money / who acts next".
  *
- * Client steps render on the LEFT column, the provider step continues the left
- * column (client-side work), and the resolution steps (approve, release) move to the
- * RIGHT — so the eye travels client work → resolution as the scene advances.
+ * The two lanes are role-split so each side reads as one party: the CLIENT lane on
+ * the LEFT (create, fund, approve) and the PROVIDER lane on the RIGHT (submit, plus
+ * the contract's payout to the provider — release). This mirrors the contract card,
+ * whose parties read Client → Escrow → Provider, so money flows left → right.
  */
 
 export type WorkflowSide = "left" | "right";
@@ -104,7 +105,7 @@ export const WORKFLOW_STEPS: WorkflowStep[] = [
     id: "submit",
     number: "03",
     role: "provider",
-    side: "left",
+    side: "right",
     icon: "submit",
     title: "Work submitted",
     body: "Provider delivers the milestone and submits proof. Funds stay locked.",
@@ -118,7 +119,7 @@ export const WORKFLOW_STEPS: WorkflowStep[] = [
     id: "approve",
     number: "04",
     role: "client",
-    side: "right",
+    side: "left",
     icon: "approve",
     title: "Client approves",
     body: "Client reviews the delivery and approves the release.",

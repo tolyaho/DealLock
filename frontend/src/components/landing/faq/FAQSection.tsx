@@ -16,7 +16,6 @@ import { FAQ_SUBTEXT, FAQ_TITLE } from "./faqData";
 import FAQAccordion from "./FAQAccordion";
 import FAQTrustVisual from "./FAQTrustVisual";
 import { useInView } from "../security/useInView";
-import MetalOrbitLines from "../MetalOrbitLines";
 import MetalSheen from "../MetalSheen";
 
 export default function FAQSection() {
@@ -30,10 +29,9 @@ export default function FAQSection() {
       aria-labelledby="dl-faq-title"
     >
       <div className="dl-faq__bg" aria-hidden="true" data-parallax="0.04">
-        {/* Soft specular sweeps + the orbital guide low in the final section — keeps   */}
-        {/* the closing panel on the same lit satin-metal surface as the rest.          */}
+        {/* Soft specular sweeps keep the closing panel on the same lit satin-metal     */}
+        {/* surface as the rest; the pastel atmosphere lives in .dl-faq__bg's gradient.  */}
         <MetalSheen />
-        <MetalOrbitLines className="dl-orbit--faq" />
       </div>
 
       <div className="dl-faq__inner">

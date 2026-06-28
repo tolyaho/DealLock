@@ -9,8 +9,6 @@ import { resolvePaymentAsset, snapshotPaymentAsset } from "../paymentAssets.js";
 
 const router = Router();
 const TX_HASH_RE = /^0x[0-9a-fA-F]{64}$/;
-const ADDR_RE = /^0x[0-9a-fA-F]{40}$/;
-const BYTES32_RE = /^0x[0-9a-fA-F]{64}$/;
 
 // All agreement routes require authentication (enforced in index.ts).
 
@@ -130,12 +128,6 @@ router.post(
       deploymentTxHash,
       deploymentBlockNumber,
       indexingStartBlock,
-      creationSource,
-      factoryAddress,
-      factoryTxHash,
-      factoryLogIndex,
-      factoryVersion,
-      metadataHash,
       paymentAssetKey,
       paymentTokenAddress,
     } = req.body as Record<string, unknown>;
@@ -224,28 +216,6 @@ router.post(
         : undefined;
     const parsedDeploymentBlock = parseOptionalBigInt(deploymentBlockNumber);
     const parsedIndexingStartBlock = parseOptionalBigInt(indexingStartBlock);
-    const parsedCreationSource =
-      creationSource === "factory" || creationSource === "direct" ? creationSource : undefined;
-    const parsedFactoryAddress =
-      typeof factoryAddress === "string" && ADDR_RE.test(factoryAddress)
-        ? factoryAddress.toLowerCase()
-        : undefined;
-    const parsedFactoryTxHash =
-      typeof factoryTxHash === "string" && TX_HASH_RE.test(factoryTxHash)
-        ? factoryTxHash.toLowerCase()
-        : undefined;
-    const parsedFactoryLogIndex =
-      typeof factoryLogIndex === "number" && Number.isInteger(factoryLogIndex) && factoryLogIndex >= 0
-        ? factoryLogIndex
-        : undefined;
-    const parsedFactoryVersion =
-      typeof factoryVersion === "number" && (factoryVersion === 1 || factoryVersion === 2 || factoryVersion === 3)
-        ? factoryVersion
-        : undefined;
-    const parsedMetadataHash =
-      typeof metadataHash === "string" && BYTES32_RE.test(metadataHash)
-        ? metadataHash.toLowerCase()
-        : undefined;
 
     const agreement = await db.agreement.create({
       data: {
@@ -263,12 +233,7 @@ router.post(
         deploymentTxHash: parsedDeploymentTxHash,
         deploymentBlockNumber: parsedDeploymentBlock,
         indexingStartBlock: parsedIndexingStartBlock,
-        creationSource: parsedCreationSource ?? "direct",
-        factoryVersion: parsedFactoryVersion,
-        factoryAddress: parsedFactoryAddress,
-        factoryTxHash: parsedFactoryTxHash,
-        factoryLogIndex: parsedFactoryLogIndex,
-        metadataHash: parsedMetadataHash,
+        creationSource: "direct",
         createdByUserId: userId,
       },
     });

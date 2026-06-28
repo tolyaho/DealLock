@@ -29,14 +29,8 @@ import { validateEnv } from "./config/env.js";
 import { logger } from "./logger.js";
 import { csrfProtection } from "./middleware/csrf.js";
 import { closeConfiguredSessionStores } from "./sessionStore.js";
-
-function publicUser(user: { id: string; email: string | null; emailVerifiedAt: Date | null }) {
-  return {
-    id: user.id,
-    email: user.email,
-    emailVerifiedAt: user.emailVerifiedAt?.toISOString() ?? null,
-  };
-}
+import { publicUser } from "./serializers.js";
+import profileRouter from "./routes/profile.js";
 
 /** Rate limiter factory — one window per sensitive endpoint group. */
 function makeRateLimit(windowMinutes: number, max: number) {
@@ -165,6 +159,10 @@ export function createApp() {
   // Email — rate limited. Stays on requireAuth only: this is how an account
   // reaches the verified state, so it must be reachable beforehand.
   app.use("/email", requireAuth, emailLimiter, emailRouter);
+
+  // Profile (display name) — requireAuth only, NOT requireVerified: the name is
+  // set during onboarding, before the email step.
+  app.use("/profile", requireAuth, profileRouter);
 
   app.use("/notification-preferences", requireAuth, requireVerified, notificationPreferencesRouter);
 

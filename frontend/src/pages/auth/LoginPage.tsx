@@ -1,7 +1,7 @@
 /*
  * LoginPage (/login) — wallet-first sign-in. Connect a wallet, sign the message,
- * continue to the dashboard. No email step on login (email is recovery /
- * notifications only — collected at sign-up).
+ * then route by session state: a verified session goes to the dashboard, a
+ * wallet-only session still owes the email step (→ /verify-email).
  */
 import { Link, Navigate } from "react-router-dom";
 import { useAuth } from "../../auth/AuthContext";
@@ -10,12 +10,14 @@ import AuthLoading from "./AuthLoading";
 import { ConnectAndSign } from "./ConnectAndSign";
 
 export default function LoginPage() {
-  const { status, isAuthenticated } = useAuth();
+  const { status, gateStatus } = useAuth();
 
-  // A live session (wallet or verified) → the dashboard. Login does not gate on
-  // the email step.
-  if (isAuthenticated) return <Navigate to="/app/home" replace />;
+  // Fully onboarded (or dev-bypassed) → the dashboard.
+  if (gateStatus === "verified") return <Navigate to="/app/home" replace />;
+  // Wallet signed in but email not yet verified → finish the email step.
+  if (gateStatus === "wallet") return <Navigate to="/verify-email" replace />;
 
+  // gateStatus is "loading" or "anonymous": render the sign-in scene below.
   return (
     <AuthLayout
       title="Log in to DealLock."
