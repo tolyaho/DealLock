@@ -6,14 +6,19 @@
  * Search is local + non-functional for now (foundation phase).
  */
 import { useState } from "react";
+import { NavLink } from "react-router-dom";
 import { IconButton } from "./Button";
 import { SearchInput } from "./SearchInput";
 import { WorkspaceSwitch } from "./WorkspaceSwitch";
 import { Avatar } from "./Avatar";
 import { IconBell, IconMenu } from "./icons";
+import { useAuth } from "../../auth/AuthContext";
+import { displayName, initialsFor } from "../../auth/userDisplay";
 
 export function Topbar({ onToggleNav }: { onToggleNav: () => void }) {
   const [query, setQuery] = useState("");
+  const { user, wallets } = useAuth();
+  const name = displayName(user, wallets) || "your profile";
   return (
     <header className="app-topbar">
       <div className="app-topbar__inner">
@@ -30,7 +35,14 @@ export function Topbar({ onToggleNav }: { onToggleNav: () => void }) {
             <SearchInput value={query} onChange={setQuery} placeholder="Search agreements…" ariaLabel="Search" block />
           </div>
           <IconButton label="Notifications" icon={<IconBell />} dot />
-          <Avatar initials="JL" size="md" metal />
+          <NavLink
+            to="/app/profile"
+            className="app-topbar__account"
+            aria-label={`Open ${name}`}
+            title={name}
+          >
+            <Avatar initials={initialsFor(user, wallets)} size="md" />
+          </NavLink>
         </div>
       </div>
     </header>

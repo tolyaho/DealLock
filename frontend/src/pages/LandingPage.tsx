@@ -18,6 +18,10 @@ export default function LandingPage() {
     // resets at the section seam.
     <div className="dl-page">
       <div className="dl-page__texture" aria-hidden="true" />
+      {/* Reeded-glass pilasters framing the wall (the auth login wall's signature
+          ribbed side-panel, ported here). Behind every section, out in the gutters. */}
+      <span className="dl-flute dl-flute--left" aria-hidden="true" />
+      <span className="dl-flute dl-flute--right" aria-hidden="true" />
       <SiteHeader />
       <Hero />
       <WorkflowStory />

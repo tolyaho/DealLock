@@ -68,8 +68,10 @@ function ContractCardOverlay({ activeStep }: Props) {
         </span>
       </div>
 
-      {/* Parties + escrow capsule — Client → Escrow contract → Provider. The escrow */}
-      {/* lock in the middle is where the money sits; it lights up while funds locked. */}
+      {/* Parties + escrow capsule — Client → Escrow contract → Provider. Lanes are     */}
+      {/* role-split (Client left, Provider right) to match the step columns; money      */}
+      {/* flows left → right, so the arrows point right. The middle lock is where the    */}
+      {/* money sits and lights up while funds are locked.                              */}
       <div className={`dl-contract__parties${rowActive("parties")}`}>
         <div className="dl-contract__party dl-contract__party--client">
           <span className="dl-contract__party-label">Client</span>

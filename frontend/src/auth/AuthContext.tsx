@@ -29,7 +29,15 @@ import { api, ApiError, type NonceResponse, type SessionResponse, type SessionUs
 export type AuthStatus = "loading" | "anonymous" | "wallet" | "verified";
 
 interface AuthValue {
+  /** The REAL backend session status (source of truth — never affected by the dev bypass). */
   status: AuthStatus;
+  /**
+   * The status route guards & redirects should consume. Identical to `status`, EXCEPT
+   * the temporary dev bypass can promote a wallet-only session to "verified" for the
+   * FRONTEND shell only (see `devBypassEmailVerification`). The backend `requireVerified`
+   * middleware is untouched, so product APIs still require real email verification.
+   */
+  gateStatus: AuthStatus;
   user: SessionUser | null;
   wallets: WalletRecord[];
   /** Has a backend session (wallet signed in), regardless of email state. */
@@ -40,16 +48,54 @@ interface AuthValue {
   signIn: () => Promise<void>;
   /** Send a verification link to `email` (completed by the link in the inbox). */
   startEmail: (email: string) => Promise<void>;
+  /** Persist the user's display name (first + last); refreshes session state. */
+  updateProfile: (firstName: string, lastName: string) => Promise<void>;
   /** End the session and disconnect the wallet. */
   logout: () => Promise<void>;
+  /**
+   * TEMPORARY DEV-ONLY: mark the FRONTEND email step as complete so a wallet-only
+   * session can reach the /app shell during local development. See the DEV BYPASS
+   * block below — this does NOT verify the email server-side.
+   */
+  devBypassEmailVerification: () => void;
 }
 
 const AuthContext = createContext<AuthValue | null>(null);
+
+/* ─────────────────────────────────────────────────────────────────────────────
+ * ⚠ TEMPORARY DEV-ONLY EMAIL-VERIFICATION BYPASS ⚠
+ * ---------------------------------------------------------------------------
+ * The backend `requireVerified` middleware still gates EVERY product route, so this
+ * flag ONLY unlocks the FRONTEND /app shell for local development — it does NOT make
+ * product APIs succeed and is NOT production-secure. It exists so we can build and
+ * preview the dashboard before the real email-code verification UI is wired up.
+ *
+ * It is deliberately isolated here (and consumed only via `gateStatus`) so it can be
+ * deleted in one place. It is sessionStorage-backed (clears when the tab closes) to
+ * reinforce that it is throwaway dev state, never a real verification.
+ *
+ * TODO(auth): remove this block, `devBypassEmailVerification`, and VerifyEmailPage's
+ * code step once real email verification is wired to POST /email/confirm. Until then
+ * the dev bypass only reveals the UI — backend product calls will 403 without a real
+ * verified email.
+ * ──────────────────────────────────────────────────────────────────────────── */
+const DEV_EMAIL_BYPASS_KEY = "deallock.devEmailBypass";
+
+function readDevEmailBypass(): boolean {
+  if (typeof window === "undefined") return false;
+  try {
+    return window.sessionStorage.getItem(DEV_EMAIL_BYPASS_KEY) === "1";
+  } catch {
+    return false;
+  }
+}
 
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [user, setUser] = useState<SessionUser | null>(null);
   const [wallets, setWallets] = useState<WalletRecord[]>([]);
   const [ready, setReady] = useState(false);
+  // TEMPORARY dev-only email bypass (see the DEV BYPASS block above).
+  const [devEmailBypass, setDevEmailBypass] = useState(readDevEmailBypass);
 
   const { address, chainId, isConnected } = useAccount();
   const { signMessageAsync } = useSignMessage();
@@ -93,6 +139,23 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     await api.post("/email/start-verification", { email });
   }, []);
 
+  const updateProfile = useCallback(async (firstName: string, lastName: string) => {
+    const data = await api.patch<SessionResponse>("/profile", { firstName, lastName });
+    setUser(data.user);
+    setWallets(data.wallets);
+  }, []);
+
+  // TEMPORARY dev-only: flip the frontend-shell bypass on (persist for the tab).
+  // Replace with real email verification — this never touches the backend session.
+  const devBypassEmailVerification = useCallback(() => {
+    setDevEmailBypass(true);
+    try {
+      window.sessionStorage.setItem(DEV_EMAIL_BYPASS_KEY, "1");
+    } catch {
+      /* sessionStorage unavailable — the in-memory flag still applies for this tab */
+    }
+  }, []);
+
   const logout = useCallback(async () => {
     try {
       await api.post("/auth/logout");
@@ -106,6 +169,13 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
     setUser(null);
     setWallets([]);
+    // Drop the dev bypass on logout so the next (possibly different) wallet starts clean.
+    setDevEmailBypass(false);
+    try {
+      window.sessionStorage.removeItem(DEV_EMAIL_BYPASS_KEY);
+    } catch {
+      /* ignore */
+    }
   }, [disconnectAsync]);
 
   // Email verification deep link: the email links to /app?verifyEmail=<token>.
@@ -138,15 +208,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         ? "verified"
         : "wallet";
 
+  // gateStatus = what the route guards/redirects use. It only ever PROMOTES a
+  // wallet-only session to "verified" via the temporary dev bypass; it can never
+  // upgrade an anonymous/loading session, so an expired/missing session still
+  // correctly redirects to /login even with the bypass flag set.
+  const gateStatus: AuthStatus =
+    status === "wallet" && devEmailBypass ? "verified" : status;
+
   const value: AuthValue = {
     status,
+    gateStatus,
     user,
     wallets,
     isAuthenticated: Boolean(user),
     refresh,
     signIn,
     startEmail,
+    updateProfile,
     logout,
+    devBypassEmailVerification,
   };
 
   return <AuthContext.Provider value={value}>{children}</AuthContext.Provider>;

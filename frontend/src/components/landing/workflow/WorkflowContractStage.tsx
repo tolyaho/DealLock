@@ -1,19 +1,14 @@
 /*
- * WorkflowContractStage — the anchored centre of the workflow scene. Two layers:
+ * WorkflowContractStage — the anchored centre of the workflow scene. It's just the
+ * readable contract UI (ContractCardOverlay) presented as a self-contained floating
+ * instrument: opaque HTML/CSS so the text stays crisp and updates per scroll step,
+ * lifted off the matte wall by its own shadow plus the stage's ambient halo
+ * (.dl-contract-stage::before) and floor reflection (.dl-contract-stage::after).
  *
- *   z-0  a CSS "material" plate (.dl-contract-stage__material) — a polished metal/
- *        glass slab rendered purely in CSS. It sits BEHIND the readable card and is
- *        a touch larger, so its lit edges + sheen frame the text like a mounting
- *        plate. Pure CSS so it is always perfectly centred behind the card, never
- *        drifts across screen sizes, and renders identically everywhere (no WebGL).
- *   z-1  the readable contract UI (ContractCardOverlay), opaque HTML/CSS so the text
- *        stays crisp and updates instantly per scroll step.
- *
- * (This replaced a Spline 3D object whose framing was derived from the canvas size
- * at mount, so it drifted out from behind the card at window sizes other than the
- * one it was tuned at. The CSS plate carries the same material read without that
- * fragility.) The stage is aria-hidden: the surrounding action cards carry the
- * accessible narrative.
+ * (Earlier versions sat the card on a CSS "material" plate, which itself replaced a
+ * drifting Spline slab; the plate was removed — the card now reads as the object,
+ * bigger and unframed.) The stage is aria-hidden: the surrounding action cards carry
+ * the accessible narrative.
  */
 
 import { memo } from "react";
@@ -26,7 +21,6 @@ interface Props {
 function WorkflowContractStage({ activeStep }: Props) {
   return (
     <div className="dl-contract-stage" aria-hidden="true">
-      <div className="dl-contract-stage__material" />
       <ContractCardOverlay activeStep={activeStep} />
     </div>
   );
