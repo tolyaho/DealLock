@@ -2,58 +2,64 @@
 
 The deployed site is the **landing page + interactive `#demo`** only — a self-contained,
 backend-free, wallet-free, deterministic simulation. No environment variables are
-required. The wallet-auth pages and `/app` dashboard are gated off in production and
-tree-shaken out of the build, so nothing backend-dependent is ever exposed.
+required, and no wallet / backend / chain code ships in the bundle.
 
-## Vercel — Git import (recommended)
+The live site is served by the existing Vercel project **`deallock-demo`** from **this
+`showcase/` directory**. Production is public; preview deployments and generated
+deployment URLs stay access-protected (Vercel **Standard Protection**).
 
-1. Push this repository to GitHub (a **separate** approval; see `VERCEL_GO_NO_GO.md`).
-2. Vercel → **New Project** → import the repo.
-3. **Root Directory → `frontend`** (this repo keeps the site under `frontend/`).
-4. Framework preset: **Vite** (auto-detected). The committed `frontend/vercel.json` pins:
-   - Build command: `npm run build`
-   - Output directory: `dist`
-   - Install command: `npm ci`
-   - SPA rewrite: every path → `/index.html` (so deep links / reloads don't 404).
-5. **Environment variables: none required.** `DEMO_MODE` defaults ON for production
-   builds. (Optional: `VITE_DEMO_ONLY=true` to be explicit; `VITE_REPO_URL=<repo>` to
-   activate the Security section's "Explore repository" links once the repo is public.)
-6. Deploy.
+> Deploy from `showcase/` — **not** the repo's full-stack `frontend/`. The `frontend/`
+> app carries the wallet/backend stack (and its older dependencies) and must never be
+> published to this project.
 
-## Vercel — CLI (alternative)
+## Vercel — CLI (current path)
 
-Run from the **`frontend/`** directory (the project root Vercel builds), not the repo
-root — do not double the `frontend/` prefix.
+Run from **this `showcase/` directory**:
 
 ```bash
-npm i -g vercel          # once
-cd frontend
-vercel                   # Preview deploy — UPLOADS code to Vercel. Needs approval.
-vercel --prod            # Production deploy. Separate approval.
+npm i -g vercel            # once
+cd showcase
+vercel deploy             # Preview — protected; verify here first
+vercel deploy --prod      # Production — public domain
 ```
 
-> `vercel`/`vercel deploy` uploads the code and creates a **Preview** (not offline).
-> `vercel link` can create/link projects and must not be run without authorization.
-> Keep Preview and Production as independent go/no-go decisions.
+`vercel.json` (committed here) pins the build so settings never drift:
+
+- Framework: **Vite**
+- Install: `npm ci`
+- Build: `npm run build`
+- Output: `dist`
+- SPA rewrite: every path → `/index.html` (deep links / reloads don't 404)
+
+The project is already linked (`deallock-demo`, team `jommo`). **Do not create a new
+project** and do not change the production domain.
+
+## Vercel — GitHub integration (optional)
+
+To auto-deploy from `main` instead of the CLI, in the existing project's settings set
+**Root Directory → `showcase/`** and connect the GitHub repo. Keep **Standard
+Protection** so only the production domain is public. Never point the project at
+`frontend/`.
 
 ## Verify a deploy
 
-- `/` loads the landing; hero "Try interactive demo" jumps to the live demo controls.
-- Switch Client/Freelancer; run accept → fund → submit → approve/release + revision.
+- `/` loads the landing; hero **"Try interactive demo"** jumps to the live demo controls.
+- Switch Client / Freelancer; run accept → fund → submit → approve/release + the revision path.
 - Header shows **"Try demo"** (no Log in / Sign up).
-- Direct-load any path (e.g. `/login`, `/app`) → redirects to `/` (no broken page).
-- No network calls to a backend/auth/RPC; only static assets (+ optional Spline CDN).
+- Direct-load any unknown path (e.g. `/app`) → redirects to `/` (no broken page).
+- No network calls to a backend / auth / RPC — only static assets (+ the optional Spline CDN).
+- Production domain loads anonymously; a preview URL shows the Vercel auth gate.
 
-## Demo mode
+## Demo build flag
 
-`src/demoMode.ts` → `DEMO_MODE`: defaults **ON** in production (`vite build`), **off** for
-local `npm run dev`. Override with `VITE_DEMO_ONLY=true|false`. In demo mode the auth +
-`/app` routes are removed from the router (and tree-shaken), and `AuthProvider` makes no
-backend calls.
+`src/demoMode.ts` → `DEMO_MODE` defaults **ON** for production builds (`vite build`) and
+off for local `npm run dev`. In this standalone showcase the wallet/auth/dashboard code
+isn't present at all, so the deployed site is demo-only regardless; the flag only toggles
+the header's single CTA. Override with `VITE_DEMO_ONLY=true|false` if needed.
 
 ## Hero vault (Spline)
 
 The hero vault is a Spline 3D scene with a **static JPG poster fallback**
 (`src/assets/hero-vault-poster.jpg`): the poster holds the slot during load and remains
-if the scene is blocked/slow, and under `prefers-reduced-motion` the poster renders alone
-(no WebGL). A blocked Spline CDN never breaks the page or the demo.
+if the scene is blocked or slow, and under `prefers-reduced-motion` the poster renders
+alone (no WebGL). A blocked Spline CDN never breaks the page or the demo.

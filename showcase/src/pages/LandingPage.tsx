@@ -7,6 +7,7 @@ import SiteHeader from "../components/landing/SiteHeader";
 import Hero from "../components/landing/Hero";
 import InteractiveDemo from "../components/landing/demo/InteractiveDemo";
 import WorkflowStory from "../components/landing/workflow/WorkflowStory";
+import SafeguardsSection from "../components/landing/safeguards/SafeguardsSection";
 import SecuritySection from "../components/landing/security/SecuritySection";
 import FAQSection from "../components/landing/faq/FAQSection";
 import ParallaxLayers from "../components/landing/ParallaxLayers";
@@ -30,6 +31,10 @@ export default function LandingPage() {
           so the hero's "Try interactive demo" CTA (#demo) lands immediately. */}
       <InteractiveDemo />
       <WorkflowStory />
+      {/* "What if something goes wrong?" — the contract exit paths (missed deadline,
+          client silence, revisions, disputes, refunds) in plain language, before the
+          code proof below. */}
+      <SafeguardsSection />
       <SecuritySection />
       <FAQSection />
       {/* Scroll-linked drift on the background light blooms (depth cue). Renders

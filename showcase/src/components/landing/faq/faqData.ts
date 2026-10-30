@@ -45,13 +45,31 @@ export const FAQ_ITEMS: FaqItem[] = [
     id: "client-no-response",
     question: "What happens if the client does not respond?",
     answer:
-      "The agreement can include a review period. After the provider submits the work, the client has a defined amount of time to review it. If there is no dispute during that window, the provider can request release according to the contract rules.",
+      "Every agreement sets a review window — anywhere from an hour to two weeks. After the provider submits, the client has that window to approve or dispute. If the client does nothing before it closes, the provider can claim the payment themselves, so an unresponsive client can't lock the funds up.",
   },
   {
     id: "client-not-satisfied",
     question: "What happens if the client is not satisfied?",
     answer:
-      "The client can dispute the submitted milestone during the review period. Disputed funds are not released automatically. The agreement moves into a resolution path, such as mutual settlement, depending on the contract version and enabled features.",
+      "The client can dispute a submitted milestone during the review window. Disputed funds are frozen — they don't release and can't be refunded unilaterally. They move only when both parties accept a proposed split: there is no automatic winner and no outside arbiter, so resolving a dispute takes agreement from both sides.",
+  },
+  {
+    id: "fees",
+    question: "Does DealLock take a fee?",
+    answer:
+      "No. There is no platform fee anywhere in the contracts. When a milestone is approved the full amount goes to the provider, and a mutual settlement splits the exact milestone amount between the two sides with nothing skimmed off.",
+  },
+  {
+    id: "refund-deadline",
+    question: "What if the provider misses the deadline?",
+    answer:
+      "If a milestone's deadline passes with nothing submitted, the client can refund that milestone from escrow after a short grace window. Once work has been submitted it can't be refunded away — it has to be approved, disputed, or claimed after the review window.",
+  },
+  {
+    id: "demo-real-money",
+    question: "Does the interactive demo move real money?",
+    answer:
+      "No. The demo on this page is a deterministic, browser-only simulation — no wallet, no account, no backend, and no blockchain transaction. Every amount and event is illustrative and labelled “Simulated”; it shows how the real contracts behave without touching any funds.",
   },
   {
     id: "provider-knows",
@@ -99,9 +117,11 @@ export const FAQ_ITEMS: FaqItem[] = [
 export const FEATURED_FAQ_IDS = [
   "funds-held",
   "can-release",
+  "provider-paid",
   "client-no-response",
   "client-not-satisfied",
-  "provider-paid",
+  "fees",
+  "demo-real-money",
   "inspect-contract",
 ] as const;
 
