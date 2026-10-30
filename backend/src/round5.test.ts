@@ -245,6 +245,50 @@ test("CSRF protection rejects missing tokens and accepts session-bound tokens", 
   assert.equal(typeof valid.body.nonceId, "string");
 });
 
+test("sign-in nonce can only be verified once", { concurrency: false }, async () => {
+  const account = privateKeyToAccount(PRIVATE_KEYS[0]);
+  const client = new TestClient();
+  const nonce = await client.request("/auth/nonce", {
+    method: "POST",
+    body: JSON.stringify({ address: account.address, chainId: CHAIN_ID }),
+  });
+  assert.equal(nonce.status, 200, JSON.stringify(nonce.body));
+
+  const signature = await account.signMessage({ message: String(nonce.body.message) });
+  const payload = {
+    address: account.address,
+    nonceId: nonce.body.nonceId,
+    signature,
+  };
+
+  const first = await client.request("/auth/verify", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+  assert.equal(first.status, 200, JSON.stringify(first.body));
+
+  const replay = await client.request("/auth/verify", {
+    method: "POST",
+    body: JSON.stringify(payload),
+  });
+  assert.equal(replay.status, 400, JSON.stringify(replay.body));
+  assert.equal(replay.body.error, "Nonce already used");
+});
+
+test("primary wallet cannot be unset without choosing another primary", { concurrency: false }, async () => {
+  const user = await signIn(PRIVATE_KEYS[0]);
+
+  const demoteOnlyPrimary = await user.client.request(`/wallets/${user.address}`, {
+    method: "PATCH",
+    body: JSON.stringify({ isPrimary: false }),
+  });
+  assert.equal(demoteOnlyPrimary.status, 400, JSON.stringify(demoteOnlyPrimary.body));
+
+  const wallets = await db.wallet.findMany({ where: { userId: user.userId } });
+  assert.equal(wallets.length, 1);
+  assert.equal(wallets[0]?.isPrimary, true);
+});
+
 test("email verification stores only hashes, rejects expired tokens, and prevents duplicate verified emails", { concurrency: false }, async () => {
   const userA = await signIn(PRIVATE_KEYS[0]);
   const token = await captureVerificationToken(userA.client, "USER@example.com");
@@ -325,6 +369,36 @@ test("product data routes require a verified email, not just a wallet session", 
   const ok = await user.client.request("/agreements");
   assert.equal(ok.status, 200, JSON.stringify(ok.body));
   assert.ok(Array.isArray(ok.body.agreements));
+});
+
+test("direct agreement registration cannot forge factory provenance fields", { concurrency: false }, async () => {
+  const clientUser = await signInVerified(PRIVATE_KEYS[0], "owner-a@example.com");
+  const providerUser = await signIn(PRIVATE_KEYS[1]);
+
+  const created = await clientUser.client.request("/agreements", {
+    method: "POST",
+    body: JSON.stringify({
+      contractAddress: CONTRACT_ADDRESS,
+      chainId: CHAIN_ID,
+      clientAddress: clientUser.address,
+      providerAddress: providerUser.address,
+      contractVersion: 6,
+      creationSource: "factory",
+      factoryVersion: 3,
+      factoryAddress: "0x0000000000000000000000000000000000000999",
+      factoryTxHash: txHash(99),
+      factoryLogIndex: 12,
+      metadataHash: txHash(98),
+    }),
+  });
+
+  assert.equal(created.status, 200, JSON.stringify(created.body));
+  assert.equal(created.body.agreement.creationSource, "direct");
+  assert.equal(created.body.agreement.factoryVersion, null);
+  assert.equal(created.body.agreement.factoryAddress, null);
+  assert.equal(created.body.agreement.factoryTxHash, null);
+  assert.equal(created.body.agreement.factoryLogIndex, null);
+  assert.equal(created.body.agreement.metadataHash, null);
 });
 
 test("notification preferences and agreement contacts are editable only by involved accounts", { concurrency: false }, async () => {

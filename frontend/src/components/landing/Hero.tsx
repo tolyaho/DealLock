@@ -13,6 +13,12 @@ export default function Hero() {
 
       <HeroBackground />
 
+      {/* Fluted pilasters on the hero screen — the page-level pair (LandingPage) is
+          hidden behind the hero's own opaque wall here, so mount a matching pair inside
+          the hero, behind the stage, so the columns are present from the first screen. */}
+      <span className="dl-flute dl-flute--left" aria-hidden="true" />
+      <span className="dl-flute dl-flute--right" aria-hidden="true" />
+
       <main className="dl-hero-v2__stage" aria-label="DealLock — milestone escrow protocol">
 
         <div className="dl-hero-copy">

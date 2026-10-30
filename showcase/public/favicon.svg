@@ -1,0 +1,21 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 64 64" role="img" aria-label="DealLock">
+  <defs>
+    <linearGradient id="bg" x1="0" y1="0" x2="0" y2="1">
+      <stop offset="0" stop-color="#1b1c22"/>
+      <stop offset="1" stop-color="#0b0b0e"/>
+    </linearGradient>
+    <linearGradient id="metal" x1="0" y1="0" x2="1" y2="1">
+      <stop offset="0" stop-color="#eef1f5"/>
+      <stop offset="0.5" stop-color="#a8afbc"/>
+      <stop offset="1" stop-color="#d6dbe2"/>
+    </linearGradient>
+  </defs>
+  <rect x="2" y="2" width="60" height="60" rx="14" fill="url(#bg)" stroke="#2a2c34" stroke-width="1.5"/>
+  <!-- shackle -->
+  <path d="M22 30v-6a10 10 0 0 1 20 0v6" fill="none" stroke="url(#metal)" stroke-width="4.5" stroke-linecap="round"/>
+  <!-- body -->
+  <rect x="16.5" y="29" width="31" height="23" rx="5.5" fill="url(#metal)"/>
+  <!-- keyhole -->
+  <circle cx="32" cy="38.5" r="3.4" fill="#0b0b0e"/>
+  <rect x="30.4" y="38.5" width="3.2" height="7.5" rx="1.6" fill="#0b0b0e"/>
+</svg>

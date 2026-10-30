@@ -1,0 +1,4836 @@
+/* ── DealLock design tokens ────────────────────────────────────────────────── */
+/* Scoped to .dl-root to prevent leakage into third-party widgets              */
+
+.dl-root {
+  /* ── Typography system — ONE source of truth ────────────────────────────────
+   * Reference these tokens; never hardcode a font-family in a rule or component.
+   * Marketing (this landing) = 3 faces · App/dashboard = 2 faces:
+   *   --font-logo              Stardos Stencil  — DealLock wordmark ONLY
+   *   --font-marketing-display Chakra Petch     — hero headline + section titles
+   *   --font-marketing-ui      IBM Plex Mono    — nav, body, chips, labels
+   *   --font-code              IBM Plex Mono    — code panels / Solidity snippets
+   *   --font-app-title         Instrument Serif — dashboard page titles
+   *   --font-app-ui            Inter            — all dashboard functional UI + numbers
+   * Faces load via the Google Fonts <link> in index.html. */
+  --font-logo:              "Stardos Stencil", Georgia, serif;
+  --font-marketing-display: "Chakra Petch", "IBM Plex Mono", ui-monospace, monospace;
+  --font-marketing-ui:      "IBM Plex Mono", ui-monospace, "Courier New", monospace, monospace;
+  --font-code:              "IBM Plex Mono", "JetBrains Mono", ui-monospace, monospace;
+  --font-app-title:         "Instrument Serif", Georgia, serif;
+  --font-app-ui:            "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+
+  /* Back-compat aliases: existing rules reference --dl-display/--dl-mono/--dl-sans,
+   * so map them onto the canonical tokens — every rule resolves the right face from
+   * one place. (--dl-mono keeps the trailing `monospace, monospace`: dropping the
+   * second keyword re-triggers WebKit's fixed-pitch size shrink, making Safari render
+   * body text smaller than Chrome. Leave it.) */
+  --dl-display: var(--font-marketing-display);
+  --dl-mono:    var(--font-marketing-ui);
+  --dl-sans:    var(--font-app-ui);
+
+  /* Canvas */
+  --dl-canvas:      #f8f9f6;
+  --dl-canvas-soft: #fcfcfa;
+
+  /* Steel scale — cold silver family */
+  --dl-steel-50:  #f7f8f6;
+  --dl-steel-100: #e8ebe9;
+  --dl-steel-200: #d3d8d6;
+  --dl-steel-300: #b8bfbd;
+  --dl-steel-400: #909997;
+  --dl-steel-500: #6d7474;
+
+  /* Brushed-metal control face — the "metallic disc" material (a slightly lighter
+   * cousin of the app design-lab --metal-disc) that the landing's signature
+   * buttons wear instead of the old graphite fill: Launch App, the hero CTA, and
+   * the repo "view contracts" CTA. A radial silver disc with a soft diagonal
+   * specular sweep; hover brightens it. Silver spectrum only; shadows are
+   * ink-tinted (rgba(17,19,21,…)), never pure black. Text on it is --dl-ink. */
+  --dl-metal-face:
+    linear-gradient(120deg, rgba(255, 255, 255, 0.50) 0%, rgba(255, 255, 255, 0) 34%, rgba(255, 255, 255, 0) 60%, rgba(255, 255, 255, 0.34) 100%),
+    radial-gradient(circle at 32% 24%, #ffffff 0%, #f2f3ef 30%, #dedfd8 60%, #c4c5bd 80%, #e9eae4 100%);
+  --dl-metal-face-hover:
+    linear-gradient(120deg, rgba(255, 255, 255, 0.60) 0%, rgba(255, 255, 255, 0) 34%, rgba(255, 255, 255, 0) 60%, rgba(255, 255, 255, 0.42) 100%),
+    radial-gradient(circle at 32% 24%, #ffffff 0%, #f7f8f4 30%, #e6e7e0 60%, #d0d1c9 80%, #eff0ea 100%);
+  --dl-metal-edge: rgba(17, 19, 21, 0.16);
+  --dl-metal-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.92),
+    inset 0 -1px 2px rgba(17, 19, 21, 0.12),
+    0 4px 12px rgba(17, 19, 21, 0.12),
+    0 1px 3px rgba(17, 19, 21, 0.08);
+  --dl-metal-shadow-hover:
+    inset 0 1px 0 rgba(255, 255, 255, 0.95),
+    inset 0 -1px 2px rgba(17, 19, 21, 0.14),
+    0 6px 18px rgba(17, 19, 21, 0.16),
+    0 2px 5px rgba(17, 19, 21, 0.10);
+
+  /* Brushed-metal ICON DISC — the small raised silver coin that holds a line icon in
+   * card headers (security cards, FAQ lifecycle). It is the landing-tuned twin of the
+   * app design-lab `--metal-disc`: the same highlight → mid → darker lower arc → rim
+   * catch-light structure, kept in the landing's lighter silver range so it reads as a
+   * polished accessory, not a heavy control. Pair with `.dl-metal-disc`. */
+  --dl-disc-face:
+    radial-gradient(circle at 36% 28%, #ffffff 0%, #f2f3ee 30%, #d8dad2 62%, #c1c3bb 80%, #e8e9e3 100%);
+  --dl-disc-rim: rgba(17, 19, 21, 0.14);
+  --dl-disc-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.95),
+    inset 0 -1px 2px rgba(17, 19, 21, 0.10),
+    0 2px 5px rgba(17, 19, 21, 0.10),
+    0 1px 2px rgba(17, 19, 21, 0.06);
+
+  /* Shared wall surface — ONE matte microcement/brushed-metal material used by both  */
+  /* the hero and the workflow so the whole page reads as a single continuous wall.   */
+  /* Warm matte silver (graphite only for seams + text). Tuned so adjacent tones step */
+  /* by a hair, never a band. See .dl-page (the landing surface) for how they layer.  */
+  /* Lifted ~4 toward white (brighter, polished silver) — same warm-silver hue (B a    */
+  /* hair below R/G); keep that relationship if you retune.                            */
+  --surface-0: #f8f8f5;
+  --surface-1: #f2f2ee;
+  --surface-2: #ebece7;
+  --surface-3: #e4e5df;
+  --surface-4: #d9dbd5;
+  --wall-line:      rgba(40, 42, 39, 0.055);
+  --wall-line-soft: rgba(40, 42, 39, 0.026);
+  --wall-edge-light: rgba(255, 255, 255, 0.62);
+  /* One shell grid for navbar + hero + workflow header + scene (defined here so all   */
+  /* sections inherit the SAME max-width + inset and snap to one layout grid).         */
+  --dl-shell-max: 1440px;
+  --dl-shell-pad: clamp(22px, 6vw, 104px);
+  /* Height of the fixed header — its reserved "safe zone". The header element IS     */
+  /* this tall, and every section reserves it at the top (hero padding-top, workflow/ */
+  /* security scroll-margin) so the wordmark / nav / Launch App can never collide with */
+  /* section content. Acts as the spec's --header-height; pairs with --dl-shell-max    */
+  /* (page-max-width) and --dl-shell-pad (page-padding-x) for one shared layout grid.  */
+  --dl-nav-height: 96px;
+
+  /* Public header/layout names (spec). Aliased to the shell tokens above so the fixed  */
+  /* header lands on the EXACT same max-width + horizontal inset as the hero and every  */
+  /* section — its left/right edges line up with hero content. Don't give these their   */
+  /* own values: that would unalign the header from the hero grid.                      */
+  --header-height:   var(--dl-nav-height);
+  --page-max-width:  var(--dl-shell-max);
+  --page-padding-x:  var(--dl-shell-pad);
+
+  /* Major-section separation — the uniform vertical rhythm between full sections      */
+  /* (Security↘FAQ, page foot). One token so the gaps stay consistent; scales with     */
+  /* viewport height. Inter-section gap = the bottom pad of one section + the top pad   */
+  /* of the next, so a section that owns a boundary carries one --dl-section-gap.       */
+  --dl-section-gap: clamp(96px, 12vh, 160px);
+
+  /* Dark surfaces */
+  --dl-graphite:      #17191b;
+  --dl-graphite-soft: #2a2e31;
+  --dl-carbon:        #08090a;
+
+  /* Text */
+  --dl-ink:  #111315;
+  --dl-body: #454a4d;
+  --dl-muted: #7a8183;
+
+  /* Hairlines — ink-tinted, not black */
+  --dl-hairline:          rgba(17, 19, 21, 0.12);
+  --dl-hairline-strong:   rgba(17, 19, 21, 0.24);
+  --dl-hairline-inv:      rgba(255, 255, 255, 0.08);
+  --dl-hairline-inv-strong: rgba(255, 255, 255, 0.16);
+
+  /* Glass surfaces */
+  --dl-glass-light: rgba(255, 255, 255, 0.56);
+  --dl-glass-steel: rgba(232, 235, 233, 0.68);
+  --dl-glass-dark:  rgba(17, 19, 21, 0.72);
+
+  /* Atmospheric glows — silver spectrum only, never pastel */
+  --dl-glow-pearl:    rgba(255, 255, 255, 0.62);
+  --dl-glow-silver:   rgba(190, 198, 198, 0.42);
+  --dl-glow-graphite: rgba(40, 45, 48, 0.24);
+
+  /* Atmospheric pastel ORBS (ElevenLabs idiom — see ELEVENLABS_DESIGN.md). The only
+   * colour allowed on the silver wall, used EXCLUSIVELY as soft radial glow drifting
+   * behind components — never as a fill, text, or border. Kept low-alpha so they read as
+   * quiet atmosphere over the brushed metal, not chromatic decoration. Pair each with a
+   * `transparent` end stop in the radial (e.g. radial-gradient(.. var(--dl-orb-sky) 0%,
+   * transparent 70%)). Soft, desaturated stops (mint / sky / lavender / peach / rose). */
+  --dl-orb-lavender: rgba(178, 162, 216, 0.22);
+  --dl-orb-sky:      rgba(150, 188, 226, 0.20);
+  --dl-orb-mint:     rgba(150, 220, 198, 0.18);
+  --dl-orb-peach:    rgba(244, 197, 168, 0.18);
+  --dl-orb-rose:     rgba(230, 178, 196, 0.18);
+  /* whisper-soft variants for the bright hero, where the full-strength orbs wash out */
+  --dl-orb-lavender-soft: rgba(178, 162, 216, 0.13);
+  --dl-orb-sky-soft:      rgba(150, 188, 226, 0.12);
+
+  /* Top specular shine — moodboard "ref-landing-crypto-ap-compliance-wallet".       */
+  /* A soft, bright, NEUTRAL silver-white glare blooming from the top edge of a       */
+  /* surface (brightest upper-left, a fainter cool-white secondary upper-right) and   */
+  /* diffusing downward — the look of studio light glancing off polished glass/metal. */
+  /* Strictly silver spectrum, NO hue (this is a gloss highlight, not a tint). The    */
+  /* radials self-feather, so the overlay needs no extra mask. Shared by the landing  */
+  /* hero (.dl-hero-v2::before) and the dashboard shell (.dl-dash__shine). Tune the   */
+  /* whites here, in one place. */
+  --dl-shine:
+    /* hot core — a bright soft glare upper-left, the dominant gleam (reaches further) */
+    radial-gradient(124% 96% at 26% -22%,
+      rgba(255, 255, 255, 1) 0%,
+      rgba(255, 255, 255, 0.82) 16%,
+      rgba(255, 255, 255, 0.34) 40%,
+      rgba(255, 255, 255, 0) 68%),
+    /* cool secondary bloom upper-right — faint blue-grey, the glass-glare tone       */
+    radial-gradient(92% 80% at 78% -14%,
+      rgba(226, 237, 244, 0.74) 0%,
+      rgba(226, 237, 244, 0) 60%),
+    /* broad soft wash tying the two together across the whole top band               */
+    radial-gradient(165% 135% at 50% -36%,
+      rgba(248, 250, 251, 0.62) 0%,
+      rgba(248, 250, 251, 0) 72%);
+
+  /* On-dark text */
+  --dl-on-dark:       #f4f5f3;
+  --dl-on-dark-muted: rgba(244, 245, 243, 0.55);
+
+  /* Semantic — muted, desaturated, functional only */
+  --dl-success:         #3a7d5c;
+  --dl-success-surface: rgba(58, 125, 92, 0.10);
+  --dl-warning:         #8a6b34;
+  --dl-warning-surface: rgba(138, 107, 52, 0.10);
+  --dl-danger:          #8b3a3a;
+  --dl-danger-surface:  rgba(139, 58, 58, 0.10);
+  --dl-info:            #3a5e8b;
+  --dl-info-surface:    rgba(58, 94, 139, 0.10);
+
+  /* Radii */
+  --dl-r-none: 0px;
+  --dl-r-xs:   4px;
+  --dl-r-sm:   6px;
+  --dl-r-md:   8px;
+  --dl-r-lg:   12px;
+  --dl-r-xl:   16px;
+  --dl-r-xxl:  24px;
+  --dl-r-full: 9999px;
+
+  /* Spacing (4px base unit) */
+  --dl-sp-xxs:     2px;
+  --dl-sp-xs:      4px;
+  --dl-sp-sm:      8px;
+  --dl-sp-md:      12px;
+  --dl-sp-lg:      16px;
+  --dl-sp-xl:      24px;
+  --dl-sp-xxl:     32px;
+  --dl-sp-xxxl:    48px;
+  --dl-sp-section: 96px;
+  --dl-sp-band:    128px;
+
+  /* Shadows — ink-tinted rgba, never rgba(0,0,0,...) */
+  --dl-shadow-card:
+    0 1px 3px rgba(17, 19, 21, 0.06),
+    0 1px 2px rgba(17, 19, 21, 0.04);
+  --dl-shadow-card-hover:
+    0 4px 12px rgba(17, 19, 21, 0.08),
+    0 2px 4px  rgba(17, 19, 21, 0.05);
+  --dl-shadow-glass:
+    inset 0 1px 0 rgba(255, 255, 255, 0.72),
+    0 1px 3px rgba(17, 19, 21, 0.06);
+  --dl-shadow-glass-raised:
+    inset 0 1px 0 rgba(255, 255, 255, 0.80),
+    0 8px 32px rgba(17, 19, 21, 0.12),
+    0 2px 8px  rgba(17, 19, 21, 0.06);
+  --dl-shadow-modal:
+    0 24px 80px rgba(17, 19, 21, 0.24),
+    0 8px 32px  rgba(17, 19, 21, 0.12);
+}
+
+/* ── Mobile system retune — compact rhythm + lighter chrome ──────────────────────
+ * Mobile is a RECOMPOSED layout, not a scaled desktop. Override the two global
+ * vertical-rhythm tokens once, here, so every section inherits a tighter mobile
+ * cadence from one place: a shorter fixed header (less reserved space, lighter
+ * chrome) and a compact major-section gap that tops out at 64px (the mobile spacing
+ * scale: 16 / 20 / 24 / 32 / 48 / 64 — no 100px+ desktop gaps on a phone). Desktop
+ * (≥768px) keeps the full cinematic values defined above. */
+@media (max-width: 767px) {
+  .dl-root {
+    --dl-nav-height: 64px;
+    --dl-section-gap: clamp(48px, 8vh, 64px);
+  }
+}
+
+/* ── Base reset ─────────────────────────────────────────────────────────────── */
+
+*, *::before, *::after {
+  box-sizing: border-box;
+  margin: 0;
+  padding: 0;
+}
+
+html {
+  font-size: 16px;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  text-rendering: optimizeLegibility;
+  /* Nav-link clicks (#workflow, #security) glide instead of jumping. Anchor targets */
+  /* carry scroll-margin-top so they land clear of the fixed nav. Disabled below for */
+  /* prefers-reduced-motion. (Only affects programmatic/anchor scrolls, not the      */
+  /* workflow's scroll-driven pin.)                                                  */
+  scroll-behavior: smooth;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+}
+
+body {
+  min-width: 320px;
+  min-height: 100dvh;
+  background: var(--dl-canvas);
+  color: var(--dl-ink);
+  /* Marketing UI/body default = IBM Plex Mono (--font-marketing-ui). The whole landing  */
+  /* — prose, nav, chips, labels, FAQ, security copy and the faux on-chain data — runs   */
+  /* on mono for the technical DealLock feel; Chakra Petch (--dl-display) is reserved     */
+  /* for the hero headline + section titles, and Stardos Stencil for the wordmark only.  */
+  font-family: var(--dl-mono);
+  font-size: 15px;
+  line-height: 1.55;
+}
+
+img, svg {
+  display: block;
+  max-width: 100%;
+}
+
+button {
+  font: inherit;
+  cursor: pointer;
+  border: none;
+  background: none;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+}
+
+/* ── Hero v2 — open editorial metallic ──────────────────────────────────────── */
+
+.dl-hero-v2 {
+  min-height: 100dvh;
+  width: 100%;
+  position: relative;
+  background:
+    radial-gradient(ellipse 100% 70% at 56% 38%, #fbfcfb 0%, rgba(251, 252, 251, 0) 65%),
+    /* whisper-soft pastel orbs (ELEVENLABS_DESIGN.md) — a lavender bloom behind the     */
+    /* vault, a fainter sky one to the left; kept on the *-soft alphas so the bright hero */
+    /* never tips into chromatic. Behind the shine/SVG/stage that paint on top.          */
+    radial-gradient(42% 38% at 82% 64%, var(--dl-orb-lavender-soft) 0%, transparent 70%),
+    radial-gradient(40% 36% at 14% 30%, var(--dl-orb-sky-soft) 0%, transparent 72%),
+    /* polished diagonal gleam — a DEFINED silver catch-light raking across the wall.    */
+    /* The fast bright→steel→bright falloff (not a soft wash) is what reads as POLISHED   */
+    /* metal rather than matte off-white; aligned to the page wall's 115deg satin sweep   */
+    /* so the gleam carries across the hero→workflow seam. Pure white = no hue tint.      */
+    linear-gradient(116deg,
+      rgba(255, 255, 255, 0) 12%,
+      rgba(255, 255, 255, 0.62) 29%,
+      rgba(255, 255, 255, 0.06) 39%,
+      rgba(208, 214, 211, 0.12) 57%,
+      rgba(255, 255, 255, 0.20) 67%,
+      rgba(255, 255, 255, 0.52) 76%,
+      rgba(255, 255, 255, 0) 91%),
+    /* base floor tuned to flow into the shared .dl-page wall below (its top ≈ #f4f5f2), */
+    /* so the hero→workflow boundary reads as one surface, not a step. Nudged a hair      */
+    /* COOLER (toward silver, off the warm off-white) — the shine comes from the gleam +  */
+    /* blooms/conic/sheen overlays on top, not this base tone.                            */
+    linear-gradient(168deg, #f6f8f7 0%, #eef1ef 52%, #e7ebe9 100%);
+  overflow: hidden;
+}
+
+/* Top specular shine (moodboard ref-landing-crypto-…). A bright silver-white glare */
+/* blooming from the very top of the hero — behind the header + headline — that     */
+/* diffuses by ~mid-screen. screen blend so it ONLY lightens (a real gloss gleam,    */
+/* never a grey wash). z-index 1 lifts it above the metallic SVG background (z 0);   */
+/* the stage (also z 1, but later in the DOM) paints over it, so copy + vault stay   */
+/* fully crisp on top.                                                               */
+.dl-hero-v2::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 68%;
+  z-index: 1;
+  pointer-events: none;
+  background: var(--dl-shine);
+  mix-blend-mode: screen;
+  opacity: 1;
+}
+
+/* ── Site header — fixed, grid-aligned to the page container ─────────────────── */
+/* A real fixed header: DealLock wordmark (left) · liquid-glass nav rail (center) ·  */
+/* Launch App (right), on the SAME max-width + inset grid as the hero and sections   */
+/* (--page-max-width / --page-padding-x), so its edges line up with page content.    */
+/* The header is click-through; only the wordmark, rail and button capture pointer   */
+/* events, so the empty grid gutters never block the hero beneath. Overlap is solved  */
+/* by reserved space (hero/section padding-top = --header-height), never by z-index.  */
+
+.site-header {
+  --nav-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: var(--header-height);
+  z-index: 100;
+  display: flex;
+  align-items: center;
+  pointer-events: none;
+}
+
+.site-header-inner {
+  width: 100%;
+  max-width: var(--page-max-width);
+  margin-inline: auto;
+  padding-inline: var(--page-padding-x);
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: 24px;
+  position: relative;
+  isolation: isolate;
+}
+
+/* Scrolled glass BAR — a single frosted pill spanning the full content width, from   */
+/* the wordmark's left edge to the Launch App button's right edge (the button's own   */
+/* metal bg sits on top at the right, so the glass reads as ending at the button's     */
+/* left side). Backgroundless at the top of the page; fades in on .nav-scrolled. The   */
+/* left edge is nudged out a touch so the wordmark sits inside the rounded cap.        */
+.site-header-inner::before {
+  content: "";
+  position: absolute;
+  z-index: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  left: calc(var(--page-padding-x) - 24px);
+  right: var(--page-padding-x);
+  height: 52px;
+  border-radius: 18px;
+  pointer-events: none;
+  opacity: 0;
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.34), rgba(255, 255, 255, 0.14)),
+    linear-gradient(110deg, rgba(255, 255, 255, 0.34) 0%, transparent 38%, rgba(255, 255, 255, 0.12) 54%, transparent 74%);
+  border: 1px solid rgba(255, 255, 255, 0.55);
+  backdrop-filter: blur(28px) saturate(1.45) contrast(1.04);
+  -webkit-backdrop-filter: blur(28px) saturate(1.45) contrast(1.04);
+  box-shadow:
+    0 18px 50px rgba(30, 32, 30, 0.10),
+    inset 0 1px 0 rgba(255, 255, 255, 0.68),
+    inset 0 -1px 0 rgba(80, 82, 78, 0.08);
+  transition: opacity 320ms var(--nav-ease);
+}
+
+.site-header.nav-scrolled .site-header-inner::before { opacity: 1; }
+
+/* Only the real controls take pointer events — the gutters stay click-through. The    */
+/* controls also sit ABOVE the glass bar (z-index:1 over the ::before at z-index:0).    */
+.site-header-inner > * {
+  pointer-events: auto;
+  position: relative;
+  z-index: 1;
+}
+
+/* Left — DealLock wordmark (Stardos Stencil), aligned to the hero's left content edge. */
+.deallock-wordmark {
+  grid-column: 1;
+  justify-self: start;
+  font-family: var(--font-logo);
+  font-weight: 700;
+  font-size: 24px;
+  line-height: 1;
+  letter-spacing: -0.035em;
+  color: var(--dl-ink);
+  text-decoration: none;
+  white-space: nowrap;
+  text-rendering: geometricPrecision;
+  -webkit-font-smoothing: antialiased;
+  text-shadow: 0 1px 0 rgba(255, 255, 255, 0.72);
+  transition: color 160ms ease, opacity 160ms ease;
+}
+
+.deallock-wordmark:hover { color: rgba(17, 19, 21, 0.78); }
+
+/* Center — nav rail. Backgroundless at the top of the page; morphs into an Apple-like */
+/* liquid-glass pill on scroll (.nav-scrolled). The matte wall stays visible through   */
+/* it — translucent, never an opaque white plastic pill.                               */
+.nav-rail {
+  grid-column: 2;
+  justify-self: center;
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  align-items: center;
+  padding: 12px 26px;
+  border-radius: 999px;
+  background: transparent;
+  border: 1px solid transparent;
+  box-shadow: none;
+  backdrop-filter: none;
+  -webkit-backdrop-filter: none;
+  transition:
+    background 320ms var(--nav-ease),
+    border-color 320ms var(--nav-ease),
+    box-shadow 320ms var(--nav-ease),
+    backdrop-filter 320ms var(--nav-ease),
+    -webkit-backdrop-filter 320ms var(--nav-ease);
+}
+
+/* Glass highlights — invisible at the top, faded in with the scrolled glass.          */
+/* ::before = thin top highlight · ::after = soft diagonal reflection streak.          */
+.nav-rail::before,
+.nav-rail::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  pointer-events: none;
+  opacity: 0;
+  z-index: 0;
+  transition: opacity 320ms var(--nav-ease);
+}
+
+.nav-rail::before {
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.52) 0%, rgba(255, 255, 255, 0) 46%);
+}
+
+.nav-rail::after {
+  background: linear-gradient(116deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.34) 24%,
+    rgba(255, 255, 255, 0) 50%,
+    rgba(255, 255, 255, 0.12) 70%,
+    rgba(255, 255, 255, 0) 100%);
+}
+
+.nav-links {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  gap: clamp(28px, 3vw, 48px);
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.nav-link {
+  font-family: var(--font-marketing-ui);
+  font-size: 12.5px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: rgba(17, 19, 21, 0.70);
+  text-decoration: none;
+  padding: 6px 2px;
+  position: relative;
+  cursor: pointer;
+  transition: color 180ms ease;
+}
+
+.nav-link::after {
+  content: "";
+  position: absolute;
+  left: 2px;
+  right: 2px;
+  bottom: 0;
+  height: 1px;
+  background: rgba(17, 19, 21, 0.42);
+  transform: scaleX(0);
+  transform-origin: center;
+  transition: transform 220ms var(--nav-ease);
+}
+
+.nav-link:hover { color: var(--dl-ink); }
+.nav-link:hover::after { transform: scaleX(1); }
+
+/* Right side — two auth actions: a ghost-metal "Log in" + a brushed-metal       */
+/* "Sign up". The container owns the grid placement; the buttons stay compact     */
+/* (not huge) and share the header's metal language.                              */
+.nav-auth {
+  grid-column: 3;
+  justify-self: end;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.nav-auth-login,
+.nav-auth-signup {
+  font-family: var(--font-marketing-ui);
+  font-size: 13px;
+  font-weight: 600;
+  letter-spacing: 0.01em;
+  color: var(--dl-ink);
+  text-decoration: none;
+  border-radius: 18px;
+  height: 52px;
+  display: inline-flex;
+  align-items: center;
+  white-space: nowrap;
+  cursor: pointer;
+  transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease, color 160ms ease;
+}
+
+/* Log in — calm ghost: a hairline pill that fills with a faint metal wash on hover. */
+.nav-auth-login {
+  padding: 0 16px;
+  background: transparent;
+  border: 1px solid transparent;
+  color: rgba(17, 19, 21, 0.72);
+}
+.nav-auth-login:hover {
+  color: var(--dl-ink);
+  background: rgba(255, 255, 255, 0.34);
+  border-color: rgba(17, 19, 21, 0.10);
+}
+
+/* Sign up — the signature brushed-metal disc button (the former Launch App look). */
+.nav-auth-signup {
+  padding: 0 22px;
+  background: var(--dl-metal-face);
+  border: 1px solid var(--dl-metal-edge);
+  box-shadow: var(--dl-metal-shadow);
+}
+.nav-auth-signup:hover {
+  transform: translateY(-1px);
+  background: var(--dl-metal-face-hover);
+  box-shadow: var(--dl-metal-shadow-hover);
+}
+
+.nav-auth-login:focus-visible,
+.nav-auth-signup:focus-visible {
+  outline: 2px solid var(--dl-ink);
+  outline-offset: 2px;
+}
+
+/* The center rail no longer carries its own glass pill — the full-width glass BAR    */
+/* (.site-header-inner::before) is the single frosted surface now, and the nav links   */
+/* sit directly on it. The rail stays a transparent flex container; its dormant        */
+/* highlight pseudo-elements never fade in (kept only as a styling hook).              */
+
+/* Collapse the center nav when space gets tight — wordmark + Launch App always stay.  */
+@media (max-width: 920px) {
+  .nav-rail { display: none; }
+}
+
+/* Lighter mobile header: shorter (via --dl-nav-height), smaller wordmark, and a       */
+/* less dominant Sign-up pill. "Log in" stays a plain ghost link. Glass bar + buttons  */
+/* share one height so the bar's right end still caps cleanly under the pill.          */
+@media (max-width: 767px) {
+  .deallock-wordmark { font-size: 20px; }
+  .site-header-inner { gap: 14px; }
+  .site-header-inner::before { height: 42px; border-radius: 15px; }
+  .nav-auth { gap: 6px; }
+  .nav-auth-login,
+  .nav-auth-signup { height: 42px; font-size: 12px; border-radius: 15px; }
+  .nav-auth-login { padding: 0 12px; }
+  .nav-auth-signup { padding: 0 16px; }
+}
+
+@media (max-width: 479px) {
+  .deallock-wordmark { font-size: 18px; }
+}
+
+/* ── Hero v2 stage — Resend-style two-column composition ─────────────────────── */
+
+.dl-hero-v2__stage {
+  min-height: 100svh;
+  position: relative;
+  z-index: 1;
+  display: grid;
+  grid-template-columns: minmax(0, 1.05fr) minmax(0, 1fr);
+  gap: clamp(56px, 6.5vw, 112px);
+  /* align-items centres the two columns against each other; align-content positions  */
+  /* the WHOLE composition vertically. `safe center` centres it in the space below    */
+  /* the header when it fits, but falls back to top-aligned (start) when content is    */
+  /* taller than that space — so the headline/vault overflow DOWNWARD and can never    */
+  /* rise into the fixed header's safe zone. (This replaces the old align-items:center */
+  /* + stretched row, which let a tall column bleed upward on short viewports.)        */
+  align-items: center;
+  align-content: safe center;
+  /* Reserve the header safe zone (its height) plus a buffer; the composition lives    */
+  /* entirely below it. Same shell max-width + inset as the header → aligned columns.   */
+  padding: calc(var(--dl-nav-height) + clamp(28px, 4.5vh, 64px)) var(--dl-shell-pad) clamp(56px, 9vh, 120px);
+  max-width: var(--dl-shell-max);
+  margin: 0 auto;
+}
+
+/* ── Modular vault sculpture — right column ──────────────────────────────────── */
+
+.dl-vault-wrap {
+  width: 100%;
+  max-width: 460px;
+  justify-self: end;
+  animation: dl-vault-float 9s ease-in-out infinite;
+}
+
+@keyframes dl-vault-float {
+  0%, 100% { transform: translateY(-8px) rotate(-0.15deg); }
+  50%       { transform: translateY(8px) rotate(0.15deg); }
+}
+
+/* ── Left copy column ────────────────────────────────────────────────────────── */
+
+.dl-hero-copy {
+  max-width: 520px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+}
+
+.dl-hero-brand {
+  font-family: var(--dl-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: rgba(17, 19, 21, 0.48);
+  margin-bottom: 24px;
+  display: inline-flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.dl-hero-brand::before {
+  content: "";
+  width: 18px;
+  height: 1px;
+  background: rgba(17, 19, 21, 0.30);
+}
+
+.dl-hero-h1 {
+  font-family: var(--dl-display);
+  font-optical-sizing: auto;
+  font-size: clamp(44px, 5vw, 72px);
+  font-weight: 600;
+  line-height: 1.04;
+  letter-spacing: -0.022em;
+  color: var(--dl-ink);
+  margin-bottom: 32px;
+  white-space: nowrap;
+}
+
+.dl-hero-sub {
+  font-family: var(--dl-mono);
+  font-size: 15px;
+  font-weight: 400;
+  line-height: 1.62;
+  color: rgba(17, 19, 21, 0.58);
+  letter-spacing: 0.005em;
+  max-width: 440px;
+  margin-bottom: 44px;
+}
+
+.dl-hero-cta-row {
+  display: flex;
+  align-items: center;
+  gap: 28px;
+  margin-bottom: 52px;
+}
+
+.dl-cta-primary {
+  font-family: var(--dl-mono);
+  font-size: 13.5px;
+  font-weight: 600;
+  letter-spacing: 0.005em;
+  color: var(--dl-ink);
+  background: var(--dl-metal-face);
+  border: 1px solid var(--dl-metal-edge);
+  border-radius: 10px;
+  padding: 0 22px;
+  height: 46px;
+  cursor: pointer;
+  transition: transform 160ms ease, box-shadow 160ms ease, background 160ms ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  box-shadow: var(--dl-metal-shadow);
+}
+
+.dl-cta-primary:hover {
+  transform: translateY(-1px);
+  background: var(--dl-metal-face-hover);
+  /* metal shadow + a faint lavender glow halo so the primary action lifts with a soft  */
+  /* lit edge (matches the pill glow; pastel kept low so the disc stays brushed metal).  */
+  box-shadow: var(--dl-metal-shadow-hover), 0 10px 26px -10px rgba(178, 162, 216, 0.5);
+}
+
+.dl-cta-primary:focus-visible {
+  outline: 2px solid var(--dl-ink);
+  outline-offset: 3px;
+}
+
+.dl-cta-secondary {
+  font-family: var(--dl-mono);
+  font-size: 13.5px;
+  font-weight: 500;
+  letter-spacing: 0.005em;
+  color: rgba(17, 19, 21, 0.56);
+  padding: 0 4px;
+  height: 46px;
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  cursor: pointer;
+  transition: color 140ms ease, gap 200ms ease;
+}
+
+.dl-cta-secondary:hover {
+  color: var(--dl-ink);
+  gap: 14px;
+}
+
+.dl-cta-secondary:focus-visible {
+  outline: 2px solid var(--dl-ink);
+  outline-offset: 3px;
+  border-radius: 4px;
+}
+
+.dl-hero-chips {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 18px;
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.dl-hero-chip {
+  font-family: var(--dl-mono);
+  font-size: 11.5px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  color: rgba(17, 19, 21, 0.62);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.58) 0%, rgba(244, 246, 245, 0.36) 100%);
+  border: 1px solid rgba(17, 19, 21, 0.08);
+  border-radius: 999px;
+  padding: 7px 14px;
+  line-height: 1.4;
+  backdrop-filter: blur(10px) saturate(1.35);
+  -webkit-backdrop-filter: blur(10px) saturate(1.35);
+  /* The pearl rim + faint drop, plus a soft pastel GLOW halo (one tint per chip below)  */
+  /* so the pills read as quietly lit glass over the metal wall.                          */
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.85),
+    0 1px 2px rgba(17, 19, 21, 0.04),
+    0 6px 20px -8px var(--dl-chip-glow, rgba(178, 162, 216, 0.4));
+  transition: box-shadow 240ms ease, border-color 240ms ease, transform 240ms ease;
+}
+/* Per-chip pastel halo — the three feature pills carry the lavender / sky / mint orbs. */
+.dl-hero-chip:nth-child(1) { --dl-chip-glow: rgba(178, 162, 216, 0.42); }
+.dl-hero-chip:nth-child(2) { --dl-chip-glow: rgba(150, 188, 226, 0.42); }
+.dl-hero-chip:nth-child(3) { --dl-chip-glow: rgba(150, 220, 198, 0.40); }
+.dl-hero-chip:hover {
+  transform: translateY(-1px);
+  border-color: rgba(17, 19, 21, 0.12);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.92),
+    0 2px 4px rgba(17, 19, 21, 0.05),
+    0 9px 26px -7px var(--dl-chip-glow, rgba(178, 162, 216, 0.55));
+}
+
+/* ── Scroll cue ──────────────────────────────────────────────────────────────── */
+
+.dl-scroll-cue {
+  position: absolute;
+  bottom: 32px;
+  left: 8vw;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  background: transparent;
+  border: 1px solid rgba(17, 19, 21, 0.16);
+  color: var(--dl-muted);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition: background 150ms ease, color 150ms ease, border-color 150ms ease;
+}
+
+.dl-scroll-cue:hover {
+  background: rgba(17, 19, 21, 0.05);
+  color: var(--dl-body);
+  border-color: rgba(17, 19, 21, 0.24);
+}
+
+.dl-scroll-cue:focus-visible {
+  outline: 2px solid var(--dl-ink);
+  outline-offset: 2px;
+}
+
+/* ── Responsive — tablet ─────────────────────────────────────────────────────── */
+
+@media (max-width: 960px) {
+  /* Single-column stack that flows at CONTENT height — drop the full-viewport floor    */
+  /* so the hero is exactly as tall as eyebrow→headline→copy→CTA→chips→vault, with no    */
+  /* large dead band before/after the vault and no forced "showroom" empty screen.      */
+  .dl-hero-v2 { min-height: auto; }
+
+  .dl-hero-v2__stage {
+    grid-template-columns: 1fr;
+    gap: clamp(24px, 4.5vh, 44px);
+    min-height: auto;
+    padding: calc(var(--dl-nav-height) + clamp(28px, 5vh, 48px)) var(--dl-shell-pad) clamp(48px, 8vh, 72px);
+    align-items: start;
+  }
+
+  .dl-vault-wrap {
+    max-width: 340px;
+    justify-self: center;
+    order: 2;
+  }
+
+  .dl-hero-copy {
+    max-width: 560px;
+    order: 1;
+  }
+
+  .dl-scroll-cue {
+    left: 5vw;
+  }
+}
+
+/* ── Responsive — mobile ─────────────────────────────────────────────────────── */
+
+@media (max-width: 639px) {
+  /* Phone: a clean, focused stack. Tightened vertical rhythm (the desktop 24/32/44/52   */
+  /* margins were airy on a phone), a smaller-but-strong headline, controlled copy width, */
+  /* and the feature chips in a compact 2-column cluster instead of an uneven wrap.       */
+  .dl-hero-v2__stage {
+    padding: calc(var(--dl-nav-height) + 22px) 20px clamp(40px, 7vh, 56px);
+    gap: clamp(22px, 5vw, 32px);
+  }
+
+  .dl-hero-copy { max-width: 100%; }
+  .dl-hero-brand { margin-bottom: 14px; }
+
+  .dl-hero-h1 {
+    font-size: clamp(30px, 8.5vw, 42px);
+    margin-bottom: 16px;
+  }
+
+  .dl-hero-sub {
+    font-size: 14px;
+    line-height: 1.58;
+    max-width: 40ch;
+    margin-bottom: 22px;
+  }
+
+  .dl-hero-cta-row {
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-bottom: 26px;
+  }
+
+  /* Compact 2-up cluster of natural-width pills (2 + 1, left-aligned) — reads as an     */
+  /* intentional grid, not the ragged flex-wrap the desktop row produced on narrow widths. */
+  .dl-hero-chips {
+    display: grid;
+    grid-template-columns: repeat(2, max-content);
+    gap: 9px 10px;
+  }
+
+  /* Contained vault — sits right under the chips (the stage gap is the only space        */
+  /* before it) and never dominates the fold; the figure is square + uncropped.           */
+  .dl-vault-wrap {
+    max-width: 260px;
+  }
+
+  .dl-scroll-cue {
+    display: none;
+  }
+}
+
+/* ── Hero height-compact mode (short / non-fullscreen / zoomed desktop) ──────────── */
+/* Scoped to the two-column desktop layout (min-width:961px) so it never fights the   */
+/* single-column stack (which simply scrolls). When the viewport is short the full    */
+/* cinematic hero can't fit one screen, so we adapt — NOT preserve it: smaller head-  */
+/* line, tighter top safe-gap + bottom pad, and trimmed copy rhythm so the copy       */
+/* column stays short. The vault is capped by height separately (max-width min()).    */
+@media (min-width: 961px) and (max-height: 820px) {
+  .dl-hero-v2__stage {
+    /* Keep the full header safe zone, just shrink the buffer below it + the foot. */
+    padding-top: calc(var(--dl-nav-height) + clamp(14px, 2.2vh, 30px));
+    padding-bottom: clamp(28px, 4.5vh, 64px);
+    gap: clamp(40px, 4.5vw, 80px);
+  }
+
+  .dl-hero-h1 {
+    font-size: clamp(38px, 4.4vw, 58px);
+    margin-bottom: clamp(18px, 2.6vh, 26px);
+  }
+
+  .dl-hero-sub {
+    margin-bottom: clamp(22px, 3.4vh, 36px);
+  }
+
+  .dl-hero-cta-row {
+    margin-bottom: clamp(24px, 3.8vh, 40px);
+  }
+}
+
+/* Very short (e.g. 1280×700, dev tools open): pull the headline down once more and   */
+/* drop the scroll cue, which would otherwise sit on top of the chips / vault foot.   */
+@media (min-width: 961px) and (max-height: 680px) {
+  .dl-hero-h1 {
+    font-size: clamp(34px, 3.8vw, 48px);
+    line-height: 1.02;
+  }
+
+  .dl-scroll-cue {
+    display: none;
+  }
+}
+
+/* ── Spline circular glass vault — hero right visual ─────────────────────────── */
+/* The COMPLETE Spline figure is shown as designed: the circular glass vault AND   */
+/* its own metal/glass plate/frame, which are part of the 3D scene (not CSS). The  */
+/* canvas is transparent and is NEVER clipped (overflow: visible, no mask, no      */
+/* object-fit crop), so the full object reads against the matte wall with no extra */
+/* card or fake backing rectangle. The full figure is revealed by pulling the      */
+/* scene camera back at runtime (HeroVaultSpline's onLoad) — NOT by a CSS plate    */
+/* and NOT by cropping the canvas.                                                 */
+/*                                                                                 */
+/* Two layers: .dl-vault-wrap--spline is the "hero visual" frame that hosts the    */
+/* ambient embedding (soft wall bloom + grounding shadow, pseudo-elements below);  */
+/* .dl-spline-vault holds the transparent canvas and sits ABOVE that atmosphere    */
+/* (z-index 2). The atmosphere makes the figure read as installed INTO the matte   */
+/* wall instead of pasted on as a card.                                            */
+
+.dl-vault-wrap--spline {
+  position: relative; /* grid flow; no absolute overlay / viewport-calc tracking */
+  justify-self: center;
+  align-self: center;
+  /* SQUARE stage that fills the right grid column (capped). Square + concentric    */
+  /* children = the niche and the vault share one center with EVEN padding on all   */
+  /* four sides by construction — the recess is sized around the vault, not nudged. */
+  width: 100%;
+  /* Cap by the HEIGHT available below the fixed header, not just by width. Because  */
+  /* the wrap is aspect-ratio 1/1, its rendered height equals its width — so a pure  */
+  /* width cap (560px) let the vault stand ~560px tall and overflow short viewports  */
+  /* (laptop / non-fullscreen / 110% zoom). The min() also feeds the height-derived  */
+  /* term in, so on a short window the square shrinks instead of being cropped; the  */
+  /* max() floors it so it never collapses. Full 560 holds until ~850px tall, then   */
+  /* the vault scales down gracefully. (Tablet/mobile ≤960px override this below.)   */
+  max-width: min(560px, max(300px, calc(100svh - var(--dl-nav-height) - 190px)));
+  aspect-ratio: 1 / 1;
+  min-width: 0;
+  margin: 0;
+  overflow: visible;       /* never clip the figure or its plate */
+  background: transparent; /* no backing box behind the Spline object */
+  animation: none;
+  /* Interactive: events must reach the Spline canvas so the lock/ring respond to    */
+  /* hover + click. Camera orbit/pan/zoom stay OFF in the scene export, so enabling   */
+  /* pointer events can never rotate the vault — it only feeds object-level hits.     */
+  pointer-events: auto;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+/* Recessed wall NICHE — the hero visual is a shallow square opening carved INTO the */
+/* matte wall, and the Spline vault sits inside it. Built only from the wall's own    */
+/* material + INSET light/shadow (no fill contrast, no border, no outer drop shadow)  */
+/* so it reads as a recess, never a card on top. Light comes from above: the top      */
+/* inner edge is shadowed (overhang), the bottom lip catches light. The Spline figure */
+/* renders above this (z-index 2), centered in the opening.                           */
+.dl-vault-wrap--spline::before {
+  content: "";
+  position: absolute;
+  inset: 7.5%;             /* sits right at the plate's outer edge — NOT inside it.    */
+  border-radius: 28px;     /* matches the plate's outer radius → one clean recess     */
+  /* The plate is translucent, so a niche placed inside its footprint would show      */
+  /* through as a second rectangle (double-frame). Keeping the recess at the plate's   */
+  /* perimeter concentrates the depth cue on the edge: a clean seated-in-wall look.    */
+  background: transparent;  /* no fill / no outline — recess is pure soft shadow      */
+  /* The opening is a touch larger than the vault, leaving a thin even reveal band.   */
+  /* That band shows the recess inner wall: shadowed at the top (overhang), catching  */
+  /* light at the bottom (bevel). Subtle, not heavy — depth without a card outline.   */
+  box-shadow:
+    inset 0 16px 26px -16px rgba(17, 19, 21, 0.17),    /* top inner wall in shadow */
+    inset 22px 0 30px -28px rgba(17, 19, 21, 0.07),    /* left inner wall, faint */
+    inset -22px 0 30px -28px rgba(17, 19, 21, 0.07),   /* right inner wall, faint */
+    inset 0 -14px 22px -18px rgba(255, 255, 255, 0.40);/* bottom wall catches light */
+  z-index: 0;
+  pointer-events: none;
+}
+
+.dl-spline-vault {
+  position: absolute;
+  inset: 0; /* fill the square wrap */
+  z-index: 2; /* figure sits above the ambient recess shadow */
+  /* The published scene frames the figure a touch left-of-centre and low; this    */
+  /* nudge re-centres the rendered vault on the box so it sits dead-centre in the   */
+  /* niche. Percentage units scale with the canvas, so it holds at every breakpoint.*/
+  /* Recenter (translate) is static; the subtle hover lift adds scale on top of it.   */
+  transform: translate(2.6%, -2.4%);
+  transition: transform 420ms cubic-bezier(0.2, 0.7, 0.2, 1);
+  overflow: visible; /* never clip the figure or its plate */
+  background: transparent;
+  /* Interactive: the canvas receives hover/click so the lock responds. Orbit/pan/   */
+  /* zoom are disabled in the scene export, so no drag can rotate the vault.          */
+  pointer-events: auto;
+  cursor: pointer;
+  user-select: none;
+  -webkit-user-drag: none;
+}
+
+/* Subtle premium hover lift — scale composes with the static recenter translate.    */
+.dl-spline-vault:hover {
+  transform: translate(2.6%, -2.4%) scale(1.012);
+}
+
+/* Sealed state holds a faint lift so the "confirmed" vault reads as settled-in.      */
+.dl-spline-vault.is-sealed {
+  transform: translate(2.6%, -2.4%) scale(1.006);
+}
+
+/* react-spline applies this class to the <canvas> wrapper; fill the container     */
+/* fully and keep it transparent.                                                  */
+.dl-spline-vault__canvas,
+.dl-spline-vault__canvas canvas {
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+  border: none;
+  outline: none;
+  overflow: visible;
+  background: transparent !important;
+  /* Canvas takes hits for hover/click; pan-y keeps vertical page scroll working on  */
+  /* touch (a vertical drag scrolls the page, it never orbits the locked camera).    */
+  pointer-events: auto;
+  user-select: none;
+  -webkit-user-drag: none;
+  touch-action: pan-y;
+}
+
+/* Gentle idle "breathing" — lives on the inner canvas wrapper so it composes with    */
+/* the parent's recenter translate (and hover scale) without fighting it. Off under   */
+/* reduced motion (that path renders the static SVG anyway, but guard regardless).    */
+.dl-spline-vault__canvas {
+  animation: dl-vault-breathe 7s ease-in-out infinite;
+  transform-origin: 50% 50%;
+  /* fade in once the scene reports onLoad (crossfades with the placeholder out) */
+  opacity: 0;
+  transition: opacity 550ms ease;
+}
+.dl-spline-vault.is-loaded .dl-spline-vault__canvas { opacity: 1; }
+
+@keyframes dl-vault-breathe {
+  0%, 100% { transform: scale(1); }
+  50%      { transform: scale(1.006); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dl-spline-vault__canvas { animation: none; }
+
+  /* Still switch between the two navbar states, just without the cross-fade. */
+  .site-header-inner::before,
+  .nav-rail,
+  .nav-rail::before,
+  .nav-rail::after,
+  .nav-auth-login,
+  .nav-auth-signup {
+    transition: none;
+  }
+}
+
+/* Soft hover glow + click "seal" pulse + status hint — all decorative overlays that  */
+/* sit ABOVE the canvas but never take pointer events, so they can't block clicks.    */
+.dl-spline-vault__fx {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  display: block;
+}
+
+/* Soft luminous bloom that intensifies on hover / while sealed. Screen-blended so it  */
+/* brightens the lock rather than washing a flat white box over it.                   */
+.dl-spline-vault__glow {
+  position: absolute;
+  inset: 8%;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 46%,
+    rgba(255, 255, 255, 0.55) 0%,
+    rgba(236, 242, 244, 0.22) 34%,
+    rgba(220, 228, 230, 0) 64%);
+  mix-blend-mode: screen;
+  opacity: 0;
+  transform: scale(0.9);
+  transition: opacity 360ms ease, transform 420ms cubic-bezier(0.2, 0.7, 0.2, 1);
+  pointer-events: none;
+}
+
+.dl-spline-vault:hover .dl-spline-vault__glow {
+  opacity: 0.9;
+  transform: scale(1);
+}
+
+.dl-spline-vault.is-sealed .dl-spline-vault__glow {
+  opacity: 0.5;
+  transform: scale(1);
+}
+
+/* Circular pulse that expands once from the lock center on click. Re-keyed in React  */
+/* (key prop) so the animation restarts on every seal.                                */
+.dl-spline-vault__pulse {
+  position: absolute;
+  top: 46%;
+  left: 50%;
+  width: 38%;
+  height: 38%;
+  border-radius: 50%;
+  border: 1.5px solid rgba(17, 19, 21, 0.22);
+  transform: translate(-50%, -50%) scale(0.3);
+  opacity: 0;
+  pointer-events: none;
+}
+
+.dl-spline-vault__pulse.is-active {
+  animation: dl-vault-seal-pulse 760ms cubic-bezier(0.2, 0.7, 0.2, 1) forwards;
+}
+
+@keyframes dl-vault-seal-pulse {
+  0%   { transform: translate(-50%, -50%) scale(0.3); opacity: 0.85; border-color: rgba(17, 19, 21, 0.30); }
+  100% { transform: translate(-50%, -50%) scale(1.7);  opacity: 0;    border-color: rgba(17, 19, 21, 0); }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dl-spline-vault__pulse.is-active { animation: none; }
+}
+
+/* "Funds locked" status hint — horizontally centered, pinned near the vault base once  */
+/* sealed. Decorative pill (the headline carries the real meaning), so pointer-events    */
+/* stay off.                                                                             */
+.dl-spline-vault__status {
+  position: absolute;
+  /* The wrapper's recenter translate (2.6%) shifts everything right; subtract it here   */
+  /* so the pill sits true-center under the disc rather than slightly right of it.        */
+  left: calc(50% - 2.6%);
+  bottom: 7%;
+  transform: translate(-50%, 8px);
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-family: var(--dl-mono);
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.04em;
+  color: rgba(17, 19, 21, 0.72);
+  white-space: nowrap;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.78) 0%, rgba(244, 246, 245, 0.5) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.7);
+  border-radius: 999px;
+  padding: 6px 13px;
+  backdrop-filter: blur(10px) saturate(1.35);
+  -webkit-backdrop-filter: blur(10px) saturate(1.35);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.82),
+    0 4px 14px rgba(17, 19, 21, 0.08);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 320ms ease, transform 380ms cubic-bezier(0.2, 0.7, 0.2, 1);
+}
+
+.dl-spline-vault.is-sealed .dl-spline-vault__status {
+  opacity: 1;
+  transform: translate(-50%, 0);
+}
+
+.dl-spline-vault__status::before {
+  content: "";
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #2f6b46;
+  box-shadow: 0 0 0 3px rgba(47, 107, 70, 0.16);
+}
+
+/* NOTE: a CSS mask/feather on the canvas does NOT composite over the Spline WebGL  */
+/* layer (verified on both software and Metal/ANGLE) — so the figure's edge cannot  */
+/* be softened by masking the object. Embedding is driven entirely by the wall      */
+/* recess (the pseudo-elements above) instead, per the design intent that the wall  */
+/* supports the object rather than the object being cropped/veiled.                 */
+
+/* Reduced-motion fallback: static VaultObject SVG, sized by height to fit the */
+/* fixed-height container (overrides the SVG's inline width:100%/height:auto).  */
+.dl-spline-vault__fallback {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.dl-spline-vault__fallback svg {
+  width: auto !important;
+  height: 100% !important;
+  max-width: 100%;
+}
+
+/* Simple loading state — a quiet, centered "Loading secure vault…" label (NOT a    */
+/* spinner, orb, or backup sculpture). It holds the fixed slot until the scene has   */
+/* rendered a stable frame; on .is-loaded it fades out a beat after the live canvas  */
+/* is already crossfading in (no flash, no layout shift). The reveal timing lives in */
+/* useStableSplineReveal — only the placeholder content changed.                     */
+.dl-spline-vault__poster {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 1;
+  transition: opacity 460ms ease 160ms;
+  pointer-events: none;
+}
+.dl-spline-vault__loadlabel {
+  font-family: var(--dl-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: rgba(17, 19, 21, 0.42);
+  animation: dl-vault-loadpulse 1.9s ease-in-out infinite;
+}
+@keyframes dl-vault-loadpulse {
+  0%, 100% { opacity: 0.4; }
+  50%      { opacity: 0.85; }
+}
+.dl-spline-vault.is-loaded .dl-spline-vault__poster {
+  opacity: 0;
+}
+
+/* Static vault still — the poster-first base layer, the reduced-motion visual, and
+   the graceful fallback image. Captured on the same matte wall so it sits flush;
+   object-fit:contain keeps the full figure framed in the (square) slot. */
+.dl-spline-vault__poster-img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  display: block;
+}
+.dl-spline-vault--static .dl-spline-vault__poster-img {
+  position: absolute;
+  inset: 0;
+}
+
+/* Best-effort hide of the "Built with Spline" watermark IF the runtime injects */
+/* it as a DOM anchor. Canonical removal is an export/editor setting. This rule  */
+/* only targets the logo link, so it never blocks canvas pointer events.        */
+.dl-spline-vault a[href*="spline.design"] {
+  display: none !important;
+}
+
+@media (max-width: 960px) {
+  /* Single-column stack: the square vault flows below the copy, centered in the  */
+  /* gutter. The canvas (absolute inset:0) and concentric niche scale with it.     */
+  .dl-vault-wrap--spline {
+    order: 2;
+    justify-self: center;
+    width: min(82vw, 480px);
+    max-width: 480px;
+    margin: 0 auto;
+  }
+}
+
+@media (max-width: 639px) {
+  /* Mobile: keep the single-column order (copy first, vault below) so the figure's */
+  /* soft bloom never collides with the fixed header. Square + centered + contained  */
+  /* (matches .dl-vault-wrap's 260 cap) so the vault supports the copy, never        */
+  /* dominates the fold or crops against the viewport.                               */
+  .dl-vault-wrap--spline {
+    width: min(70vw, 260px);
+    max-width: 260px;
+  }
+}
+
+/* ── Reduced motion ──────────────────────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .dl-vault-wrap {
+    animation: none;
+    transform: none;
+  }
+
+  /* poster crossfade + label pulse are instant/off under reduced motion (the    */
+  /* reduced-motion path renders the static SVG directly, but guard regardless). */
+  .dl-spline-vault__poster {
+    transition: none;
+  }
+  .dl-spline-vault__loadlabel {
+    animation: none;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════════════════ */
+/* SECTION EMBLEMS — small decorative 3D Spline icons above section headings      */
+/* (Security shield, Workflow contract). Resend-style intro emblems: a fixed,     */
+/* small square box so there's no layout shift, a transparent canvas (no plate/   */
+/* crop/frame), pointer-events:none, aria-hidden. A frosted silver placeholder    */
+/* holds the slot until the scene paints, then crossfades to the live object.     */
+/* ════════════════════════════════════════════════════════════════════════════ */
+.dl-emblem {
+  position: relative;
+  width: 132px;
+  aspect-ratio: 1 / 1;
+  /* A firm minimum gap (≥24px) below the emblem so it never crowds the heading,    */
+  /* on tall or short viewports alike (the old 3vh floor went too tight when short). */
+  margin: 0 auto clamp(24px, 3vh, 32px);
+  pointer-events: none;
+  display: grid;
+  place-items: center;
+}
+
+/* Canvas container — absolutely centred so an upscale (`--emblem-scale`) grows    */
+/* the canvas symmetrically without changing the fixed wrapper footprint. The      */
+/* drop-shadow tracks the object's own alpha, so the grounding can never detach    */
+/* into an offset circle the way a centre-pinned glow would.                       */
+.dl-emblem__object {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: calc(100% * var(--emblem-scale, 1));
+  height: calc(100% * var(--emblem-scale, 1));
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  filter: drop-shadow(0 6px 11px rgba(17, 19, 21, 0.13));
+  transition: opacity 600ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.dl-emblem.is-loaded .dl-emblem__object {
+  opacity: 1;
+}
+
+/* Mild vertical bob — pure up/down (the base translate keeps it centred). Calm and  */
+/* slow so it reads as a gentle hover, never a bounce. Off under reduced-motion.      */
+.dl-emblem--float .dl-emblem__object {
+  animation: dl-emblem-float 5s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+}
+
+@keyframes dl-emblem-float {
+  0%,
+  100% {
+    transform: translate(-50%, calc(-50% - 4px));
+  }
+  50% {
+    transform: translate(-50%, calc(-50% + 4px));
+  }
+}
+
+.dl-emblem__canvas,
+.dl-emblem__object > div {
+  width: 100%;
+  height: 100%;
+}
+
+.dl-emblem__canvas canvas {
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+  background: transparent !important;
+}
+
+/* Frosted silver placeholder — a soft medallion with a single light sweep (not a  */
+/* spinner). Fades out as the object fades in, then is unmounted from the DOM.      */
+.dl-emblem__skeleton {
+  position: absolute;
+  inset: 16%;
+  z-index: 1;
+  border-radius: 50%;
+  overflow: hidden;
+  background:
+    radial-gradient(circle at 50% 40%, rgba(255, 255, 255, 0.6) 0%, rgba(236, 239, 238, 0.3) 48%, rgba(220, 226, 228, 0) 74%);
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.6);
+  opacity: 1;
+  transition: opacity 600ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.dl-emblem__skeleton::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, transparent 30%, rgba(255, 255, 255, 0.55) 50%, transparent 70%);
+  transform: translateX(-100%);
+  animation: dl-emblem-sweep 1.9s ease-in-out infinite;
+}
+
+@keyframes dl-emblem-sweep {
+  100% {
+    transform: translateX(100%);
+  }
+}
+
+.dl-emblem__skeleton[data-done] {
+  opacity: 0;
+}
+
+/* Reduced-motion fallback — a static silver medallion (no WebGL, no runtime        */
+/* download), so the emblem still reads as a calm metallic disc above the heading.  */
+.dl-emblem--static .dl-emblem__medallion {
+  position: absolute;
+  inset: 16%;
+  border-radius: 50%;
+  background:
+    radial-gradient(circle at 50% 38%, rgba(255, 255, 255, 0.72) 0%, rgba(232, 236, 236, 0.42) 50%, rgba(214, 221, 222, 0.16) 82%, rgba(214, 221, 222, 0) 100%);
+  box-shadow: inset 0 1px 1px rgba(255, 255, 255, 0.65), 0 6px 14px rgba(17, 19, 21, 0.1);
+}
+
+/* Best-effort hide of the "Built with Spline" watermark if the runtime injects it. */
+.dl-emblem a[href*="spline.design"] {
+  display: none !important;
+}
+
+/* Responsive size steps — desktop 132 · tablet ~116 · mobile ~104 · very narrow ~92, */
+/* always centered, never overlapping text (the gap below scales with the box).        */
+@media (max-width: 1199px) {
+  .dl-emblem {
+    width: 116px;
+  }
+}
+
+@media (max-width: 767px) {
+  /* Compact intro emblem on mobile so the shield never pushes the heading down the    */
+  /* page — small and reassuring, not a hero object (per the mobile spline policy).     */
+  .dl-emblem {
+    width: 80px;
+    margin-bottom: clamp(14px, 4vw, 20px);
+  }
+}
+
+@media (max-width: 479px) {
+  .dl-emblem {
+    width: 64px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dl-emblem__object,
+  .dl-emblem--float .dl-emblem__object {
+    transition: none;
+    animation: none;
+  }
+  .dl-emblem__skeleton::after {
+    animation: none;
+  }
+}
+
+/* ════════════════════════════════════════════════════════════════════════════ */
+/* WORKFLOW STORY — sticky scrollytelling section below the hero                  */
+/* A central metal/glass contract card (Spline + HTML overlay) stays pinned while */
+/* six client/provider action cards light up step by step. Same DealLock system:  */
+/* matte wall, silver/graphite/glass, restrained purple accent, premium calm.     */
+/* ════════════════════════════════════════════════════════════════════════════ */
+
+.dl-workflow {
+  /* Restrained grey-violet accent — desaturated so it reads "subtle purple", never */
+  /* neon. Used only for active states (chip, highlighted row, connectors, dots).    */
+  --dl-accent:         #6f63bd;
+  --dl-accent-strong:  #5a4fa6;
+  --dl-accent-surface: rgba(111, 99, 189, 0.10);
+  --dl-accent-line:    rgba(111, 99, 189, 0.34);
+  --dl-accent-glow:    rgba(111, 99, 189, 0.22);
+
+  /* Central contract card — the focal object. These vars size the STAGE (the        */
+  /* physical Spline card's footprint); the readable HTML overlay sits at ~70% inside */
+  /* it, on the glass centre, so the metal rails frame the text. Height is capped by  */
+  /* viewport height so the card + typed narration still fit the pinned 100vh scene.  */
+  --wf-card-w: min(42vw, 600px);
+  /* The central card is the pinned focal object (the title scrolls through above it, */
+  /* so the card gets the full pinned screen) — tall enough to dominate the flanking  */
+  /* action cards, which nestle within its height. The card now carries more product  */
+  /* detail (escrow capsule, current-step block, verified footer), so it's a touch    */
+  /* taller than before.                                                              */
+  /* Trimmed from 80vh so the focal block (stage + step dots + hint) clears the bottom */
+  /* of the pinned scene with breathing room — at 80vh the hint sat flush on the edge. */
+  --wf-card-h: min(73vh, 730px);
+
+  position: relative;
+  z-index: 1;
+  /* Transparent — this section is the NEXT PANEL on the shared .dl-page wall, not a */
+  /* new background. It adds only the focal spotlight behind the contract card.      */
+  background: transparent;
+  color: var(--dl-ink);
+  isolation: isolate;
+  scroll-margin-top: var(--dl-nav-height); /* #workflow nav anchor lands clear of the fixed nav */
+}
+
+/* ── Calm matte backdrop ─────────────────────────────────────────────────────── */
+/* All layers are vertically uniform or pinned, so nothing visibly drifts across   */
+/* the tall (multi-viewport) scroll track.                                         */
+
+.dl-workflow__bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  overflow: hidden;
+  pointer-events: none;
+}
+
+.dl-workflow__bg-glow {
+  position: absolute;
+  inset: 0;
+  /* A soft vertical spotlight column down the centre (uniform in Y → scroll-safe)   */
+  /* focuses light on the pinned card, while faint edge shadows let the side panels   */
+  /* fall away — a quiet spotlight, no hard card container. Grain is shared (.dl-page) */
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.52) 50%, rgba(255, 255, 255, 0) 100%),
+    linear-gradient(90deg, rgba(120, 126, 120, 0.06) 0%, rgba(120, 126, 120, 0) 24%, rgba(120, 126, 120, 0) 76%, rgba(120, 126, 120, 0.06) 100%);
+  opacity: 0.62;
+}
+
+/* ── Architectural transition seam ───────────────────────────────────────────── */
+/* The base wall is now ONE continuous .dl-page surface, so there is no colour step  */
+/* to patch here. Instead this is a deliberate, quiet panel joint at the hero→work-  */
+/* flow boundary: a soft ambient shadow plane that settles into the seam (the upper  */
+/* panel casting onto the lower) with a hairline catch-light just beneath it — like  */
+/* two large wall panels meeting. No hard divider, no colour bridge. It rides at the */
+/* very top of the section, clear of the hero scroll cue.                            */
+.dl-workflow__seam {
+  position: absolute;
+  left: 0;
+  right: 0;
+  top: -120px;
+  height: 240px;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    /* hairline catch-light along the joint */
+    linear-gradient(180deg, rgba(255, 255, 255, 0) 49.5%, rgba(255, 255, 255, 0.5) 50%, rgba(255, 255, 255, 0) 51%),
+    /* soft ambient occlusion: deepest at the joint, fading both ways */
+    linear-gradient(180deg, rgba(40, 42, 39, 0) 0%, rgba(40, 42, 39, 0.05) 50%, rgba(40, 42, 39, 0) 100%);
+}
+
+/* ── Sticky scroll track ─────────────────────────────────────────────────────── */
+
+.dl-workflow__scroll {
+  position: relative;
+  z-index: 1;
+  height: 640vh; /* ~6 steps × ~90vh of pinned scrolling (see useWorkflowStep) */
+}
+
+.dl-workflow__sticky {
+  position: sticky;
+  /* Pin BELOW the fixed header and only occupy the space under it — the scene centres */
+  /* in this region, so cards can never enter the navbar/logo zone regardless of how   */
+  /* short the window is. min-height keeps the scene usable on very short viewports     */
+  /* (it scrolls slightly there instead of crushing); overflow clips any spillover.     */
+  top: var(--dl-nav-height);
+  height: calc(100svh - var(--dl-nav-height));
+  min-height: 560px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: clamp(12px, 2.4vh, 32px) 0;
+  overflow: hidden;
+}
+
+.dl-workflow__sticky::before {
+  /* Focal bloom pinned behind the central card. A radial-gradient is already a soft   */
+  /* falloff, so the old filter: blur(26px) on this ~720px layer bought no visible      */
+  /* softness — it just forced a large blurred layer to be composited every frame for   */
+  /* the whole pinned scroll. Dropped; the gradient stops carry the same glow.          */
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: min(60vw, 820px);
+  height: min(56vw, 760px);
+  transform: translate(-50%, -50%);
+  /* Brighter studio key light so the contract card reads as a product lit on a metal   */
+  /* stage (the workflow gets the strongest metallic treatment). Still a soft radial    */
+  /* falloff — no hard disc — and the MetalSheen bands add the angled reflections. Two   */
+  /* soft pastel orbs (lavender + sky) bloom around it so the focal stage carries the    */
+  /* page's quiet ElevenLabs colour moment, peeking past the bright white centre.        */
+  background:
+    radial-gradient(ellipse at center, rgba(255, 255, 255, 0.94) 0%, rgba(240, 241, 237, 0.5) 34%, rgba(216, 219, 212, 0.2) 58%, rgba(196, 199, 193, 0) 76%),
+    radial-gradient(46% 44% at 24% 30%, var(--dl-orb-lavender) 0%, transparent 70%),
+    radial-gradient(48% 46% at 78% 74%, var(--dl-orb-sky) 0%, transparent 72%);
+  opacity: 0.96;
+  pointer-events: none;
+  z-index: -1;
+}
+
+/* ── Section header ──────────────────────────────────────────────────────────── */
+
+.dl-workflow__header {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 14px;
+  text-align: center;
+  /* A calm intro panel the reader scrolls THROUGH before the card scene pins.       */
+  /* min-height is now content-driven (the old 20vh slack inflated the block well     */
+  /* past its ~140px of text) — so the only gap below the title is the bottom         */
+  /* padding, a tight rhythm tier (~16px). The card track follows immediately, so the */
+  /* contract arrives right under the title; top padding still clears the hero seam.  */
+  min-height: clamp(40px, 8vh, 110px);
+  max-width: 660px;
+  margin: 0 auto;
+  padding: clamp(44px, 6.5vh, 92px) var(--dl-shell-pad) clamp(8px, 1.2vh, 16px);
+}
+
+/* Kicker — the "01 · WORKFLOW" label that fades + rises in as the header enters    */
+/* view, ahead of the title/sub typing in beneath it.                               */
+.dl-workflow__kicker {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 12px;
+  opacity: 0;
+  transform: translateY(10px);
+  transition:
+    opacity 620ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 620ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.dl-workflow__kicker.is-in {
+  opacity: 1;
+  transform: none;
+}
+
+.dl-workflow__index {
+  font-family: var(--dl-mono);
+  font-size: clamp(15px, 1.6vw, 19px);
+  font-weight: 600;
+  letter-spacing: 0.06em;
+  color: var(--dl-accent-strong);
+  font-variant-numeric: tabular-nums;
+}
+
+.dl-workflow__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 11px;
+  font-family: var(--dl-mono);
+  font-size: 11px;
+  font-weight: 500;
+  letter-spacing: 0.3em;
+  text-transform: uppercase;
+  color: var(--dl-muted);
+}
+
+/* Flanking hairlines, like a section divider — frames the eyebrow as a chapter mark. */
+.dl-workflow__eyebrow::before,
+.dl-workflow__eyebrow::after {
+  content: "";
+  width: 26px;
+  height: 1px;
+  background: var(--dl-hairline-strong);
+}
+
+.dl-workflow__title {
+  font-family: var(--dl-display);
+  /* The headline is now a product-explanatory sentence ("One agreement. Five steps.  */
+  /* Funds locked the whole way."), so it WRAPS to 2–3 balanced lines instead of one.  */
+  font-size: clamp(25px, 3vw, 40px);
+  font-weight: 600;
+  letter-spacing: -0.02em;
+  line-height: 1.14;
+  color: var(--dl-ink);
+  max-width: 19ch;
+  text-wrap: balance;
+}
+
+/* A touch wider/blockier caret to suit the large display title. */
+.dl-workflow__title .dl-wf-caret {
+  width: 2px;
+  vertical-align: -0.06em;
+}
+
+.dl-workflow__sub {
+  font-family: var(--dl-mono);
+  font-size: clamp(13.5px, 1.1vw, 15.5px);
+  line-height: 1.62;
+  color: var(--dl-body);
+  max-width: 46ch;
+  /* Reserve ~2 lines so the layout is stable while the line types in. */
+  min-height: 3.2em;
+}
+
+/* ── Three-column scene ──────────────────────────────────────────────────────── */
+
+.dl-workflow__scene {
+  /* SINGLE row now (was 3). All action cards share their side column + this one row   */
+  /* and overlap; each is offset/hidden by its position class (see .dl-wf-card states) */
+  /* so the scene's height is driven by the centre card, NOT by stacking six cards.    */
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto minmax(0, 1fr);
+  grid-template-rows: minmax(0, 1fr);
+  align-items: center;
+  column-gap: clamp(28px, 5.5vw, 96px);
+  width: 100%;
+  height: 100%;
+  max-width: var(--dl-shell-max);
+  margin: 0 auto;
+  padding-inline: var(--dl-shell-pad);
+}
+
+.dl-workflow__center {
+  grid-column: 2;
+  grid-row: 1;
+  align-self: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: clamp(13px, 1.8vh, 20px);
+}
+
+/* Interaction hint under the card. The card's CURRENT STEP block now carries the    */
+/* current-state narrative, so this is purely the affordance cue: the flow walks on   */
+/* scroll, and any step can be tapped. Quiet, uppercase, tracked — like the comp.     */
+/* Navigator group under the card — the step dots + the affordance hint, kept as one  */
+/* tight stack so the centre column treats it as a single child (one gap, not two).   */
+.dl-workflow__nav {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+}
+
+.dl-workflow__hint {
+  font-family: var(--dl-mono);
+  font-size: 9.5px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--dl-muted);
+  /* Secondary to the dots — kept faint so it reads as a quiet caption, not a label. */
+  opacity: 0.5;
+  text-align: center;
+}
+
+/* ── Step dots (WorkflowStepNav) ───────────────────────────────────────────────── */
+/* Always-visible carousel-style selector: one dot per step, each a real button, so   */
+/* any step is reachable (the faint flanking cards could only ever reach ±1). Active   */
+/* dot stretches to a pill; done = filled steel; upcoming = faint. Accent tokens are   */
+/* in scope here (this lives inside .dl-workflow).                                     */
+.dl-wf-steps {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.dl-wf-step-pip {
+  display: grid;
+  place-items: center;
+  /* Visual dot is tiny; the padding gives a comfortable ≥24px tap/click target. */
+  padding: 8px 6px;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  border-radius: 8px;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.dl-wf-step-pip__dot {
+  display: block;
+  width: 7px;
+  height: 7px;
+  border-radius: 99px;
+  background: var(--dl-steel-300);
+  transition:
+    width 320ms cubic-bezier(0.22, 0.7, 0.2, 1),
+    background-color 220ms ease,
+    transform 220ms ease,
+    box-shadow 220ms ease;
+}
+
+.dl-wf-step-pip:hover .dl-wf-step-pip__dot {
+  background: var(--dl-steel-500);
+  transform: scale(1.18);
+}
+
+.dl-wf-step-pip.is-done .dl-wf-step-pip__dot {
+  background: var(--dl-steel-400);
+}
+
+.dl-wf-step-pip.is-active .dl-wf-step-pip__dot {
+  width: 22px;
+  background: var(--dl-accent-strong);
+  transform: none;
+  box-shadow: 0 1px 4px var(--dl-accent-glow);
+}
+
+.dl-wf-step-pip:focus-visible {
+  outline: none;
+}
+
+.dl-wf-step-pip:focus-visible .dl-wf-step-pip__dot {
+  box-shadow: 0 0 0 3px var(--dl-accent-surface);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dl-wf-step-pip__dot {
+    transition: background-color 220ms ease;
+  }
+}
+
+.dl-wf-caret {
+  display: none;
+  width: 1.5px;
+  height: 1em;
+  margin-left: 2px;
+  vertical-align: -0.12em;
+  background: var(--dl-accent-strong);
+  border-radius: 1px;
+}
+
+.dl-wf-caret.is-typing {
+  display: inline-block;
+  animation: dl-wf-blink 900ms steps(2, start) infinite;
+}
+
+@keyframes dl-wf-blink {
+  0%, 100% { opacity: 1; }
+  50%      { opacity: 0; }
+}
+
+/* ── Action cards ────────────────────────────────────────────────────────────── */
+
+.dl-wf-card {
+  /* All cards share their side column + the scene's single row, so they overlap in   */
+  /* one cell; align-self centres them on the contract's mid-line and the position     */
+  /* classes below transform/fade them. --wf-card-shift is how far prev/next sit above */
+  /* and below that centre line (viewport-relative so it shrinks on short screens).    */
+  grid-row: 1;
+  align-self: center;
+  --wf-card-shift: clamp(118px, 20vh, 188px);
+  position: relative;
+  display: flex;
+  align-items: flex-start;
+  gap: 14px;
+  width: min(100%, 326px);
+  padding: 18px 20px;
+  border-radius: 22px;
+  /* The whole card is a button (walks the flow to its step) — make that tappable. */
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
+  will-change: opacity, transform;
+  /* Near-opaque face over the uniform matte wall — no backdrop-filter. A live       */
+  /* backdrop blur on six cards was a per-frame recomposite that made scrolling janky */
+  /* on retina, and over the flat wall it was imperceptible anyway. The gradient is   */
+  /* a touch more opaque to keep the same solid-glass read without it.                */
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.96) 0%, rgba(246, 247, 244, 0.86) 100%);
+  /* Ink hairline (not white) so the card edge actually reads against the brighter      */
+  /* metal wall — a white border vanished into it. Inset white keeps the lit top edge.  */
+  border: 1px solid rgba(17, 19, 21, 0.09);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 1px 2px rgba(17, 19, 21, 0.05),
+    0 16px 36px rgba(17, 19, 21, 0.10);
+  /* Reveal is a clean fade + rise only — no blur(). Animating filter:blur() looked  */
+  /* heavy and rendered inconsistently between Chrome and Safari (Safari softened    */
+  /* the whole card and stuttered the transition), so the cards now appear sharp.    */
+  transition:
+    opacity 560ms cubic-bezier(0.22, 0.7, 0.2, 1),
+    transform 560ms cubic-bezier(0.22, 0.7, 0.2, 1),
+    border-color 320ms ease,
+    box-shadow 320ms ease;
+}
+
+.dl-wf-card--left {
+  justify-self: end;
+}
+
+.dl-wf-card--right {
+  justify-self: start;
+}
+
+/* Position states — distance from the active step. Only active + the two immediate */
+/* neighbours occupy visible space; everything else fades fully out (so the scene    */
+/* never becomes a wall of six). All offsets are relative to the centre line, so      */
+/* there are no fragile absolute tops to overflow a short viewport.                   */
+.dl-wf-card.is-active {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  border-color: var(--dl-accent-line);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.85),
+    0 1px 2px rgba(17, 19, 21, 0.04),
+    0 18px 40px rgba(17, 19, 21, 0.09),
+    0 0 0 3px var(--dl-accent-surface);
+}
+
+/* Hover/focus affordance — the cards are buttons. Faint neighbours brighten so they  */
+/* read as reachable; the edge darkens; keyboard focus gets a clear accent ring.       */
+.dl-wf-card:hover {
+  border-color: rgba(17, 19, 21, 0.18);
+}
+
+.dl-wf-card.is-prev:hover,
+.dl-wf-card.is-next:hover {
+  opacity: 0.62;
+}
+
+.dl-wf-card:focus-visible {
+  outline: none;
+  border-color: var(--dl-accent-line);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.85),
+    0 0 0 3px var(--dl-accent-surface),
+    0 18px 40px rgba(17, 19, 21, 0.10);
+}
+
+/* Previous step — sits faint, just ABOVE the active/contract centre line. */
+.dl-wf-card.is-prev {
+  opacity: 0.34;
+  transform: translateY(calc(-1 * var(--wf-card-shift))) scale(0.96);
+}
+
+/* Next step — faint, just BELOW the centre line. */
+.dl-wf-card.is-next {
+  opacity: 0.34;
+  transform: translateY(var(--wf-card-shift)) scale(0.96);
+}
+
+/* Everything more than one step away is hidden entirely — no layout footprint. */
+.dl-wf-card.is-past,
+.dl-wf-card.is-future {
+  opacity: 0;
+  transform: translateY(0) scale(0.94);
+  pointer-events: none;
+}
+
+.dl-wf-card__icon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  border-radius: 13px;
+  color: var(--dl-body);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.9) 0%, rgba(232, 235, 233, 0.7) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.78);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 2px 6px rgba(17, 19, 21, 0.06);
+  transition: color 320ms ease, background 320ms ease, box-shadow 320ms ease;
+}
+
+.dl-wf-card.is-active .dl-wf-card__icon {
+  color: var(--dl-accent-strong);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.95) 0%, var(--dl-accent-surface) 100%);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 2px 8px var(--dl-accent-glow);
+}
+
+.dl-wf-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: 5px;
+  min-width: 0;
+}
+
+/* Step number + role on one line — the role chip answers "who acts now?" at a glance. */
+.dl-wf-card__meta {
+  display: flex;
+  align-items: center;
+  /* Wrap-safe: the flanking cards are only ~254px wide (grid-column constrained), so the */
+  /* longest role label ("CONTRACT", step 05) + the state pill can't share one line — the */
+  /* row needs ~169px but the body is ~156px. Without wrap the pill spilled past the card */
+  /* edge (worst in Safari, whose mono metrics run a hair wider). Wrapping drops the pill  */
+  /* onto its own line on that one tight card; shorter roles (CLIENT/PROVIDER) stay inline. */
+  flex-wrap: wrap;
+  gap: 6px 8px;
+  margin-bottom: 2px;
+}
+
+.dl-wf-card__role {
+  font-family: var(--dl-mono);
+  font-size: 10px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--dl-muted);
+  transition: color 320ms ease;
+}
+
+.dl-wf-card.is-active .dl-wf-card__role {
+  color: var(--dl-accent-strong);
+}
+
+/* State tag — DONE / ACTIVE NOW / UPCOMING. Calm-confirmed, dominant, secondary, all */
+/* on one pill so the card's status is legible before any interaction.                 */
+.dl-wf-card__tag {
+  /* inline-flex + line-height:1 centres the label in the pill across browsers. As a   */
+  /* plain inline span it inherited the body's tall mono line-height, so the uppercase  */
+  /* glyphs (no descenders) sat high in the line box — most visible in Safari, whose    */
+  /* `line-height: normal` reserves more descender space for IBM Plex Mono than Chrome. */
+  display: inline-flex;
+  align-items: center;
+  line-height: 1;
+  /* No margin-left:auto — with wrap, that shoved the pill to the far right of its own   */
+  /* wrapped line (floating, disconnected). The pill instead just trails the role and,   */
+  /* when it wraps (long CONTRACT/PROVIDER roles), sits flush-LEFT under it.              */
+  font-family: var(--dl-mono);
+  font-size: 8.5px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  /* trailing letter-spacing adds phantom width on the RIGHT of the last glyph; a hair  */
+  /* less right padding keeps the label optically centred in the pill.                  */
+  padding: 4px 7px 4px 8px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  transition: color 320ms ease, background 320ms ease, border-color 320ms ease;
+}
+
+.dl-wf-card__tag--active {
+  color: var(--dl-accent-strong);
+  background: var(--dl-accent-surface);
+  border-color: var(--dl-accent-line);
+}
+
+.dl-wf-card__tag--done {
+  color: var(--dl-success);
+  background: var(--dl-success-surface);
+}
+
+.dl-wf-card__tag--upcoming {
+  color: var(--dl-muted);
+  background: rgba(17, 19, 21, 0.045);
+}
+
+/* A true circle, fixed square footprint. The two digits are centred by the grid;     */
+/* letter-spacing is zeroed (trailing tracking after the 2nd digit was pushing "01"    */
+/* visually left of centre) and a hair of text-indent compensates the mono glyph's     */
+/* own left side-bearing so the pair sits dead-centre.                                  */
+.dl-wf-card__num {
+  display: inline-grid;
+  place-items: center;
+  /* Fixed square that never shrinks — it's a flex child in the meta row, and without */
+  /* this it collapses to its ~12px content width and renders as a vertical oval.      */
+  flex: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  font-family: var(--dl-mono);
+  font-size: 9.5px;
+  font-weight: 500;
+  letter-spacing: 0;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
+  color: var(--dl-muted);
+  background: rgba(17, 19, 21, 0.05);
+}
+
+.dl-wf-card.is-active .dl-wf-card__num {
+  color: #fff;
+  background: var(--dl-accent);
+}
+
+.dl-wf-card.is-done .dl-wf-card__num {
+  color: var(--dl-success);
+  background: var(--dl-success-surface);
+}
+
+.dl-wf-card__title {
+  font-family: var(--dl-mono);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0.005em;
+  line-height: 1.25;
+  color: var(--dl-ink);
+}
+
+.dl-wf-card__text {
+  font-family: var(--dl-mono);
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--dl-body);
+}
+
+/* Connector — a thin line + node reaching from the card's inner edge toward the   */
+/* central card. Draws in (scaleX) only when the card is active.                   */
+.dl-wf-card__connector {
+  position: absolute;
+  top: 50%;
+  width: clamp(28px, 4vw, 72px);
+  height: 1px;
+  background: linear-gradient(90deg, var(--dl-accent-line), rgba(111, 99, 189, 0.05));
+  /* Hidden by default — only the ACTIVE card draws its connector toward the contract. */
+  /* prev/next are faint context, they don't need a line.                              */
+  opacity: 0;
+  transform: translateY(-50%) scaleX(0.25);
+  transition: opacity 420ms ease, transform 520ms cubic-bezier(0.22, 0.7, 0.2, 1);
+  pointer-events: none;
+}
+
+.dl-wf-card--left .dl-wf-card__connector {
+  left: 100%;
+  transform-origin: left center;
+}
+
+.dl-wf-card--right .dl-wf-card__connector {
+  right: 100%;
+  transform-origin: right center;
+  background: linear-gradient(270deg, var(--dl-accent-line), rgba(111, 99, 189, 0.05));
+}
+
+.dl-wf-card.is-active .dl-wf-card__connector {
+  opacity: 1;
+  transform: translateY(-50%) scaleX(1);
+}
+
+.dl-wf-card__node {
+  position: absolute;
+  top: 50%;
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #fff;
+  border: 1.5px solid var(--dl-accent);
+  transform: translateY(-50%);
+  opacity: 0;
+  transition: opacity 420ms ease;
+}
+
+.dl-wf-card--left .dl-wf-card__node {
+  left: 0;
+  transform: translate(-50%, -50%);
+}
+
+.dl-wf-card--right .dl-wf-card__node {
+  right: 0;
+  transform: translate(50%, -50%);
+}
+
+.dl-wf-card.is-active .dl-wf-card__node {
+  opacity: 1;
+}
+
+/* ── Central contract card (HTML/CSS — the focal object) ─────────────────────── */
+
+.dl-contract-stage {
+  position: relative;
+  width: var(--wf-card-w);
+  /* Wrap the card's own content (no plate to fill now): the stage is exactly the card, */
+  /* so it can never starve the rows, and the step dots sit right beneath the card with */
+  /* no dead gap. Height tracks the content, which the compact tiers reduce by dropping  */
+  /* rows on short windows. */
+  height: auto;
+  min-width: 300px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  animation: dl-wf-stage-float 9s ease-in-out infinite;
+}
+
+/* Ambient silver bloom behind the instrument — a soft studio key light on the wall  */
+/* so the chassis sits in a halo, not flat against the matte. Silver spectrum only.   */
+.dl-contract-stage::before {
+  content: "";
+  position: absolute;
+  inset: -6% 0 -2%;
+  z-index: -1;
+  background:
+    radial-gradient(ellipse 62% 54% at 50% 40%, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0) 70%),
+    radial-gradient(ellipse 80% 70% at 50% 46%, rgba(206, 212, 210, 0.2) 0%, rgba(206, 212, 210, 0) 72%);
+  pointer-events: none;
+}
+
+/* A faint elliptical floor reflection grounding the instrument. */
+.dl-contract-stage::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 1%;
+  width: 58%;
+  height: 4.5%;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: radial-gradient(ellipse 50% 50% at 50% 50%, rgba(17, 19, 21, 0.12) 0%, rgba(17, 19, 21, 0) 72%);
+  filter: blur(4px);
+  z-index: -1;
+  pointer-events: none;
+}
+
+@keyframes dl-wf-stage-float {
+  0%, 100% { transform: translateY(-5px); }
+  50%      { transform: translateY(5px); }
+}
+
+/* ── Contract card UI (readable overlay) ─────────────────────────────────────── */
+/* Sits on the glass centre of the Spline card (~70% of the stage) so the metal     */
+/* rails frame it. Frosted but translucent enough that the 3D material/reflections   */
+/* read through; the Spline object carries the heavy depth, so the panel keeps only  */
+/* a light ink-tinted lift. Rows distribute top-to-bottom so the panel fills.        */
+
+.dl-contract {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  flex-direction: column;
+  /* Group from the top with a tight, even rhythm; the footer is pushed to the bottom  */
+  /* (margin-top:auto on .dl-contract__addr). This reads as deliberate grouping rather  */
+  /* than space-between loosely spreading every row apart on tall cards.                */
+  justify-content: flex-start;
+  /* The card IS the object now (no plate behind it), so it takes ~all of the stage      */
+  /* width — bigger and more substantial than the old 68% inset.                         */
+  width: 92%;
+  /* Content-driven height, NOT a fixed % of the stage. Tying it to a % meant a shorter  */
+  /* stage starved the rows and the amount module (overflow:hidden) clipped the USD      */
+  /* line; auto makes the card exactly its content, immune to the stage size.            */
+  height: auto;
+  gap: clamp(8px, 1.15vh, 13px);
+  padding: clamp(18px, 1.8vw, 26px);
+  border-radius: 22px;
+  font-variant-numeric: tabular-nums;
+  /* Opaque satin panel inlaid into the metal housing: a soft top sheen over a warm     */
+  /* off-white body keeps text crisp while reading as a finished surface, not a plain   */
+  /* white box. The recessed parties well + raised amount module inside carry the depth. */
+  background:
+    radial-gradient(ellipse 120% 72% at 50% -8%, rgba(255, 255, 255, 0.92) 0%, rgba(255, 255, 255, 0) 46%),
+    linear-gradient(180deg, rgba(253, 253, 252, 0.98) 0%, rgba(242, 243, 241, 0.96) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.85);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.96),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.22),
+    inset 0 14px 28px rgba(255, 255, 255, 0.32),
+    0 2px 6px rgba(17, 19, 21, 0.06),
+    0 18px 42px rgba(17, 19, 21, 0.14);
+  /* No backdrop-filter: this face is opaque, so a blur behind it is invisible — pure   */
+  /* per-frame cost. Keeping it off keeps the pinned card cheap during scroll.          */
+}
+
+.dl-contract__top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.dl-contract__brand {
+  font-family: var(--dl-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.28em;
+  color: var(--dl-ink);
+}
+
+.dl-contract__chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--dl-mono);
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  padding: 5px 11px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55);
+  transition: color 320ms ease, background 320ms ease, border-color 320ms ease;
+}
+
+.dl-contract__chip-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+/* Two tones only: purple while the agreement is in flight, green once it's settled.   */
+.dl-contract__chip--progress {
+  color: var(--dl-accent-strong);
+  background: var(--dl-accent-surface);
+  border-color: var(--dl-accent-line);
+}
+
+.dl-contract__chip--done {
+  color: var(--dl-success);
+  background: var(--dl-success-surface);
+  border-color: rgba(58, 125, 92, 0.22);
+}
+
+/* Highlightable rows share an accent ring + wash via two custom props that are composed */
+/* INTO each row's own material below, so lighting the active step never clobbers a      */
+/* well's inset or a module's lift. Default = invisible; .is-active lights it.            */
+.dl-contract__title-row,
+.dl-contract__parties,
+.dl-contract__amount,
+.dl-contract__progress {
+  --wf-ring: transparent;
+  --wf-wash: rgba(255, 255, 255, 0);
+  border-radius: 12px;
+  transition: background 360ms ease, box-shadow 360ms ease;
+}
+
+/* The progress rail is intentionally NOT in this set: its current node already glows  */
+/* "you are here", and a full-row wash there would stack against the purple CURRENT    */
+/* STEP block right below it — too much purple in the lower card. The rail stays a      */
+/* clean precision instrument; the parties capsule and amount module carry the wash.    */
+.is-active.dl-contract__title-row,
+.is-active.dl-contract__parties,
+.is-active.dl-contract__amount {
+  --wf-ring: var(--dl-accent-line);
+  --wf-wash: var(--dl-accent-surface);
+}
+
+/* Header band: text stays aligned to the panel edge; the wash bleeds into the padding. */
+.dl-contract__title-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 7px 9px;
+  margin: -3px -9px 0;
+  background: var(--wf-wash);
+  box-shadow: 0 0 0 1px var(--wf-ring);
+}
+
+.dl-contract__eyebrow {
+  font-family: var(--dl-mono);
+  font-size: clamp(14px, 1.35vw, 16.5px);
+  font-weight: 500;
+  letter-spacing: 0;
+  color: var(--dl-ink);
+}
+
+.dl-contract__net {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-family: var(--dl-mono);
+  font-size: 8.5px;
+  letter-spacing: 0.04em;
+  color: var(--dl-muted);
+  padding: 3px 9px;
+  border-radius: 999px;
+  background: rgba(17, 19, 21, 0.035);
+  box-shadow: inset 0 0 0 1px rgba(17, 19, 21, 0.05);
+}
+
+.dl-contract__net-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--dl-steel-400);
+}
+
+/* Recessed soft well holding the money-flow model: Client → Escrow → Provider. The   */
+/* escrow capsule in the middle is where the funds actually sit, so it's the visual    */
+/* anchor of "DealLock never holds the money — the contract does".                     */
+.dl-contract__parties {
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
+  align-items: center;
+  gap: clamp(8px, 1.1vw, 14px);
+  padding: clamp(11px, 1.3vw, 14px) clamp(13px, 1.4vw, 16px);
+  border-radius: 14px;
+  background:
+    linear-gradient(var(--wf-wash), var(--wf-wash)),
+    linear-gradient(180deg, rgba(17, 19, 21, 0.03) 0%, rgba(17, 19, 21, 0.012) 100%);
+  box-shadow:
+    inset 0 1px 2px rgba(17, 19, 21, 0.05),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.7),
+    0 0 0 1px var(--wf-ring);
+}
+
+.dl-contract__party {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+/* The right-side party (Provider) mirrors the left one (Client) on the far side of */
+/* the escrow capsule. */
+.dl-contract__party--provider {
+  align-items: flex-end;
+  text-align: right;
+}
+
+/* Escrow capsule — the centre column. The lock icon lights lavender while funds are  */
+/* held and turns green (check) once released, so the money's location is always read. */
+.dl-contract__escrow {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+
+.dl-contract__escrow-flow {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.dl-contract__escrow-arrow {
+  color: var(--dl-steel-300);
+  font-size: 12px;
+  line-height: 1;
+  transition: color 320ms ease;
+}
+
+.dl-contract__escrow-icon {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: #fff;
+  border: 1px solid var(--dl-hairline-strong);
+  color: var(--dl-steel-500);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 1px 2px rgba(17, 19, 21, 0.06);
+  transition: color 320ms ease, border-color 320ms ease, box-shadow 320ms ease;
+}
+
+.dl-contract__escrow-label {
+  font-family: var(--dl-mono);
+  font-size: 8px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--dl-muted);
+}
+
+.dl-contract__escrow--locked .dl-contract__escrow-icon {
+  color: var(--dl-accent-strong);
+  border-color: var(--dl-accent-line);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 0 0 3px var(--dl-accent-surface),
+    0 1px 5px var(--dl-accent-glow);
+}
+
+.dl-contract__escrow--locked .dl-contract__escrow-arrow {
+  color: var(--dl-accent);
+}
+
+.dl-contract__escrow--released .dl-contract__escrow-icon {
+  color: var(--dl-success);
+  border-color: rgba(58, 125, 92, 0.3);
+}
+
+.dl-contract__party-label {
+  font-family: var(--dl-mono);
+  font-size: 8.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--dl-muted);
+}
+
+.dl-contract__party-addr {
+  font-family: var(--dl-mono);
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--dl-ink);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dl-contract__milestone {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  padding-top: 2px;
+}
+
+.dl-contract__milestone-title {
+  font-family: var(--dl-mono);
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--dl-ink);
+}
+
+.dl-contract__milestone-count {
+  font-family: var(--dl-mono);
+  font-size: 9.5px;
+  color: var(--dl-muted);
+  white-space: nowrap;
+}
+
+/* The escrow chamber: the panel's focal module. A softly raised satin well with a  */
+/* frosted top reflection; when funds are locked/released it gains a restrained      */
+/* lavender-silver edge glow so the eye lands here. The contract's "vault chamber".   */
+.dl-contract__amount {
+  position: relative;
+  overflow: hidden;
+  /* The money is the anchor — it must NEVER be squeezed/clipped, even if a very short  */
+  /* window forces the other rows to compress. */
+  flex: none;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: clamp(14px, 1.5vw, 18px) clamp(15px, 1.5vw, 19px);
+  border-radius: 16px;
+  background:
+    linear-gradient(var(--wf-wash), var(--wf-wash)),
+    radial-gradient(ellipse 130% 90% at 50% -10%, rgba(255, 255, 255, 0.9) 0%, rgba(255, 255, 255, 0) 70%),
+    linear-gradient(180deg, rgba(255, 255, 255, 0.92) 0%, rgba(238, 240, 237, 0.72) 100%);
+  border: 1px solid rgba(255, 255, 255, 0.72);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.92),
+    0 1px 2px rgba(17, 19, 21, 0.04),
+    0 8px 20px rgba(17, 19, 21, 0.08),
+    0 0 0 1px var(--wf-ring);
+}
+
+/* a single soft glass reflection skimming the chamber's top edge */
+.dl-contract__amount::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 52%;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.7) 0%, rgba(255, 255, 255, 0) 100%);
+  pointer-events: none;
+}
+
+.dl-contract__amount > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* Locked / released: the chamber lights with a restrained lavender-silver glow. */
+.is-active.dl-contract__amount {
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.94),
+    0 1px 2px rgba(17, 19, 21, 0.04),
+    0 8px 22px rgba(17, 19, 21, 0.09),
+    0 0 0 1px var(--dl-accent-line),
+    0 0 20px rgba(111, 99, 189, 0.15);
+}
+
+.dl-contract__amount-main {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: none;
+}
+
+.dl-contract__amount-eth {
+  font-family: var(--dl-mono);
+  font-size: clamp(26px, 2.6vw, 33px);
+  font-weight: 500;
+  letter-spacing: -0.018em;
+  line-height: 1;
+  color: var(--dl-ink);
+  white-space: nowrap;
+}
+
+.dl-contract__amount-usd {
+  font-family: var(--dl-mono);
+  font-size: 9.5px;
+  color: var(--dl-muted);
+}
+
+/* The lock pill lives INSIDE the amount module, so "Locked in escrow" reads as the    */
+/* status of this value — not a floating tag. It narrates pending → locked → released. */
+.dl-contract__lock {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  flex: none;
+  font-family: var(--dl-mono);
+  font-size: 10px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+  white-space: nowrap;
+  padding: 7px 12px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  transition: color 320ms ease, background 320ms ease, border-color 320ms ease;
+}
+
+.dl-contract__lock svg {
+  flex: none;
+}
+
+.dl-contract__amount--pending .dl-contract__lock {
+  color: var(--dl-muted);
+  background: rgba(17, 19, 21, 0.045);
+  border-color: rgba(17, 19, 21, 0.08);
+}
+
+.dl-contract__amount--locked .dl-contract__lock {
+  color: var(--dl-accent-strong);
+  background: var(--dl-accent-surface);
+  border-color: var(--dl-accent-line);
+}
+
+.dl-contract__amount--released .dl-contract__lock {
+  color: var(--dl-success);
+  background: var(--dl-success-surface);
+  border-color: rgba(58, 125, 92, 0.26);
+}
+
+.dl-contract__progress {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 2px;
+  padding: 11px 9px 5px;
+  position: relative;
+  background: var(--wf-wash);
+  border-radius: 12px;
+  box-shadow: 0 0 0 1px var(--wf-ring);
+}
+
+.dl-contract__step {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+  flex: 1;
+  position: relative;
+}
+
+/* Continuous precision rail behind the dots — the "mechanism" the milestones ride */
+/* on. Centred on the EXACT vertical middle of every 14px node (radius 7px) via    */
+/* top:7px + translateY(-50%), so the line threads each node dead-centre. Round     */
+/* caps + a faint gradient on filled segments read as a machined track, not a bar.  */
+.dl-contract__step::before {
+  content: "";
+  position: absolute;
+  top: 7px;
+  left: -50%;
+  width: 100%;
+  height: 1.5px;
+  transform: translateY(-50%);
+  border-radius: 999px;
+  background: var(--dl-hairline);
+  z-index: 0;
+}
+
+.dl-contract__step:first-child::before {
+  display: none;
+}
+
+.dl-contract__step.is-done::before,
+.dl-contract__step.is-current::before {
+  background: linear-gradient(90deg, rgba(111, 99, 189, 0.5), var(--dl-accent-line));
+}
+
+/* Milestone node — a precise 14px disc. Inner glyphs (check / active core) are     */
+/* ABSOLUTELY centred (top/left 50% + translate -50%,-50%) so they can never drift  */
+/* with box-sizing, border rounding, or sub-pixel placement. Even border all round. */
+.dl-contract__step-dot {
+  position: relative;
+  z-index: 1;
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  background: #fff;
+  border: 1.5px solid var(--dl-steel-300);
+  box-shadow:
+    inset 0 1px 1px rgba(17, 19, 21, 0.05),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.7);
+  transition: border-color 320ms ease, background 320ms ease, box-shadow 320ms ease;
+}
+
+.dl-contract__step-dot > svg {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  color: #fff;
+}
+
+.dl-contract__step.is-done .dl-contract__step-dot {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.32), rgba(255, 255, 255, 0) 62%),
+    var(--dl-accent);
+  border-color: var(--dl-accent-strong);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.42),
+    0 1px 2px var(--dl-accent-glow);
+}
+
+/* Active milestone — white disc, accent rim, an EVEN lavender halo (no directional */
+/* drop shadow) and a pixel-centred accent core. The "you are here" signal.          */
+.dl-contract__step.is-current .dl-contract__step-dot {
+  border-color: var(--dl-accent);
+  background: #fff;
+  box-shadow:
+    0 0 0 3px var(--dl-accent-surface),
+    0 0 0 4px rgba(111, 99, 189, 0.12),
+    0 0 7px 1px var(--dl-accent-glow);
+}
+
+.dl-contract__step.is-current .dl-contract__step-dot::after {
+  content: "";
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 38% 32%, #8a7fd0 0%, var(--dl-accent) 72%);
+  transform: translate(-50%, -50%);
+}
+
+.dl-contract__step-label {
+  font-family: var(--dl-mono);
+  font-size: 7.5px;
+  letter-spacing: 0.04em;
+  color: var(--dl-muted);
+  text-align: center;
+  white-space: nowrap;
+}
+
+.dl-contract__step.is-current .dl-contract__step-label,
+.dl-contract__step.is-done .dl-contract__step-label {
+  color: var(--dl-body);
+}
+
+/* CURRENT STEP — the plain-language "what's happening now" block. A permanent, gently */
+/* lavender-tinted module so the eye always has one place that says, in words, what    */
+/* the escrow just did and who acts next. This is the card's narrative voice.          */
+.dl-contract__current {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: clamp(10px, 1.25vw, 13px) clamp(12px, 1.35vw, 15px);
+  border-radius: 13px;
+  background: linear-gradient(180deg, rgba(111, 99, 189, 0.075) 0%, rgba(111, 99, 189, 0.04) 100%);
+  border: 1px solid var(--dl-accent-line);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55);
+}
+
+.dl-contract__current-dot {
+  flex: none;
+  position: relative;
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  display: grid;
+  place-items: center;
+  background: #fff;
+  border: 1px solid var(--dl-accent-line);
+}
+
+.dl-contract__current-dot::after {
+  content: "";
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 38% 32%, #8a7fd0 0%, var(--dl-accent) 72%);
+  box-shadow: 0 0 0 3px var(--dl-accent-surface);
+}
+
+.dl-contract__current-body {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.dl-contract__current-label {
+  font-family: var(--dl-mono);
+  font-size: 8px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--dl-accent-strong);
+}
+
+.dl-contract__current-text {
+  font-family: var(--dl-mono);
+  font-size: 11.5px;
+  line-height: 1.42;
+  color: var(--dl-ink);
+}
+
+/* Footer — on-chain verification (the trust signal) + the contract address. Pinned to */
+/* the card's bottom edge (margin-top:auto) so the content above can group tightly.    */
+.dl-contract__addr {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  margin-top: auto;
+  padding-top: clamp(10px, 1.4vh, 15px);
+  border-top: 1px solid var(--dl-hairline);
+}
+
+.dl-contract__verified {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--dl-mono);
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  /* Muted, NOT success-green: this is an illustrative sample, not a verified tx. */
+  color: var(--dl-muted);
+}
+
+.dl-contract__verified svg {
+  flex: none;
+}
+
+.dl-contract__addr-hash {
+  font-family: var(--dl-mono);
+  font-size: 10.5px;
+  color: var(--dl-muted);
+  white-space: nowrap;
+}
+
+/* ── Tablet / mobile: single-column stack with a sticky card ─────────────────── */
+
+@media (max-width: 960px) {
+  .dl-workflow {
+    --wf-card-w: min(92vw, 440px);
+    /* Taller stage so the richer card (escrow capsule + current-step block + footer)  */
+    /* fits without clipping when it scrolls normally at the top of the mobile stack.   */
+    --wf-card-h: min(158vw, 668px);
+  }
+
+  /* The card fills nearly the whole (smaller) stage width so the text stays legible. */
+  .dl-contract {
+    width: 94%;
+    height: auto;
+  }
+
+  /* Compact, narrative rhythm: the header is content-height (the old 24vh min-height +  */
+  /* 14vh top padding stranded the contract card ~a screen below the title) and the      */
+  /* static card track follows right under it — heading → card with one tight gap.       */
+  .dl-workflow__header {
+    min-height: 0;
+    padding-top: clamp(40px, 7vh, 64px);
+  }
+
+  .dl-workflow__scroll {
+    height: auto;
+  }
+
+  .dl-workflow__sticky {
+    position: static;
+    height: auto;
+    overflow: visible;
+    padding: clamp(20px, 4vh, 32px) 0 clamp(40px, 7vh, 64px);
+    gap: clamp(24px, 4.5vh, 40px);
+  }
+
+  .dl-workflow__sticky::before {
+    display: none;
+  }
+
+  .dl-workflow__scene {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    gap: 16px;
+  }
+
+  /* Small width: NO sticky-overlap. The pinned-contract model made the big contract
+   * card cover the numbered action cards scrolling behind it (they read as hidden, not
+   * "dissolving"). Here the scene is a plain vertical flow — the contract scrolls
+   * normally at the top, then the 01–06 action cards follow, each fully in the
+   * foreground with nothing overlapping. */
+  .dl-workflow__center {
+    position: static;
+    z-index: auto;
+    width: 100%;
+    padding: 0 0 8px;
+    background: none;
+  }
+
+  /* The scene is a static scroll list here (the contract isn't pinned), so the step  */
+  /* dots would scroll away as a stray control near the top — the stacked cards are   */
+  /* the navigator. Hide them; the hint copy still cues the scroll/tap interaction.   */
+  .dl-wf-steps {
+    display: none;
+  }
+
+  /* On mobile the stacked cards carry the narrative text — the typed line would     */
+  /* sit in the sticky card's fade zone and overlap the first card, so hide it.      */
+  .dl-workflow__narration {
+    display: none;
+  }
+
+  .dl-contract-stage {
+    animation: none;
+  }
+
+  /* Stacked + static here, so the desktop position model is fully neutralised: every */
+  /* card is full-size and visible (the active one just gains the accent ring). No     */
+  /* vertical offsets, no hidden past/future — it's a simple scroll list.              */
+  .dl-wf-card,
+  .dl-wf-card.is-active,
+  .dl-wf-card.is-prev,
+  .dl-wf-card.is-next,
+  .dl-wf-card.is-past,
+  .dl-wf-card.is-future {
+    opacity: 1;
+    transform: none;
+    pointer-events: auto;
+    max-height: none;
+  }
+
+  .dl-wf-card--left,
+  .dl-wf-card--right {
+    justify-self: center;
+    width: min(100%, 440px);
+  }
+
+  .dl-wf-card__connector {
+    display: none;
+  }
+}
+
+@media (max-width: 540px) {
+  .dl-workflow {
+    --wf-card-w: min(94vw, 390px);
+    --wf-card-h: min(176vw, 612px);
+  }
+
+  .dl-contract {
+    width: 96%;
+    height: auto;
+  }
+
+  .dl-wf-card {
+    width: 100%;
+    padding: 16px;
+  }
+}
+
+/* ── Height-compact mode (short windows / non-fullscreen / browser zoom) ────────── */
+/* Scoped to the DESKTOP pinned scene (min-width:961px) so it never touches the mobile */
+/* static stack. When the pinned area is short it can't hold the contract + flanking   */
+/* cards, so we shrink the contract and progressively drop the neighbours, then the    */
+/* narration — but the user ALWAYS keeps: active card + contract + (until very short)   */
+/* the typed line. The single-row stage means nothing ever reaches up into the navbar. */
+
+@media (min-width: 961px) and (max-height: 860px) {
+  .dl-workflow {
+    /* Continuous with the 73vh base (no size jump across 860) and trimmed enough to    */
+    /* leave room for the step dots + hint below the card on short windows.             */
+    --wf-card-h: min(72vh, 660px);
+  }
+}
+
+@media (min-width: 961px) and (max-height: 760px) {
+  .dl-workflow {
+    --wf-card-h: min(74vh, 600px);
+  }
+
+  /* Drop the least-essential row so the flow blocks (parties, amount, rail, current  */
+  /* step) keep room without crowding when the pinned area is short.                  */
+  .dl-contract__milestone {
+    display: none;
+  }
+
+  /* Only the active card — prev/next would fight the active card + contract for the   */
+  /* limited height, so they fade out entirely.                                        */
+  .dl-wf-card.is-prev,
+  .dl-wf-card.is-next {
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  /* Compact the active card so its text can't define (and overflow) the layout. A     */
+  /* bare max-height did NOT clip — the body just spilled past the card edge. Trim the  */
+  /* padding and CLAMP the body copy to 3 lines (ellipsis) so the card height is        */
+  /* bounded by construction; the title + first lines carry the meaning, and the typed  */
+  /* narration below the contract still gives the full sentence.                        */
+  .dl-wf-card {
+    padding: 14px 16px;
+  }
+
+  .dl-wf-card__text {
+    display: -webkit-box;
+    -webkit-line-clamp: 3;
+    line-clamp: 3;
+    -webkit-box-orient: vertical;
+    overflow: hidden;
+  }
+}
+
+@media (min-width: 961px) and (max-height: 640px) {
+  .dl-workflow {
+    /* Content-sized contract no longer scales down here, so keep the plate big enough   */
+    /* to frame it (dots are already hidden at this height, freeing the room).           */
+    --wf-card-h: min(82vh, 512px);
+  }
+
+  /* Very short: drop the whole navigator (dots + hint) — the cards stay tappable and   */
+  /* scroll still walks the flow, and this frees the contract its full room.            */
+  .dl-workflow__nav {
+    display: none;
+  }
+
+  /* Very short: also fold away the current-step block's roomy padding + the milestone */
+  /* (already hidden above) so the core escrow story still fits without clipping.      */
+  .dl-contract__current {
+    padding: 9px 11px;
+  }
+
+  /* Below ~640px tall the 560 min-height would center content in a box taller than the */
+  /* visible area (clipping the contract's lower edge), so relax it — the scene is now  */
+  /* compact enough (only the active card) to live in less height.                      */
+  .dl-workflow__sticky {
+    min-height: 480px;
+  }
+
+  /* Very tight: drop the typed narration (the active card already carries the text)   */
+  /* so the contract never collides with it.                                           */
+  .dl-workflow__narration {
+    display: none;
+  }
+
+  /* Trim the body to 2 lines here — at this height even 3 lines + the contract is too  */
+  /* much; title + 2 lines keeps the active card readable without crowding the card.    */
+  .dl-wf-card__text {
+    -webkit-line-clamp: 2;
+    line-clamp: 2;
+  }
+}
+
+/* ── Reduced motion ──────────────────────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  /* The material plate is pure CSS (no motion), so it stays behind the card here too */
+  /* — only the idle float is disabled.                                               */
+  .dl-contract-stage {
+    animation: none;
+  }
+
+  /* Keep the position OFFSETS (prev/next still sit above/below; past/future stay      */
+  /* hidden) — only drop the tween so steps change instantly instead of sliding. Don't */
+  /* zero the transform here, or prev/next would collapse onto the active card.        */
+  .dl-wf-card {
+    transition: opacity 200ms ease;
+  }
+
+  .dl-wf-card__connector {
+    transition: opacity 200ms ease;
+  }
+
+  .dl-wf-card.is-active .dl-wf-card__connector {
+    transform: translateY(-50%) scaleX(1);
+  }
+
+  /* No rise/fade for the eyebrow or the fixed title — show them resolved. */
+  .dl-workflow__eyebrow,
+  .dl-workflow__title {
+    transition: none;
+    opacity: 1;
+    transform: none;
+  }
+
+  .dl-wf-caret {
+    display: none !important;
+  }
+}
+
+/* ══ Security section ═════════════════════════════════════════════════════════ */
+/* "Security you can inspect." The transparency panel on the shared matte wall.    */
+/* Light only for now (a scoped dark toggle was removed by request). Every rule     */
+/* reads from the --sc-* token layer, so a theme could be reintroduced by adding a  */
+/* token override block. Brand accent stays the sanctioned restrained lavender,     */
+/* scoped here like .dl-workflow does.                                             */
+
+.dl-sec {
+  /* ── Light theme tokens ───────────────────────────────────────────────────── */
+  --sc-text:       #14171a;
+  --sc-text-soft:  #454a4d;
+  --sc-muted:      #7a8183;
+
+  --sc-panel-bg:
+    radial-gradient(120% 84% at 50% -12%, rgba(255, 255, 255, 0.92) 0%, rgba(255, 255, 255, 0) 60%),
+    linear-gradient(180deg, rgba(253, 253, 252, 0.98) 0%, rgba(241, 242, 240, 0.97) 100%);
+  --sc-panel-border: rgba(17, 19, 21, 0.13);
+  --sc-panel-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 1px 2px rgba(17, 19, 21, 0.04),
+    0 26px 60px rgba(17, 19, 21, 0.10),
+    0 8px 24px rgba(17, 19, 21, 0.06);
+  --sc-panel-shadow-soft:
+    inset 0 1px 0 rgba(255, 255, 255, 0.85),
+    0 1px 2px rgba(17, 19, 21, 0.04),
+    0 10px 26px rgba(17, 19, 21, 0.07);
+
+  --sc-code-bg: linear-gradient(180deg, rgba(247, 248, 246, 0.72) 0%, rgba(243, 244, 242, 0.6) 100%);
+  --sc-inset-bg:   rgba(17, 19, 21, 0.03);
+  --sc-meta-bg:    rgba(255, 255, 255, 0.5);
+  --sc-inset-border: rgba(17, 19, 21, 0.07);
+  --sc-line-hover: rgba(17, 19, 21, 0.022);
+
+  --sc-hairline:      rgba(17, 19, 21, 0.10);
+  --sc-hairline-soft: rgba(17, 19, 21, 0.06);
+  --sc-edge-light:    rgba(255, 255, 255, 0.85);
+  --sc-raised:        rgba(255, 255, 255, 0.92);
+
+  --sc-accent:         #6f63bd;
+  --sc-accent-strong:  #5a4fa6;
+  --sc-accent-surface: rgba(111, 99, 189, 0.10);
+  --sc-accent-line:    rgba(111, 99, 189, 0.30);
+  --sc-accent-glow:    rgba(111, 99, 189, 0.18);
+  --sc-success:        #3a7d5c;
+
+  --sc-gutter: rgba(17, 19, 21, 0.26);
+
+  /* solid CTA — graphite, matching the hero's primary button */
+  --sc-solid-bg:     linear-gradient(180deg, #1d2024 0%, #0e1012 100%);
+  --sc-solid-text:   rgba(255, 255, 255, 0.96);
+  --sc-solid-border: rgba(17, 19, 21, 0.92);
+  --sc-solid-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.14),
+    0 4px 14px rgba(17, 19, 21, 0.16);
+
+  /* code token colours — desaturated, brand-cold */
+  --tk-com: #8b918a;
+  --tk-str: #3f7d63;
+  --tk-num: #97683a;
+  --tk-key: #5a4fa6;
+  --tk-typ: #3a5e8b;
+  --tk-lit: #97683a;
+  --tk-fn:  #2b2f33;
+  --tk-pun: #6d7474;
+  --tk-pl:  #2f3437;
+
+  position: relative;
+  z-index: 1;
+  isolation: isolate;
+  scroll-margin-top: var(--dl-nav-height); /* clears the fixed navbar when jumped to via #security */
+  color: var(--sc-text);
+  /* One-screen composition: the title + the code block sit together in a single      */
+  /* viewport. min-height pins it to the screen and the content is vertically centred; */
+  /* top padding clears the fixed nav, the rest is kept tight so both fit one page.    */
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  /* `safe center` centres the composition when it fits the viewport, but falls back */
+  /* to top-aligned when the content is taller than one screen — so the title + code  */
+  /* block stay visible from the top instead of being pushed below the fold.          */
+  justify-content: safe center;
+  /* Top padding is modest (NOT nav-height) — scroll-margin-top already lands the     */
+  /* #security jump clear of the nav, and safe-center keeps the block tidy — so the    */
+  /* title sits high enough that the code block fits the same screen. The BOTTOM is    */
+  /* the full --dl-section-gap: it's pure trailing space after Security's content, so  */
+  /* it sets the Security↘FAQ separation WITHOUT touching FAQ's one-screen top budget. */
+  padding: clamp(44px, 6vh, 72px) 0 var(--dl-section-gap);
+}
+
+/* Section backdrop — a quiet PANEL JOINT at the top edge over the shared wall: a soft */
+/* ambient-occlusion band (the panel above settling onto this one) with a catch-light  */
+/* sheen just beneath it, then transparent so the matte page surface reads straight     */
+/* through. Same joint language as the hero→workflow seam, so every boundary reads as   */
+/* one continuous wall with subtle panel joints rather than separate blocks.            */
+.dl-sec__bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, rgba(40, 42, 39, 0.05) 0%, rgba(40, 42, 39, 0) 120px),
+    radial-gradient(92% 52% at 50% 0%, rgba(255, 255, 255, 0.42) 0%, rgba(255, 255, 255, 0) 56%),
+    /* central content spotlight — a big soft white glow lifting the code panel + proof */
+    /* cards off the wall (premium "lit product" feel), fading well before the edges.    */
+    radial-gradient(78% 66% at 50% 46%, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0) 62%),
+    /* atmospheric pastel orbs drifting in the corners (ElevenLabs idiom) — sky + mint */
+    radial-gradient(46% 40% at 90% 16%, var(--dl-orb-sky) 0%, transparent 72%),
+    radial-gradient(50% 42% at 8% 92%, var(--dl-orb-mint) 0%, transparent 72%);
+}
+
+.dl-sec__inner {
+  position: relative;
+  z-index: 1;
+  max-width: var(--dl-shell-max);
+  margin: 0 auto;
+  padding-inline: var(--dl-shell-pad);
+}
+
+/* ── Header ───────────────────────────────────────────────────────────────────── */
+
+.dl-sec__header {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  margin-bottom: clamp(20px, 3vh, 36px);
+  /* one-shot reveal */
+  opacity: 0;
+  transform: translateY(14px);
+  transition:
+    opacity 700ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 700ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.dl-sec.is-in .dl-sec__header {
+  opacity: 1;
+  transform: none;
+}
+
+.dl-sec__intro {
+  max-width: 680px;
+  margin: 0 auto;
+}
+
+.dl-sec__eyebrow {
+  display: inline-block;
+  font-family: var(--dl-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--sc-muted);
+  margin-bottom: clamp(10px, 1.4vh, 16px);
+}
+
+.dl-sec__title {
+  font-family: var(--dl-display);
+  font-size: clamp(30px, 4.2vw, 50px);
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  line-height: 1.04;
+  color: var(--sc-text);
+  margin-bottom: clamp(10px, 1.4vh, 16px);
+}
+
+.dl-sec__sub {
+  font-family: var(--dl-mono);
+  font-size: clamp(13.5px, 1.05vw, 16px);
+  line-height: 1.62;
+  color: var(--sc-text-soft);
+  max-width: 56ch;
+  margin-inline: auto;
+  /* Reserve ~3 lines so the typed subtitle doesn't nudge the body below it. */
+  min-height: 4.9em;
+}
+
+/* ── Body grid ────────────────────────────────────────────────────────────────── */
+
+.dl-sec__body {
+  display: grid;
+  grid-template-columns: minmax(258px, 340px) minmax(0, 1fr);
+  gap: clamp(22px, 3vw, 48px);
+  align-items: start;
+  /* reveal, a beat after the header */
+  opacity: 0;
+  transform: translateY(18px);
+  transition:
+    opacity 760ms 90ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 760ms 90ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.dl-sec.is-in .dl-sec__body {
+  opacity: 1;
+  transform: none;
+}
+
+.dl-sec__main {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(14px, 1.8vw, 20px);
+  min-width: 0;
+}
+
+/* ── Metal icon disc (shared primitive) ─────────────────────────────────────────── */
+/* A small RAISED brushed-silver coin that carries a quiet line icon — the page's      */
+/* "premium accessory" for card headers. Reuses the design-lab metal-disc material via  */
+/* the landing `--dl-disc-*` tokens. Size is driven by `--disc-size` so one class fits  */
+/* every context (security cards ~38px, FAQ lifecycle ~26px). Icon is graphite/silver;  */
+/* `.dl-metal-disc--accent` lifts it to the restrained violet for security/active use.  */
+.dl-root .dl-metal-disc {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: var(--disc-size, 40px);
+  height: var(--disc-size, 40px);
+  border-radius: 50%;
+  background: var(--dl-disc-face);
+  border: 1px solid var(--dl-disc-rim);
+  box-shadow: var(--dl-disc-shadow);
+  color: var(--dl-steel-500);
+  transition: color 200ms ease, box-shadow 200ms ease, transform 200ms ease;
+}
+
+.dl-root .dl-metal-disc svg {
+  width: var(--disc-icon, 18px);
+  height: var(--disc-icon, 18px);
+  display: block;
+}
+
+.dl-root .dl-metal-disc--accent {
+  /* Restrained grey-violet (the workflow accent value), with a literal fallback so the */
+  /* modifier holds outside the `.dl-workflow` scope where `--dl-accent-*` is defined.   */
+  color: var(--dl-accent-strong, #5a4fa6);
+}
+
+/* ── Security proof cards (left column) — plain-language trust before the code ─── */
+
+.dl-sec-proof {
+  display: flex;
+  flex-direction: column;
+  gap: clamp(10px, 1.3vw, 14px);
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+
+.dl-sec-proof-card {
+  display: flex;
+  align-items: flex-start;
+  gap: 13px;
+  padding: clamp(14px, 1.5vw, 18px) clamp(15px, 1.6vw, 19px);
+  border-radius: 16px;
+  background: var(--sc-panel-bg);
+  border: 1px solid var(--sc-panel-border);
+  box-shadow: var(--sc-panel-shadow-soft);
+  transition: border-color 200ms ease, box-shadow 200ms ease, transform 200ms ease;
+}
+
+.dl-sec-proof-card:hover {
+  border-color: var(--sc-accent-line);
+  box-shadow: var(--sc-panel-shadow-soft), 0 0 0 3px var(--sc-accent-surface);
+  transform: translateY(-1px);
+}
+
+/* The icon is a shared `.dl-metal-disc` (raised silver coin); this only sizes it for  */
+/* the security context. On card hover the icon lifts to the section's violet accent.  */
+.dl-sec-proof-card__icon {
+  --disc-size: 38px;
+  --disc-icon: 18px;
+  margin-top: 1px;
+}
+
+.dl-sec-proof-card:hover .dl-sec-proof-card__icon {
+  color: var(--sc-accent-strong);
+  transform: translateY(-1px);
+}
+
+.dl-sec-proof-card__body {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.dl-sec-proof-card__title {
+  font-family: var(--dl-mono);
+  font-size: 14px;
+  font-weight: 600;
+  letter-spacing: 0;
+  color: var(--sc-text);
+}
+
+.dl-sec-proof-card__copy {
+  font-family: var(--dl-mono);
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--sc-muted);
+}
+
+/* ── Code panel ──────────────────────────────────────────────────────────────── */
+
+.dl-code-panel {
+  position: relative;
+  border-radius: clamp(16px, 1.6vw, 22px);
+  background: var(--sc-panel-bg);
+  border: 1px solid var(--sc-panel-border);
+  box-shadow: var(--sc-panel-shadow);
+  padding: clamp(14px, 1.4vw, 20px);
+  overflow: hidden;
+}
+
+.dl-code-panel__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  margin-bottom: 10px;
+}
+
+.dl-asset-tabs {
+  display: inline-flex;
+  gap: 4px;
+  padding: 3px;
+  border-radius: 12px;
+  background: var(--sc-inset-bg);
+  border: 1px solid var(--sc-hairline-soft);
+}
+
+.dl-asset-tab {
+  display: inline-flex;
+  align-items: center;
+  gap: 7px;
+  font-family: var(--dl-mono);
+  font-size: 12.5px;
+  font-weight: 500;
+  letter-spacing: 0.01em;
+  color: var(--sc-muted);
+  padding: 7px 13px;
+  border-radius: 9px;
+  /* Never wrap a label to two lines — keep each pill on one line; the tablist     */
+  /* scrolls horizontally instead on narrow screens (see the 640px rule).          */
+  white-space: nowrap;
+  flex-shrink: 0;
+  transition: color 160ms ease, background 240ms ease, box-shadow 240ms ease;
+}
+
+.dl-asset-tab__icon {
+  width: 15px;
+  height: 15px;
+  opacity: 0.78;
+}
+
+.dl-asset-tab:hover {
+  color: var(--sc-text-soft);
+}
+
+.dl-asset-tab.is-active {
+  color: var(--sc-accent-strong);
+  background: var(--sc-raised);
+  box-shadow:
+    inset 0 1px 0 var(--sc-edge-light),
+    0 1px 2px rgba(17, 19, 21, 0.08);
+}
+
+.dl-asset-tab.is-active .dl-asset-tab__icon {
+  opacity: 1;
+}
+
+.dl-asset-tab:focus-visible {
+  outline: 2px solid var(--sc-accent);
+  outline-offset: 2px;
+}
+
+.dl-code-panel__tools {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.dl-code-panel__badge {
+  font-family: var(--dl-mono);
+  font-size: 9.5px;
+  font-weight: 500;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
+  color: var(--sc-muted);
+  background: var(--sc-inset-bg);
+  border: 1px solid var(--sc-hairline-soft);
+  padding: 5px 9px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.dl-code-panel__copy {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--dl-mono);
+  font-size: 11.5px;
+  font-weight: 500;
+  color: var(--sc-text-soft);
+  padding: 6px 11px;
+  border-radius: 9px;
+  border: 1px solid var(--sc-hairline);
+  background: var(--sc-raised);
+  transition: color 160ms ease, border-color 160ms ease, background 200ms ease;
+}
+
+.dl-code-panel__copy:hover {
+  color: var(--sc-text);
+  border-color: var(--sc-hairline-strong, var(--sc-accent-line));
+}
+
+.dl-code-panel__copy.is-copied {
+  color: var(--sc-success);
+  border-color: var(--sc-success);
+}
+
+.dl-code-panel__copy:focus-visible {
+  outline: 2px solid var(--sc-accent);
+  outline-offset: 2px;
+}
+
+.dl-code-panel__copy-icon {
+  width: 14px;
+  height: 14px;
+}
+
+.dl-code-panel__blurb {
+  font-family: var(--dl-mono);
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--sc-muted);
+  margin: 0 2px 12px;
+  min-height: 1.5em;
+}
+
+.dl-code-panel__filebar {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 9px 14px;
+  border-radius: 11px 11px 0 0;
+  background: var(--sc-inset-bg);
+  border: 1px solid var(--sc-inset-border);
+  border-bottom: none;
+  color: var(--sc-muted);
+  font-family: var(--dl-mono);
+  font-size: 11.5px;
+}
+
+.dl-code-panel__filepath {
+  color: var(--sc-text-soft);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.dl-code-panel__lang {
+  margin-left: auto;
+  font-size: 9.5px;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  opacity: 0.72;
+  flex-shrink: 0;
+}
+
+.dl-code-panel__scroll {
+  border-radius: 0 0 12px 12px;
+  border: 1px solid var(--sc-inset-border);
+  background: var(--sc-code-bg);
+  overflow: auto;
+  /* Bounded by viewport height so the whole panel (and the title above it) fit one  */
+  /* screen; longer snippets scroll inside the panel.                                */
+  max-height: clamp(220px, 33vh, 420px);
+}
+
+.dl-code-panel__scroll:focus-visible {
+  outline: 2px solid var(--sc-accent);
+  outline-offset: -2px;
+}
+
+.dl-code-panel__scroll::-webkit-scrollbar {
+  width: 9px;
+  height: 9px;
+}
+
+.dl-code-panel__scroll::-webkit-scrollbar-thumb {
+  background: var(--sc-hairline);
+  border-radius: 999px;
+  border: 2px solid transparent;
+  background-clip: padding-box;
+}
+
+.dl-code-panel__scroll::-webkit-scrollbar-thumb:hover {
+  background: var(--sc-hairline-strong, var(--sc-accent-line));
+  background-clip: padding-box;
+}
+
+.dl-code {
+  font-family: var(--dl-mono);
+  font-size: clamp(13px, 1vw, 15px);
+  line-height: 1.7;
+  margin: 0;
+  padding: 16px 0;
+  color: var(--tk-pl);
+  tab-size: 2;
+  animation: dl-sec-code-in 220ms ease both;
+  /* Mobile browsers (iOS Safari / Chrome Android) auto-inflate text blocks by their  */
+  /* own font-boosting heuristic, which sizes each <pre> line differently by its       */
+  /* width — so the snippet renders with inconsistent per-line font sizes on phones.   */
+  /* Pin the adjust to 100% (scoped to the code, inherited by the lines) so every line */
+  /* keeps the CSS size; user pinch-zoom still works.                                  */
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+@keyframes dl-sec-code-in {
+  from { opacity: 0; transform: translateY(4px); }
+  to   { opacity: 1; transform: none; }
+}
+
+.dl-code__line {
+  display: grid;
+  grid-template-columns: 2.6em 1fr;
+  column-gap: 1.3em;
+  padding: 0 18px;
+}
+
+.dl-code__line:hover {
+  background: var(--sc-line-hover);
+}
+
+.dl-code__ln {
+  text-align: right;
+  color: var(--sc-gutter);
+  font-variant-numeric: tabular-nums;
+  user-select: none;
+  opacity: 0.75;
+}
+
+.dl-code__src {
+  white-space: pre;
+  overflow-wrap: normal;
+}
+
+/* token colours (light/dark via --tk-*) */
+.dl-sec .tk-com { color: var(--tk-com); font-style: italic; }
+.dl-sec .tk-str { color: var(--tk-str); }
+.dl-sec .tk-num { color: var(--tk-num); }
+.dl-sec .tk-key { color: var(--tk-key); }
+.dl-sec .tk-typ { color: var(--tk-typ); }
+.dl-sec .tk-lit { color: var(--tk-lit); }
+.dl-sec .tk-fn  { color: var(--tk-fn); }
+.dl-sec .tk-pun { color: var(--tk-pun); }
+.dl-sec .tk-pl  { color: var(--tk-pl); }
+
+/* per-asset metadata strip */
+.dl-code-panel__meta {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1px;
+  margin: 12px 0 0;
+  border-radius: 12px;
+  overflow: hidden;
+  border: 1px solid var(--sc-inset-border);
+  background: var(--sc-inset-border); /* shows through the 1px gaps as dividers */
+}
+
+.dl-code-panel__meta-cell {
+  background: var(--sc-meta-bg);
+  padding: 11px 14px;
+}
+
+.dl-code-panel__meta-cell dt {
+  font-family: var(--dl-mono);
+  font-size: 9.5px;
+  font-weight: 500;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--sc-muted);
+  margin-bottom: 4px;
+}
+
+.dl-code-panel__meta-cell dd {
+  font-family: var(--dl-mono);
+  font-size: 12.5px;
+  line-height: 1.3;
+  color: var(--sc-text);
+  font-variant-numeric: tabular-nums;
+}
+
+/* ── Repo / GitHub CTA wrapper ───────────────────────────────────────────────── */
+
+.dl-repo-cta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: clamp(16px, 2.4vw, 32px);
+  flex-wrap: wrap;
+  padding: clamp(15px, 1.7vw, 21px) clamp(16px, 1.9vw, 24px);
+  border-radius: clamp(14px, 1.4vw, 18px);
+  background: var(--sc-panel-bg);
+  border: 1px solid var(--sc-panel-border);
+  box-shadow: var(--sc-panel-shadow-soft);
+  transition: border-color 200ms ease, box-shadow 200ms ease;
+}
+
+.dl-repo-cta:hover {
+  border-color: var(--sc-accent-line);
+}
+
+.dl-repo-cta__lead {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  min-width: 0;
+}
+
+/* Raised metal disc (shared `--dl-disc-*` material) so the GitHub mark matches the     */
+/* security proof-card icons above it — one machined-silver icon language section-wide.  */
+.dl-repo-cta__mark {
+  flex-shrink: 0;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  color: var(--dl-steel-500);
+  background: var(--dl-disc-face);
+  border: 1px solid var(--dl-disc-rim);
+  box-shadow: var(--dl-disc-shadow);
+}
+
+.dl-repo-cta__gh {
+  width: 20px;
+  height: 20px;
+}
+
+.dl-repo-cta__text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.dl-repo-cta__title {
+  font-family: var(--dl-mono);
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--sc-text);
+}
+
+.dl-repo-cta__sub {
+  font-family: var(--dl-mono);
+  font-size: 12.5px;
+  line-height: 1.45;
+  color: var(--sc-muted);
+  margin-top: 2px;
+}
+
+.dl-repo-cta__actions {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+}
+
+.dl-repo-cta__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-family: var(--dl-mono);
+  font-size: 13px;
+  font-weight: 600;
+  height: 42px;
+  padding: 0 17px;
+  border-radius: 10px;
+  transition: color 160ms ease, border-color 160ms ease, transform 160ms ease, box-shadow 160ms ease;
+}
+
+.dl-repo-cta__btn--ghost {
+  color: var(--sc-text-soft);
+  background: var(--sc-raised);
+  border: 1px solid var(--sc-hairline);
+}
+
+.dl-repo-cta__btn--ghost:hover {
+  color: var(--sc-text);
+  border-color: var(--sc-accent-line);
+  transform: translateY(-1px);
+}
+
+.dl-repo-cta__btn--solid {
+  color: var(--dl-ink);
+  background: var(--dl-metal-face);
+  border: 1px solid var(--dl-metal-edge);
+  box-shadow: var(--dl-metal-shadow);
+}
+
+.dl-repo-cta__btn--solid:hover {
+  transform: translateY(-1px);
+  background: var(--dl-metal-face-hover);
+  box-shadow: var(--dl-metal-shadow-hover);
+}
+
+.dl-repo-cta__btn:focus-visible {
+  outline: 2px solid var(--sc-accent);
+  outline-offset: 2px;
+}
+
+/* ── Responsive ──────────────────────────────────────────────────────────────── */
+
+@media (max-width: 1024px) {
+  .dl-sec__body {
+    grid-template-columns: 1fr;
+  }
+
+  /* Header → proof cards (as a 2-up row) → code panel. Proof cards stay FIRST so the */
+  /* plain-language reassurance leads, with the code as the proof layer beneath.       */
+  .dl-sec-proof {
+    flex-direction: row;
+    flex-wrap: wrap;
+  }
+
+  .dl-sec-proof-card {
+    flex: 1 1 calc(50% - 7px);
+    min-width: 240px;
+  }
+}
+
+@media (max-width: 640px) {
+  /* Content-height (not a forced full screen) + compact rhythm so the section reads as */
+  /* a tidy reassurance panel, not an endless stack. */
+  .dl-sec {
+    min-height: auto;
+    padding-top: clamp(28px, 5vh, 40px);
+  }
+
+  .dl-sec__header {
+    margin-bottom: clamp(16px, 3vh, 24px);
+  }
+
+  .dl-sec__title {
+    font-size: clamp(25px, 7vw, 32px);
+  }
+
+  /* Typing is disabled on mobile, so the 3-line reserve just added dead space. */
+  .dl-sec__sub {
+    font-size: 13.5px;
+    min-height: 0;
+  }
+
+  /* Slimmer proof cards — smaller icon wells + tighter padding so the trust list stays */
+  /* compact rather than three tall blocks. */
+  .dl-sec-proof-card {
+    padding: 13px 14px;
+    gap: 11px;
+  }
+
+  .dl-sec-proof-card__icon {
+    width: 30px;
+    height: 30px;
+    border-radius: 9px;
+  }
+
+  /* Stack the proof cards one-up on phones. */
+  .dl-sec-proof {
+    flex-direction: column;
+  }
+
+  .dl-sec-proof-card {
+    flex: 1 1 auto;
+  }
+
+  .dl-code-panel__head {
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .dl-asset-tabs {
+    overflow-x: auto;
+    max-width: 100%;
+  }
+
+  .dl-code-panel__meta {
+    grid-template-columns: 1fr;
+  }
+
+  .dl-repo-cta {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .dl-repo-cta__actions {
+    justify-content: stretch;
+  }
+
+  .dl-repo-cta__btn {
+    flex: 1 1 auto;
+    justify-content: center;
+  }
+}
+
+/* ── Reduced motion ──────────────────────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .dl-sec__header,
+  .dl-sec__body {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none;
+  }
+
+  .dl-code {
+    animation: none;
+  }
+
+  .dl-sec-proof-card:hover,
+  .dl-repo-cta__btn:hover,
+  .dl-repo-cta__btn--solid:hover {
+    transform: none;
+  }
+}
+
+/* ══ FAQ section ══════════════════════════════════════════════════════════════ */
+/* "Questions before you lock funds" — the final trust layer below Security.       */
+/* Reference board: left intro + soft object + trust note, right accordion. Matte  */
+/* off-white / frosted glass / restrained lilac, on the shared matte wall. Reads    */
+/* from a --fq-* token layer that mirrors the Security section's --sc-*.            */
+
+.dl-faq {
+  /* ── Token layer (light) ──────────────────────────────────────────────────── */
+  --fq-text:       #14171a;
+  --fq-text-soft:  #454a4d;
+  --fq-muted:      #7a8183;
+
+  --fq-panel-bg:
+    radial-gradient(120% 84% at 50% -12%, rgba(255, 255, 255, 0.92) 0%, rgba(255, 255, 255, 0) 60%),
+    linear-gradient(180deg, rgba(253, 253, 252, 0.98) 0%, rgba(241, 242, 240, 0.97) 100%);
+  --fq-panel-border: rgba(17, 19, 21, 0.13);
+  --fq-panel-shadow-soft:
+    inset 0 1px 0 rgba(255, 255, 255, 0.85),
+    0 1px 2px rgba(17, 19, 21, 0.04),
+    0 10px 26px rgba(17, 19, 21, 0.07);
+  --fq-panel-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 1px 2px rgba(17, 19, 21, 0.04),
+    0 26px 60px rgba(17, 19, 21, 0.10),
+    0 8px 24px rgba(17, 19, 21, 0.06);
+
+  --fq-raised:        rgba(255, 255, 255, 0.92);
+  --fq-inset-bg:      rgba(17, 19, 21, 0.03);
+  --fq-inset-border:  rgba(17, 19, 21, 0.07);
+  --fq-hairline:      rgba(17, 19, 21, 0.10);
+  --fq-hairline-soft: rgba(17, 19, 21, 0.06);
+  --fq-edge-light:    rgba(255, 255, 255, 0.85);
+
+  --fq-accent:         #6f63bd;
+  --fq-accent-strong:  #5a4fa6;
+  --fq-accent-surface: rgba(111, 99, 189, 0.10);
+  --fq-accent-line:    rgba(111, 99, 189, 0.30);
+  --fq-accent-glow:    rgba(111, 99, 189, 0.18);
+
+  position: relative;
+  z-index: 1;
+  isolation: isolate;
+  scroll-margin-top: var(--dl-nav-height); /* lands the #faq jump clear of the fixed nav */
+  color: var(--fq-text);
+  /* One-screen composition: the whole FAQ — intro + every (curated) question — fits a  */
+  /* single viewport. FAQ is the last section, so rather than force min-height:100vh    */
+  /* and centre (which, combined with the #faq scroll-anchor, pushed the block past the */
+  /* fold on short laptops), it flows naturally. The top padding is deliberately small  */
+  /* — scroll-margin-top already drops the #faq jump below the nav — so the curated     */
+  /* questions land within one screen even at 768px tall (don't grow it or that breaks). */
+  /* Most of the Security↘FAQ separation comes from Security's bottom --dl-section-gap.  */
+  /* The page foot uses --dl-section-gap so the bottom rhythm matches the section gaps.  */
+  padding: clamp(26px, 3.4vh, 48px) 0 var(--dl-section-gap);
+}
+
+/* Panel joint at the top edge over the shared wall — soft ambient-occlusion band +   */
+/* catch-light sheen, then transparent so the matte page surface reads through (same   */
+/* joint language as .dl-sec__bg and the hero→workflow seam).                          */
+.dl-faq__bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background:
+    linear-gradient(180deg, rgba(40, 42, 39, 0.045) 0%, rgba(40, 42, 39, 0) 120px),
+    radial-gradient(92% 50% at 50% 0%, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0) 56%),
+    /* central content spotlight — lifts the intro + accordion off the wall, matching   */
+    /* the Security section so the two read as one continuous lit environment.          */
+    radial-gradient(80% 64% at 50% 44%, rgba(255, 255, 255, 0.46) 0%, rgba(255, 255, 255, 0) 62%),
+    /* atmospheric pastel orbs closing the page — lavender + peach, low + to the sides  */
+    radial-gradient(52% 44% at 88% 88%, var(--dl-orb-lavender) 0%, transparent 72%),
+    radial-gradient(48% 40% at 10% 78%, var(--dl-orb-peach) 0%, transparent 72%);
+}
+
+.dl-faq__inner {
+  position: relative;
+  z-index: 1;
+  max-width: var(--dl-shell-max);
+  margin: 0 auto;
+  padding-inline: var(--dl-shell-pad);
+}
+
+/* ── Two-column layout: intro (left) / accordion (right) ───────────────────────── */
+
+.dl-faq__layout {
+  display: grid;
+  grid-template-columns: minmax(280px, 0.82fr) minmax(0, 1.25fr);
+  gap: clamp(40px, 6vw, 104px);
+  align-items: start;
+}
+
+/* ── Intro column ──────────────────────────────────────────────────────────────── */
+
+.dl-faq__intro {
+  /* one-shot reveal */
+  opacity: 0;
+  transform: translateY(16px);
+  transition:
+    opacity 720ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 720ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.dl-faq.is-in .dl-faq__intro {
+  opacity: 1;
+  transform: none;
+}
+
+.dl-faq__eyebrow {
+  display: inline-block;
+  font-family: var(--dl-mono);
+  font-size: 11px;
+  font-weight: 600;
+  letter-spacing: 0.28em;
+  text-transform: uppercase;
+  color: var(--fq-muted);
+  margin-bottom: clamp(12px, 1.6vh, 18px);
+}
+
+.dl-faq__title {
+  font-family: var(--dl-display);
+  font-size: clamp(30px, 3.6vw, 46px);
+  font-weight: 600;
+  letter-spacing: -0.015em;
+  line-height: 1.06;
+  color: var(--fq-text);
+  margin: 0 0 clamp(14px, 1.8vh, 20px);
+  max-width: 13ch;
+}
+
+.dl-faq__sub {
+  font-family: var(--dl-mono);
+  font-size: clamp(13.5px, 1vw, 15.5px);
+  line-height: 1.62;
+  color: var(--fq-text-soft);
+  max-width: 42ch;
+  margin: 0;
+}
+
+/* ── Trust visual: escrow-lifecycle stepper + safe-wording note ────────────────── */
+
+.dl-faq-trust {
+  margin-top: clamp(28px, 4vh, 48px);
+  display: flex;
+  flex-direction: column;
+  gap: clamp(14px, 2vh, 20px);
+  align-items: flex-start;
+  padding: clamp(20px, 2vw, 26px);
+  border-radius: clamp(16px, 1.6vw, 20px);
+  background: var(--fq-panel-bg);
+  border: 1px solid var(--fq-panel-border);
+  box-shadow: var(--fq-panel-shadow-soft);
+  max-width: 340px;
+}
+
+.dl-faq-trust__eyebrow {
+  font-family: var(--dl-mono);
+  font-size: 10.5px;
+  font-weight: 600;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--fq-muted);
+}
+
+/* Vertical lifecycle stepper — the real escrow flow, with a thin lilac rail joining */
+/* the dots. The terminal step ("Released or disputed") drops its rail.              */
+.dl-faq-lifecycle {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+}
+
+.dl-faq-lifecycle__step {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: 13px;
+  padding: 7px 0;
+  font-family: var(--dl-mono);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--fq-text-soft);
+}
+
+/* Rail connecting the metal discs — centred on the 26px disc (centre x = 13px) and    */
+/* running from this disc's centre down to the next one. Sits behind the discs.         */
+.dl-faq-lifecycle__step::before {
+  content: "";
+  position: absolute;
+  left: 12.25px;
+  top: 50%;
+  bottom: -50%;
+  width: 1.5px;
+  background: var(--fq-accent-line);
+  opacity: 0.5;
+}
+
+.dl-faq-lifecycle__step.is-end::before {
+  display: none;
+}
+
+.dl-faq-lifecycle__disc {
+  position: relative;
+  z-index: 1;
+  --disc-size: 26px;
+  --disc-icon: 14px;
+}
+
+.dl-faq-trust__note-copy {
+  font-family: var(--dl-mono);
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--fq-muted);
+}
+
+/* ── Accordion ─────────────────────────────────────────────────────────────────── */
+
+.dl-faq__panel {
+  /* reveal a beat after the intro */
+  opacity: 0;
+  transform: translateY(20px);
+  transition:
+    opacity 780ms 90ms cubic-bezier(0.22, 1, 0.36, 1),
+    transform 780ms 90ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.dl-faq.is-in .dl-faq__panel {
+  opacity: 1;
+  transform: none;
+}
+
+.dl-faq-list {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: clamp(7px, 0.8vw, 10px);
+}
+
+.dl-faq-item {
+  border-radius: clamp(12px, 1.2vw, 16px);
+  background: var(--fq-panel-bg);
+  border: 1px solid var(--fq-panel-border);
+  box-shadow: var(--fq-panel-shadow-soft);
+  transition: border-color 220ms ease, box-shadow 220ms ease;
+}
+
+.dl-faq-item:hover {
+  border-color: var(--fq-accent-line);
+}
+
+.dl-faq-item.is-open {
+  border-color: var(--fq-accent-line);
+  box-shadow: var(--fq-panel-shadow-soft), 0 0 0 3px var(--fq-accent-surface);
+}
+
+.dl-faq-item__heading {
+  margin: 0;
+  font: inherit;
+}
+
+.dl-faq-item__trigger {
+  width: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: clamp(14px, 1.6vw, 22px);
+  padding: clamp(13px, 1.4vw, 17px) clamp(18px, 1.9vw, 24px);
+  background: none;
+  border: none;
+  cursor: pointer;
+  text-align: left;
+  color: var(--fq-text);
+  border-radius: inherit;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.dl-faq-item__q {
+  font-family: var(--dl-mono);
+  font-size: clamp(14.5px, 1.02vw, 16px);
+  font-weight: 600;
+  line-height: 1.4;
+  color: var(--fq-text);
+}
+
+.dl-faq-item.is-open .dl-faq-item__q {
+  color: var(--fq-accent-strong);
+}
+
+.dl-faq-item__caret {
+  flex-shrink: 0;
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  border-radius: 9px;
+  color: var(--fq-muted);
+  background: var(--fq-inset-bg);
+  border: 1px solid var(--fq-hairline-soft);
+  transition: transform 280ms cubic-bezier(0.22, 1, 0.36, 1), color 220ms ease, border-color 220ms ease, background 220ms ease;
+}
+
+.dl-faq-item.is-open .dl-faq-item__caret {
+  transform: rotate(180deg);
+  color: var(--fq-accent-strong);
+  border-color: var(--fq-accent-line);
+  background: var(--fq-accent-surface);
+}
+
+.dl-faq-item__trigger:focus-visible {
+  outline: 2px solid var(--fq-accent);
+  outline-offset: -2px;
+}
+
+/* Open/close animation — grid-rows 0fr→1fr collapses to exactly the content height */
+/* without a magic max-height; the inner wrapper clips + fades during the move.      */
+.dl-faq-item__panel {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows 300ms cubic-bezier(0.22, 1, 0.36, 1);
+}
+
+.dl-faq-item.is-open .dl-faq-item__panel {
+  grid-template-rows: 1fr;
+}
+
+.dl-faq-item__panel-inner {
+  overflow: hidden;
+  min-height: 0;
+  opacity: 0;
+  transition: opacity 240ms ease;
+}
+
+.dl-faq-item.is-open .dl-faq-item__panel-inner {
+  opacity: 1;
+  transition: opacity 280ms ease 60ms;
+}
+
+.dl-faq-item__a {
+  margin: 0;
+  padding: 0 clamp(18px, 1.9vw, 24px) clamp(14px, 1.5vw, 18px);
+  font-family: var(--dl-mono);
+  font-size: clamp(13.5px, 0.94vw, 15px);
+  line-height: 1.6;
+  color: var(--fq-text-soft);
+  max-width: 70ch;
+}
+
+/* ── Responsive ──────────────────────────────────────────────────────────────── */
+
+@media (max-width: 920px) {
+  .dl-faq__layout {
+    grid-template-columns: 1fr;
+    gap: clamp(28px, 5vw, 44px);
+  }
+
+  .dl-faq__title {
+    max-width: 18ch;
+  }
+
+  .dl-faq-trust {
+    max-width: none;
+  }
+}
+
+@media (max-width: 639px) {
+  .dl-faq {
+    padding-top: clamp(24px, 4vh, 36px);
+  }
+
+  .dl-faq__title {
+    font-size: clamp(25px, 6.8vw, 32px);
+    max-width: 22ch;
+  }
+
+  /* Compress the lifecycle trust card — less padding, a tighter top gap, smaller        */
+  /* markers and step rhythm so it doesn't read as a big block above the questions.      */
+  .dl-faq-trust {
+    margin-top: clamp(18px, 3vh, 26px);
+    padding: 16px;
+    gap: 12px;
+  }
+
+  .dl-faq-lifecycle__step {
+    padding: 6px 0;
+    font-size: 12.5px;
+    gap: 11px;
+  }
+
+  /* Slightly smaller discs on phones; re-centre the rail on the 23px disc (centre 11.5). */
+  .dl-faq-lifecycle__disc {
+    --disc-size: 23px;
+    --disc-icon: 13px;
+  }
+
+  .dl-faq-lifecycle__step::before {
+    left: 10.75px;
+  }
+
+  /* Slimmer accordion rows + reduced open-answer padding on phones. */
+  .dl-faq-item__trigger {
+    padding: 13px 16px;
+  }
+
+  .dl-faq-item__q {
+    font-size: 14.5px;
+  }
+
+  .dl-faq-item__a {
+    padding: 0 16px 14px;
+    font-size: 14px;
+  }
+}
+
+/* ── Reduced motion ──────────────────────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+  .dl-faq__intro,
+  .dl-faq__panel {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none;
+  }
+
+  .dl-faq-item__panel,
+  .dl-faq-item__panel-inner,
+  .dl-faq-item__caret {
+    transition: none;
+  }
+}
+
+/* ══════════════════════════════════════════════════════════════════════════════ */
+/* RECOVERED hero/wall CSS (restored from session transcripts after a hard reset).  */
+/* Unique selectors, appended — they were lost from the reconstruction's middle.    */
+/* ══════════════════════════════════════════════════════════════════════════════ */
+
+/* ── Landing surface — ONE continuous matte-silver wall ─────────────────────────── */
+/* Every section below the hero is transparent, so THIS surface is the shared         */
+/* material: its tone, brushed grain, panel seams and light run unbroken from the      */
+/* hero seam to the page foot instead of resetting per block. The hero paints its own  */
+/* brighter "shiny" wall on top for screen one; below it, this surface shows through.  */
+/* Silver family only — light falls from the upper right and the wall deepens by a     */
+/* hair toward the foot, so the page reads as one tall architectural panel, not a      */
+/* flat fill. (Giving .dl-page a containing block ALSO fixes the grain/dither layers,  */
+/* which were absolutely positioned against a static parent and so only ever covered   */
+/* the first screen — now they span the whole page.)                                   */
+.dl-page {
+  position: relative;
+  isolation: isolate;
+  min-height: 100dvh;
+  /* Safety net only (the layout itself is overflow-free): clip, never hidden, so a   */
+  /* stray decorative/Spline bleed can't add a horizontal scrollbar — `clip` doesn't   */
+  /* create a scroll container, so the workflow's position:sticky still pins normally. */
+  overflow-x: clip;
+  background:
+    /* soft key light, upper right (strongest at the top, fades over the first panels) — */
+    /* brightened to a near-pure hot core with a tighter falloff so the top of the wall   */
+    /* gleams like lit metal rather than diffusing to a flat grey.                        */
+    radial-gradient(135% 82% at 86% -6%, rgba(255, 255, 255, 0.95) 0%, rgba(255, 255, 255, 0.36) 26%, rgba(255, 255, 255, 0) 46%),
+    /* faint cool fill, lower left, to round the surface + darken the foot a touch      */
+    radial-gradient(98% 62% at 6% 104%, rgba(196, 200, 194, 0.22) 0%, rgba(196, 200, 194, 0) 46%),
+    /* large architectural panel seams — a few WIDE, soft recesses (not a grid). They   */
+    /* live in the surface itself, so they sit BEHIND every content panel and can never */
+    /* read as a line over text; the centre one is a catch-light, the flanks are soft   */
+    /* recesses framing the content column. Aligned ~to the hero's own seam positions    */
+    /* (14% / 50% / ~82%) so the structure carries across the hero→workflow boundary.    */
+    linear-gradient(90deg,
+      rgba(40, 42, 39, 0) 10.5%,
+      rgba(40, 42, 39, 0.030) 14%,
+      rgba(40, 42, 39, 0) 17.5%,
+      rgba(255, 255, 255, 0) 50%,
+      rgba(255, 255, 255, 0.20) 53.5%,
+      rgba(255, 255, 255, 0) 57%,
+      rgba(40, 42, 39, 0) 78.5%,
+      rgba(40, 42, 39, 0.032) 82%,
+      rgba(40, 42, 39, 0) 85.5%),
+    /* edge vignette — a faint inward falloff on the LEFT/RIGHT margins. The page is    */
+    /* viewport-wide, so these x-edges are the viewport edges at every scroll position: */
+    /* this frames the content column with continuous soft depth (not darkness) across  */
+    /* all sections, the way a lit gallery wall falls off toward its corners.           */
+    linear-gradient(90deg,
+      rgba(40, 42, 39, 0.05) 0%,
+      rgba(40, 42, 39, 0) 11%,
+      rgba(40, 42, 39, 0) 89%,
+      rgba(40, 42, 39, 0.05) 100%),
+    /* broad SATIN sweep — one diagonal specular band (bright → steel dip → bright) across */
+    /* the whole wall, so the surface reads as a single POLISHED aluminium panel caught    */
+    /* under angled studio light. The peaks are brighter and the falloff faster than a     */
+    /* matte wash (a defined gleam edge = polish); the steel dip mid-band gives real value */
+    /* contrast. The per-section sheens (MetalSheen) layer brighter reflections on top.    */
+    linear-gradient(115deg,
+      rgba(255, 255, 255, 0) 0%,
+      rgba(255, 255, 255, 0.66) 23%,
+      rgba(255, 255, 255, 0.10) 33%,
+      rgba(120, 124, 116, 0.06) 54%,
+      rgba(255, 255, 255, 0.22) 66%,
+      rgba(255, 255, 255, 0.58) 78%,
+      rgba(255, 255, 255, 0) 100%),
+    /* the wall: a top→foot tonal descent through a luminous silver range. Nudged COOLER  */
+    /* + a touch deeper at the foot (toward the login wall's neutral brushed-aluminium     */
+    /* silver) so the surface reads more metallic, while the top stays bright and the foot */
+    /* is still a light polished silver (never a dim grey). Text stays dark ink, so the    */
+    /* tone only carries the metallic read without touching contrast.                      */
+    linear-gradient(180deg,
+      #fafbfa 0%,
+      #eff1ef 32%,
+      #e5e8e6 66%,
+      #dadedc 100%);
+}
+
+/* Fine fractal-noise dither over the wall (kills gradient banding; neutral grain). */
+.dl-page::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='220' height='220'%3E%3Cfilter id='dlnoise'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23dlnoise)'/%3E%3C/svg%3E");
+  background-size: 220px 220px;
+  background-repeat: repeat;
+  mix-blend-mode: overlay;
+  opacity: 0.05;
+}
+
+/* Faint architectural DOT MICRO-GRID — a single ink dot every 26px, so low-contrast  */
+/* it only resolves on a close look (a technical-precision cue, never wallpaper). It   */
+/* spans the whole page behind content (z-index 0), and is masked to FADE OUT at the   */
+/* left/right margins so it concentrates behind the content column and never fights    */
+/* the edge vignette. Static (no animation), GPU-cheap, hidden under the hero's own    */
+/* shiny wall — it reads in the workflow / security / FAQ panels.                      */
+.dl-page::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  background-image: radial-gradient(circle, rgba(40, 44, 40, 0.12) 0.55px, transparent 0.65px);
+  background-size: 22px 22px;
+  /* Pulled WAY back so the metal — not the dots — is the surface. Dimmed + masked into  */
+  /* a soft central pool (radial, not full-width) so it never reads as a paper/tech grid */
+  /* and never fights the satin/specular layers; just a faint precision cue on a close   */
+  /* look behind the content column.                                                      */
+  opacity: 0.22;
+  -webkit-mask-image: radial-gradient(118% 90% at 50% 42%, #000 0%, #000 40%, transparent 82%);
+  mask-image: radial-gradient(118% 90% at 50% 42%, #000 0%, #000 40%, transparent 82%);
+}
+
+/* Brushed-aluminium grain across the whole page, modelled on the AUTH login wall
+ * (.dl-auth__vault-side::before): a fine VERTICAL brush — bright pearl crest / faint
+ * graphite valley at a ~3px pitch — under one broad directional sheen band raking down
+ * the panel. The previous version layered isotropic micro-DOTS + a 96deg groove on a
+ * multiply blend, which read as grey paper grain; this is the cleaner satin-metal look
+ * the login wall has. Normal blend, low alpha, GPU-cheap (static). */
+.dl-page__texture {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  opacity: 0.9;
+  background-image:
+    /* directional brushed sheen — faint steel → bright crest → faint steel, raking down
+       the wall so it reads as one angled-lit aluminium panel (the login wall's 102deg
+       sheen, ported). Brighter crest so the brush gleams under the light, not just sits. */
+    linear-gradient(101deg,
+      rgba(120, 126, 122, 0.05) 0%,
+      rgba(255, 255, 255, 0.12) 30%,
+      rgba(255, 255, 255, 0.18) 52%,
+      rgba(120, 126, 122, 0.05) 76%,
+      rgba(120, 126, 122, 0.07) 100%),
+    /* fine vertical brush lines (the login idiom): brighter pearl crest / deeper graphite
+       valley at a ~3px pitch — the raised contrast is the anisotropic shimmer of brushed
+       metal (each rib catches the key light), where the old low-contrast pair read flat. */
+    repeating-linear-gradient(90deg,
+      rgba(255, 255, 255, 0.12) 0px,
+      rgba(255, 255, 255, 0.12) 1px,
+      rgba(66, 72, 70, 0.07) 1px,
+      rgba(66, 72, 70, 0.07) 3px);
+  background-size: 100% 100%, 3px 100%;
+}
+
+/* ── Fluted pilasters — reeded-glass columns framing the wall ────────────────────
+ * Ports the auth login wall's signature ribbed side-panel (.dl-auth__flute) onto the
+ * landing: a pair of vertical reeded-glass pilasters standing at the far left/right of
+ * the page, out in the margins beside the centred content column. Bright crest → valley
+ * ribs (repeating 90deg), a soft groove + crisp seam where each column meets the wall
+ * (its INNER edge) and a faint pearl edge-light on the OUTER edge, so the page reads as
+ * an architectural panel set between two machined columns.
+ *
+ * Mounted twice, both BEHIND content (so they can never cover copy/cards/vault — they
+ * only ever paint in the empty gutters, which stay narrower than --dl-shell-pad at every
+ * breakpoint): once on .dl-page (z-index:0, before the sections in DOM → behind them, like
+ * .dl-page__texture) for the workflow/security/FAQ panels, and once inside .dl-hero-v2
+ * (z-index:0, after HeroBackground, before the stage) so they also show on screen one,
+ * where the hero paints its own opaque wall over the page-level pair. Both share these
+ * classes, so left/right columns line up continuously across the hero→workflow seam.
+ * Silver spectrum only; shadows ink-tinted (rgba(40,42,39,…)), never pure black. */
+.dl-flute {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  z-index: 0;
+  width: clamp(24px, 4vw, 80px);
+  pointer-events: none;
+  /* reeded ribs: bright pearl crest → wall show-through → graphite valley → … → crest.   */
+  /* Crests near-white and valleys deeper than before so the columns read as POLISHED     */
+  /* chrome catching the studio light, not soft matte reeding.                            */
+  background-image: repeating-linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.66) 0px,
+    rgba(206, 211, 207, 0) 3.5px,
+    rgba(104, 112, 108, 0.24) 7px,
+    rgba(206, 211, 207, 0) 10.5px,
+    rgba(255, 255, 255, 0.66) 14px
+  );
+  /* dissolve into the wall at the extreme top + foot — the columns have no hard ends */
+  -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 150px, #000 calc(100% - 200px), transparent 100%);
+  mask-image: linear-gradient(180deg, transparent 0, #000 150px, #000 calc(100% - 200px), transparent 100%);
+}
+.dl-flute--left {
+  left: 0;
+  /* soft inner groove + crisp seam on the RIGHT edge; bright pearl edge-light on the far
+     LEFT (raised so the column's outer lip gleams). */
+  box-shadow:
+    inset -10px 0 14px -12px rgba(40, 42, 39, 0.22),
+    inset -1px 0 0 rgba(40, 42, 39, 0.12),
+    inset 1px 0 0 rgba(255, 255, 255, 0.66);
+}
+.dl-flute--right {
+  right: 0;
+  box-shadow:
+    inset 10px 0 14px -12px rgba(40, 42, 39, 0.22),
+    inset 1px 0 0 rgba(40, 42, 39, 0.12),
+    inset -1px 0 0 rgba(255, 255, 255, 0.66);
+}
+/* Phones: the layout reflows to a near-full-width single column, so the columns would
+ * crowd the content — drop them and let the matte wall carry the small screen alone. */
+@media (max-width: 600px) {
+  .dl-flute { display: none; }
+}
+
+/* ── Specular metal sheen (MetalSheen.tsx) ───────────────────────────────────────── */
+/* Large soft reflection sweeps that make a section read as satin aluminium under       */
+/* studio light. `screen` blend lightens only (adds shine, never darkens text); bands    */
+/* are pre-blurred + cached and only their TRANSFORM drifts (compositor-cheap). z-index   */
+/* -1 keeps them behind the host's content but above the base wall.                      */
+.dl-sheen {
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  overflow: hidden;
+}
+
+.dl-sheen__band {
+  position: absolute;
+  pointer-events: none;
+  mix-blend-mode: screen;
+  will-change: transform;
+}
+
+/* Diagonal chrome highlight, top-left → lower-right (the primary "lit metal" reading). */
+.dl-sheen__band--diag {
+  width: 84vw;
+  height: 30vh;
+  left: -16vw;
+  top: 12%;
+  transform: rotate(-15deg);
+  background: linear-gradient(90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0) 16%,
+    rgba(255, 255, 255, 0.64) 46%,
+    rgba(214, 217, 210, 0.16) 60%,
+    rgba(255, 255, 255, 0) 100%);
+  filter: blur(22px);
+  opacity: 0.56;
+}
+
+/* Soft vertical reflective column down the centre, behind the focal card. */
+.dl-sheen__band--column {
+  width: 30vw;
+  height: 88%;
+  left: 50%;
+  top: 4%;
+  transform: translateX(-50%) rotate(6deg);
+  background: linear-gradient(90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.34) 44%,
+    rgba(190, 194, 186, 0.08) 54%,
+    rgba(255, 255, 255, 0) 100%);
+  filter: blur(38px);
+  opacity: 0.42;
+}
+
+/* Faint lower silver reflection, low in the section (behind the orbit lines). */
+.dl-sheen__band--low {
+  width: 92vw;
+  height: 24vh;
+  left: 50%;
+  bottom: 3%;
+  transform: translateX(-50%) rotate(-3deg);
+  background: linear-gradient(90deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.3) 50%,
+    rgba(255, 255, 255, 0) 100%);
+  filter: blur(28px);
+  opacity: 0.36;
+}
+
+/* Workflow gets the strongest, brightest reflections — it's the focal product stage. */
+.dl-sheen--workflow .dl-sheen__band--diag { opacity: 0.68; }
+.dl-sheen--workflow .dl-sheen__band--column { opacity: 0.58; }
+.dl-sheen--workflow .dl-sheen__band--low { opacity: 0.48; }
+
+/* Slow specular drift — TRANSFORM only (blur stays constant so the layer is cached and  */
+/* the per-variant opacity above is preserved). Fully parked under reduced-motion.       */
+@media (prefers-reduced-motion: no-preference) {
+  .dl-sheen__band--diag {
+    animation: dl-sheen-diag 19s ease-in-out infinite alternate;
+  }
+  .dl-sheen__band--column {
+    animation: dl-sheen-col 23s ease-in-out infinite alternate;
+  }
+  @keyframes dl-sheen-diag {
+    from { transform: rotate(-15deg) translateX(-3%); }
+    to   { transform: rotate(-15deg) translateX(6%); }
+  }
+  @keyframes dl-sheen-col {
+    from { transform: translateX(-50%) rotate(6deg) translateY(0); }
+    to   { transform: translateX(-50%) rotate(6deg) translateY(-2.4%); }
+  }
+}
+
+/* Hero wall: soft directional blooms + a metallic conic sheen. */
+.dl-wall-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 0;
+  pointer-events: none;
+  overflow: hidden;
+  background:
+    radial-gradient(ellipse 78% 60% at 84% 12%, rgba(255, 255, 255, 0.66) 0%, rgba(255, 255, 255, 0.26) 34%, rgba(255, 255, 255, 0) 70%),
+    radial-gradient(ellipse 62% 48% at 22% 8%, rgba(255, 255, 255, 0.24) 0%, rgba(255, 255, 255, 0.07) 42%, rgba(255, 255, 255, 0) 76%),
+    conic-gradient(from 200deg at 70% 26%,
+      rgba(255, 255, 255, 0) 0deg,
+      rgba(255, 255, 255, 0.16) 42deg,
+      rgba(122, 128, 122, 0.05) 96deg,
+      rgba(255, 255, 255, 0.11) 152deg,
+      rgba(122, 128, 122, 0.045) 206deg,
+      rgba(255, 255, 255, 0.17) 258deg,
+      rgba(122, 128, 122, 0.05) 312deg,
+      rgba(255, 255, 255, 0) 360deg);
+}
+
+.dl-wall-bg__plane,
+.dl-wall-bg__light,
+.dl-wall-bg__shadow {
+  position: absolute;
+  pointer-events: none;
+}
+
+.dl-wall-bg__plane {
+  top: -8%;
+  bottom: -10%;
+  z-index: 1;
+  opacity: 0.70;
+  filter: blur(0.25px);
+}
+
+.dl-wall-bg__plane--left {
+  left: 0;
+  width: var(--vault-frame-left);
+  background:
+    linear-gradient(98deg, rgba(255, 255, 255, 0.35) 0%, rgba(255, 255, 255, 0.10) 44%, rgba(128, 133, 127, 0.082) 100%);
+  clip-path: polygon(0 0, 86% 0, 100% 100%, 0 100%);
+}
+
+.dl-wall-bg__plane--right {
+  left: var(--vault-frame-left);
+  right: -4%;
+  width: auto;
+  background:
+    linear-gradient(105deg, rgba(126, 132, 126, 0.11) 0%, rgba(226, 228, 223, 0.25) 36%, rgba(255, 255, 255, 0.36) 72%, rgba(212, 214, 209, 0.18) 100%);
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 10% 100%);
+}
+
+.dl-wall-bg__light--ambient {
+  right: -8%;
+  top: -26%;
+  width: 72%;
+  height: 72%;
+  z-index: 4;
+  background: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.74) 0%, rgba(255, 255, 255, 0.26) 42%, rgba(255, 255, 255, 0) 74%);
+  filter: blur(34px);
+  opacity: 0.76;
+}
+
+.dl-wall-bg__light--vault {
+  right: 7%;
+  top: 19%;
+  width: 42%;
+  height: 62%;
+  z-index: 4;
+  background: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.52) 0%, rgba(230, 231, 226, 0.28) 43%, rgba(196, 199, 193, 0) 76%);
+  filter: blur(24px);
+  opacity: 0.42;
+}
+
+.dl-wall-bg__shadow--diagonal {
+  inset: -8% -4%;
+  z-index: 1;
+  background: linear-gradient(114deg, rgba(120, 126, 120, 0) 0%, rgba(120, 126, 120, 0.075) 42%, rgba(255, 255, 255, 0.20) 54%, rgba(120, 126, 120, 0.055) 66%, rgba(120, 126, 120, 0) 100%);
+  clip-path: polygon(44% 0, 69% 0, 50% 100%, 24% 100%);
+  opacity: 0.78;
+}
+
+/* Moving specular glint across the wall (polished metal catching light). */
+.dl-wall-bg__sheen {
+  position: absolute;
+  top: -20%;
+  bottom: -20%;
+  left: -34%;
+  width: 46%;
+  z-index: 2;
+  opacity: 0.75;
+  background: linear-gradient(
+    104deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.06) 34%,
+    rgba(255, 255, 255, 0.42) 50%,
+    rgba(255, 255, 255, 0.06) 66%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  transform: translate3d(0, 0, 0) rotate(2deg);
+  animation: dl-wall-sheen 16s ease-in-out infinite alternate;
+  will-change: transform;
+}
+
+@keyframes dl-wall-sheen {
+  from { transform: translate3d(0, 0, 0) rotate(2deg); }
+  to   { transform: translate3d(285%, 0, 0) rotate(2deg); }
+}
+
+/* (Header styles live in the "Site header" section near the top of this file.) */
+
+/* Engraved "DL" monogram inside the hero vault SVG — mono, from the shared token. */
+.dl-vault-monogram { font-family: var(--font-marketing-ui); }
+
+/* Progressive blur fading into the section below (6 layered masks). */
+.dl-hero-blur {
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: clamp(150px, 21vh, 230px);
+  z-index: 3;
+  pointer-events: none;
+}
+
+.dl-hero-blur__layer { position: absolute; inset: 0; }
+
+.dl-hero-blur__layer--1 { backdrop-filter: blur(0.8px); -webkit-backdrop-filter: blur(0.8px); -webkit-mask-image: linear-gradient(180deg, transparent 0%, #000 24%, #000 100%); mask-image: linear-gradient(180deg, transparent 0%, #000 24%, #000 100%); }
+.dl-hero-blur__layer--2 { backdrop-filter: blur(1.6px); -webkit-backdrop-filter: blur(1.6px); -webkit-mask-image: linear-gradient(180deg, transparent 16%, #000 42%, #000 100%); mask-image: linear-gradient(180deg, transparent 16%, #000 42%, #000 100%); }
+.dl-hero-blur__layer--3 { backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); -webkit-mask-image: linear-gradient(180deg, transparent 34%, #000 58%, #000 100%); mask-image: linear-gradient(180deg, transparent 34%, #000 58%, #000 100%); }
+.dl-hero-blur__layer--4 { backdrop-filter: blur(6px); -webkit-backdrop-filter: blur(6px); -webkit-mask-image: linear-gradient(180deg, transparent 52%, #000 74%, #000 100%); mask-image: linear-gradient(180deg, transparent 52%, #000 74%, #000 100%); }
+.dl-hero-blur__layer--5 { backdrop-filter: blur(11px); -webkit-backdrop-filter: blur(11px); -webkit-mask-image: linear-gradient(180deg, transparent 70%, #000 90%, #000 100%); mask-image: linear-gradient(180deg, transparent 70%, #000 90%, #000 100%); }
+.dl-hero-blur__layer--6 { backdrop-filter: blur(22px); -webkit-backdrop-filter: blur(22px); -webkit-mask-image: linear-gradient(180deg, transparent 86%, #000 100%); mask-image: linear-gradient(180deg, transparent 86%, #000 100%); }
+
+.dl-hero-blur__veil {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(180deg, rgba(233, 234, 229, 0) 0%, rgba(233, 234, 229, 0) 54%, rgba(230, 231, 226, 0.42) 100%);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dl-wall-bg__sheen { animation: none; transform: translate3d(120%, 0, 0) rotate(2deg); }
+}

@@ -26,8 +26,8 @@ import { WORKFLOW_STEPS, STEP_COUNT } from "./workflowSteps";
 import { useWorkflowStep } from "./useWorkflowStep";
 import WorkflowActionCard, { type CardPosition } from "./WorkflowActionCard";
 import WorkflowContractStage from "./WorkflowContractStage";
+import WorkflowStepNav from "./WorkflowStepNav";
 import TypewriterText from "./TypewriterText";
-import MetalOrbitLines from "../MetalOrbitLines";
 import MetalSheen from "../MetalSheen";
 import { useMediaQuery } from "../useMediaQuery";
 
@@ -47,10 +47,12 @@ function cardPosition(index: number, activeStep: number): CardPosition {
 // per-character re-laid-out a big text node on every keystroke while the header was
 // still scrolling through the viewport, and that concurrent relayout stuttered. So the
 // title just fades in with the eyebrow; a short beat later the subtitle types out in
-// small mono — which reveals as smoothly as the pinned contract narration does.
-const WF_TITLE = "The Milestone Flow";
+// small mono. The copy is product-explanatory — it teaches the model (one agreement,
+// five steps, funds locked the whole way) before the visitor touches anything.
+const WF_EYEBROW = "The DealLock Mechanism";
+const WF_TITLE = "Funded first. Proved next. Paid only after approval.";
 const WF_SUB =
-  "DealLock secures each milestone. Funds stay locked until work is approved.";
+  "The client deposits into a smart-contract escrow before work starts. The provider submits proof for each milestone. Funds release only when the client approves.";
 const WF_SUB_SPEED = 15;
 const WF_SUB_DELAY = 520;
 
@@ -65,7 +67,7 @@ export default function WorkflowStory() {
     [],
   );
 
-  const { activeStep } = useWorkflowStep({
+  const { activeStep, scrollToStep } = useWorkflowStep({
     trackRef,
     cardRefs,
     stepCount: STEP_COUNT,
@@ -110,8 +112,6 @@ export default function WorkflowStory() {
     [],
   );
 
-  const narration = WORKFLOW_STEPS[Math.min(activeStep, STEP_COUNT - 1)].typewriter;
-
   return (
     <section id="workflow" className="dl-workflow" aria-labelledby="dl-workflow-title">
       <div className="dl-workflow__bg" aria-hidden="true">
@@ -127,7 +127,7 @@ export default function WorkflowStory() {
       {/* contract-card scene takes over and pins as the central focal object.        */}
       <header className="dl-workflow__header" ref={headerRef}>
         <span className={`dl-workflow__eyebrow${headerInView ? " is-in" : ""}`}>
-          Workflow
+          {WF_EYEBROW}
         </span>
         <h2
           id="dl-workflow-title"
@@ -149,18 +149,21 @@ export default function WorkflowStory() {
       <div className="dl-workflow__scroll" ref={trackRef}>
         <div className="dl-workflow__sticky">
           {/* Pinned metallic background for the focal stage: specular reflection sweeps */}
-          {/* (strongest variant) under the orbital guide. Both are decorative layers    */}
-          {/* (z-index below the scene) — they never touch the contract or the cards.    */}
+          {/* (strongest variant). Decorative layer only (z-index below the scene) — it  */}
+          {/* never touches the contract or the cards. The soft pastel atmosphere behind  */}
+          {/* the card now lives in .dl-workflow__sticky::before (ELEVENLABS_DESIGN.md).  */}
           <MetalSheen className="dl-sheen--workflow" />
-          {/* Decorative orbital guide pinned behind the contract — implies "flow"     */}
-          {/* without becoming an infographic. Background layer only (z-index below).   */}
-          <MetalOrbitLines className="dl-orbit--workflow" />
           <div className="dl-workflow__scene">
             <div className="dl-workflow__center">
               <WorkflowContractStage activeStep={activeStep} />
-              <p className="dl-workflow__narration">
-                <TypewriterText key={activeStep} text={narration} />
-              </p>
+              {/* The card carries the current-state narrative now (its CURRENT STEP   */}
+              {/* block), so this group is just the navigator: the always-visible step  */}
+              {/* dots (jump to ANY step) plus the affordance hint. The flow also walks  */}
+              {/* on scroll, and the action cards stay tappable.                        */}
+              <div className="dl-workflow__nav">
+                <WorkflowStepNav activeStep={activeStep} onSelect={scrollToStep} />
+                <p className="dl-workflow__hint">Scroll — or tap a step — to walk the flow</p>
+              </div>
             </div>
 
             {WORKFLOW_STEPS.map((step, i) => (
@@ -173,6 +176,7 @@ export default function WorkflowStory() {
                 index={i}
                 position={cardPosition(i, activeStep)}
                 done={i < activeStep}
+                onSelect={scrollToStep}
                 // Desktop grid column; ignored once the scene switches to flex on mobile.
                 style={placement[i]}
               />

@@ -106,6 +106,7 @@ let ethAgreementAddress = "";
 let usdcAgreementAddress = "";
 let v6AgreementAddress = "";
 let deployerAddress = "";
+let providerAddress = "";
 
 before(async () => {
   const reachable = await isHardhatReachable();
@@ -122,6 +123,7 @@ before(async () => {
   const deployer = privateKeyToAccount(DEPLOYER_KEY);
   const provider = privateKeyToAccount(PROVIDER_KEY);
   deployerAddress = deployer.address.toLowerCase();
+  providerAddress = provider.address.toLowerCase();
 
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   const publicClient = createPublicClient({ chain: hardhatChain, transport: http(HARDHAT_RPC) }) as any;
@@ -347,6 +349,19 @@ test("syncFactory creates Agreement rows from AgreementCreated events", async ()
   const client = createPublicClient({ chain: hardhatChain, transport: http(HARDHAT_RPC) }) as unknown as PublicClient;
   const latestBlock = await client.getBlockNumber();
 
+  await db.agreement.create({
+    data: {
+      contractAddress: ethAgreementAddress,
+      chainId: CHAIN_ID,
+      clientAddress: "0x00000000000000000000000000000000000000a1",
+      providerAddress: deployerAddress,
+      clientEmail: "spoofed-client@example.com",
+      providerEmail: "spoofed-provider@example.com",
+      contractVersion: 1,
+      creationSource: "direct",
+    },
+  });
+
   const factory = config.factoryContracts[0]!;
   const result = await syncFactory({ factory, client, config, confirmedHead: latestBlock });
 
@@ -354,6 +369,10 @@ test("syncFactory creates Agreement rows from AgreementCreated events", async ()
 
   const ethRow = await db.agreement.findUnique({ where: { chainId_contractAddress: { chainId: CHAIN_ID, contractAddress: ethAgreementAddress } } });
   assert.ok(ethRow, "ETH agreement row should exist");
+  assert.equal(ethRow.clientAddress, deployerAddress);
+  assert.equal(ethRow.providerAddress, providerAddress);
+  assert.equal(ethRow.clientEmail, null);
+  assert.equal(ethRow.providerEmail, null);
   assert.equal(ethRow.creationSource, "factory");
   assert.equal(ethRow.factoryVersion, 2);
   assert.equal(ethRow.contractVersion, 5);

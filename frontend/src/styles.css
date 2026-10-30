@@ -64,6 +64,20 @@
     0 6px 18px rgba(17, 19, 21, 0.16),
     0 2px 5px rgba(17, 19, 21, 0.10);
 
+  /* Brushed-metal ICON DISC — the small raised silver coin that holds a line icon in
+   * card headers (security cards, FAQ lifecycle). It is the landing-tuned twin of the
+   * app design-lab `--metal-disc`: the same highlight → mid → darker lower arc → rim
+   * catch-light structure, kept in the landing's lighter silver range so it reads as a
+   * polished accessory, not a heavy control. Pair with `.dl-metal-disc`. */
+  --dl-disc-face:
+    radial-gradient(circle at 36% 28%, #ffffff 0%, #f2f3ee 30%, #d8dad2 62%, #c1c3bb 80%, #e8e9e3 100%);
+  --dl-disc-rim: rgba(17, 19, 21, 0.14);
+  --dl-disc-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.95),
+    inset 0 -1px 2px rgba(17, 19, 21, 0.10),
+    0 2px 5px rgba(17, 19, 21, 0.10),
+    0 1px 2px rgba(17, 19, 21, 0.06);
+
   /* Shared wall surface — ONE matte microcement/brushed-metal material used by both  */
   /* the hero and the workflow so the whole page reads as a single continuous wall.   */
   /* Warm matte silver (graphite only for seams + text). Tuned so adjacent tones step */
@@ -128,6 +142,21 @@
   --dl-glow-pearl:    rgba(255, 255, 255, 0.62);
   --dl-glow-silver:   rgba(190, 198, 198, 0.42);
   --dl-glow-graphite: rgba(40, 45, 48, 0.24);
+
+  /* Atmospheric pastel ORBS (ElevenLabs idiom — see ELEVENLABS_DESIGN.md). The only
+   * colour allowed on the silver wall, used EXCLUSIVELY as soft radial glow drifting
+   * behind components — never as a fill, text, or border. Kept low-alpha so they read as
+   * quiet atmosphere over the brushed metal, not chromatic decoration. Pair each with a
+   * `transparent` end stop in the radial (e.g. radial-gradient(.. var(--dl-orb-sky) 0%,
+   * transparent 70%)). Soft, desaturated stops (mint / sky / lavender / peach / rose). */
+  --dl-orb-lavender: rgba(178, 162, 216, 0.22);
+  --dl-orb-sky:      rgba(150, 188, 226, 0.20);
+  --dl-orb-mint:     rgba(150, 220, 198, 0.18);
+  --dl-orb-peach:    rgba(244, 197, 168, 0.18);
+  --dl-orb-rose:     rgba(230, 178, 196, 0.18);
+  /* whisper-soft variants for the bright hero, where the full-strength orbs wash out */
+  --dl-orb-lavender-soft: rgba(178, 162, 216, 0.13);
+  --dl-orb-sky-soft:      rgba(150, 188, 226, 0.12);
 
   /* Top specular shine — moodboard "ref-landing-crypto-ap-compliance-wallet".       */
   /* A soft, bright, NEUTRAL silver-white glare blooming from the top edge of a       */
@@ -287,6 +316,11 @@ a {
   position: relative;
   background:
     radial-gradient(ellipse 100% 70% at 56% 38%, #fbfcfb 0%, rgba(251, 252, 251, 0) 65%),
+    /* whisper-soft pastel orbs (ELEVENLABS_DESIGN.md) — a lavender bloom behind the     */
+    /* vault, a fainter sky one to the left; kept on the *-soft alphas so the bright hero */
+    /* never tips into chromatic. Behind the shine/SVG/stage that paint on top.          */
+    radial-gradient(42% 38% at 82% 64%, var(--dl-orb-lavender-soft) 0%, transparent 70%),
+    radial-gradient(40% 36% at 14% 30%, var(--dl-orb-sky-soft) 0%, transparent 72%),
     /* base floor tuned to flow into the shared .dl-page wall below (its top ≈ #f4f5f2), */
     /* so the hero→workflow boundary reads as one surface, not a step. The hero's shine  */
     /* comes from the blooms/conic/sheen overlays on top, not this base tone.            */
@@ -705,7 +739,9 @@ a {
 .dl-cta-primary:hover {
   transform: translateY(-1px);
   background: var(--dl-metal-face-hover);
-  box-shadow: var(--dl-metal-shadow-hover);
+  /* metal shadow + a faint lavender glow halo so the primary action lifts with a soft  */
+  /* lit edge (matches the pill glow; pastel kept low so the disc stays brushed metal).  */
+  box-shadow: var(--dl-metal-shadow-hover), 0 10px 26px -10px rgba(178, 162, 216, 0.5);
 }
 
 .dl-cta-primary:focus-visible {
@@ -763,9 +799,25 @@ a {
   line-height: 1.4;
   backdrop-filter: blur(10px) saturate(1.35);
   -webkit-backdrop-filter: blur(10px) saturate(1.35);
+  /* The pearl rim + faint drop, plus a soft pastel GLOW halo (one tint per chip below)  */
+  /* so the pills read as quietly lit glass over the metal wall.                          */
   box-shadow:
-    inset 0 1px 0 rgba(255, 255, 255, 0.82),
-    0 1px 2px rgba(17, 19, 21, 0.04);
+    inset 0 1px 0 rgba(255, 255, 255, 0.85),
+    0 1px 2px rgba(17, 19, 21, 0.04),
+    0 6px 20px -8px var(--dl-chip-glow, rgba(178, 162, 216, 0.4));
+  transition: box-shadow 240ms ease, border-color 240ms ease, transform 240ms ease;
+}
+/* Per-chip pastel halo — the three feature pills carry the lavender / sky / mint orbs. */
+.dl-hero-chip:nth-child(1) { --dl-chip-glow: rgba(178, 162, 216, 0.42); }
+.dl-hero-chip:nth-child(2) { --dl-chip-glow: rgba(150, 188, 226, 0.42); }
+.dl-hero-chip:nth-child(3) { --dl-chip-glow: rgba(150, 220, 198, 0.40); }
+.dl-hero-chip:hover {
+  transform: translateY(-1px);
+  border-color: rgba(17, 19, 21, 0.12);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.92),
+    0 2px 4px rgba(17, 19, 21, 0.05),
+    0 9px 26px -7px var(--dl-chip-glow, rgba(178, 162, 216, 0.55));
 }
 
 /* ── Scroll cue ──────────────────────────────────────────────────────────────── */
@@ -1463,8 +1515,12 @@ a {
   --wf-card-w: min(42vw, 600px);
   /* The central card is the pinned focal object (the title scrolls through above it, */
   /* so the card gets the full pinned screen) — tall enough to dominate the flanking  */
-  /* action cards, which nestle within its height.                                    */
-  --wf-card-h: min(74vh, 720px);
+  /* action cards, which nestle within its height. The card now carries more product  */
+  /* detail (escrow capsule, current-step block, verified footer), so it's a touch    */
+  /* taller than before.                                                              */
+  /* Trimmed from 80vh so the focal block (stage + step dots + hint) clears the bottom */
+  /* of the pinned scene with breathing room — at 80vh the hint sat flush on the edge. */
+  --wf-card-h: min(73vh, 730px);
 
   position: relative;
   z-index: 1;
@@ -1560,8 +1616,13 @@ a {
   transform: translate(-50%, -50%);
   /* Brighter studio key light so the contract card reads as a product lit on a metal   */
   /* stage (the workflow gets the strongest metallic treatment). Still a soft radial    */
-  /* falloff — no hard disc — and the MetalSheen bands add the angled reflections.       */
-  background: radial-gradient(ellipse at center, rgba(255, 255, 255, 0.94) 0%, rgba(240, 241, 237, 0.5) 34%, rgba(216, 219, 212, 0.2) 58%, rgba(196, 199, 193, 0) 76%);
+  /* falloff — no hard disc — and the MetalSheen bands add the angled reflections. Two   */
+  /* soft pastel orbs (lavender + sky) bloom around it so the focal stage carries the    */
+  /* page's quiet ElevenLabs colour moment, peeking past the bright white centre.        */
+  background:
+    radial-gradient(ellipse at center, rgba(255, 255, 255, 0.94) 0%, rgba(240, 241, 237, 0.5) 34%, rgba(216, 219, 212, 0.2) 58%, rgba(196, 199, 193, 0) 76%),
+    radial-gradient(46% 44% at 24% 30%, var(--dl-orb-lavender) 0%, transparent 70%),
+    radial-gradient(48% 46% at 78% 74%, var(--dl-orb-sky) 0%, transparent 72%);
   opacity: 0.96;
   pointer-events: none;
   z-index: -1;
@@ -1617,26 +1678,37 @@ a {
 }
 
 .dl-workflow__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 11px;
   font-family: var(--dl-mono);
   font-size: 11px;
   font-weight: 500;
-  letter-spacing: 0.26em;
+  letter-spacing: 0.3em;
   text-transform: uppercase;
   color: var(--dl-muted);
 }
 
+/* Flanking hairlines, like a section divider — frames the eyebrow as a chapter mark. */
+.dl-workflow__eyebrow::before,
+.dl-workflow__eyebrow::after {
+  content: "";
+  width: 26px;
+  height: 1px;
+  background: var(--dl-hairline-strong);
+}
+
 .dl-workflow__title {
   font-family: var(--dl-display);
-  font-size: clamp(28px, 3.4vw, 46px);
+  /* The headline is now a product-explanatory sentence ("One agreement. Five steps.  */
+  /* Funds locked the whole way."), so it WRAPS to 2–3 balanced lines instead of one.  */
+  font-size: clamp(25px, 3vw, 40px);
   font-weight: 600;
   letter-spacing: -0.02em;
-  line-height: 1.04;
+  line-height: 1.14;
   color: var(--dl-ink);
-  /* One-line floor only. The title is FIXED (it fades in, never types), and on every */
-  /* supported width "The Milestone Flow" sits on one line — so reserving two lines    */
-  /* just left a dead band above the subtitle. min-height is a floor, so a narrow      */
-  /* phone that wraps the title still grows the box (no clipping); the sub follows it.  */
-  min-height: 1.1em;
+  max-width: 19ch;
+  text-wrap: balance;
 }
 
 /* A touch wider/blockier caret to suit the large display title. */
@@ -1681,17 +1753,97 @@ a {
   display: flex;
   flex-direction: column;
   align-items: center;
-  gap: clamp(16px, 2.4vh, 26px);
+  gap: clamp(13px, 1.8vh, 20px);
 }
 
-.dl-workflow__narration {
+/* Interaction hint under the card. The card's CURRENT STEP block now carries the    */
+/* current-state narrative, so this is purely the affordance cue: the flow walks on   */
+/* scroll, and any step can be tapped. Quiet, uppercase, tracked — like the comp.     */
+/* Navigator group under the card — the step dots + the affordance hint, kept as one  */
+/* tight stack so the centre column treats it as a single child (one gap, not two).   */
+.dl-workflow__nav {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 7px;
+}
+
+.dl-workflow__hint {
   font-family: var(--dl-mono);
-  font-size: clamp(13.5px, 1.15vw, 15.5px);
-  line-height: 1.58;
-  color: var(--dl-body);
+  font-size: 9.5px;
+  font-weight: 500;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--dl-muted);
+  /* Secondary to the dots — kept faint so it reads as a quiet caption, not a label. */
+  opacity: 0.5;
   text-align: center;
-  max-width: 34ch;
-  min-height: 2.4em;
+}
+
+/* ── Step dots (WorkflowStepNav) ───────────────────────────────────────────────── */
+/* Always-visible carousel-style selector: one dot per step, each a real button, so   */
+/* any step is reachable (the faint flanking cards could only ever reach ±1). Active   */
+/* dot stretches to a pill; done = filled steel; upcoming = faint. Accent tokens are   */
+/* in scope here (this lives inside .dl-workflow).                                     */
+.dl-wf-steps {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.dl-wf-step-pip {
+  display: grid;
+  place-items: center;
+  /* Visual dot is tiny; the padding gives a comfortable ≥24px tap/click target. */
+  padding: 8px 6px;
+  background: none;
+  border: 0;
+  cursor: pointer;
+  border-radius: 8px;
+  -webkit-tap-highlight-color: transparent;
+}
+
+.dl-wf-step-pip__dot {
+  display: block;
+  width: 7px;
+  height: 7px;
+  border-radius: 99px;
+  background: var(--dl-steel-300);
+  transition:
+    width 320ms cubic-bezier(0.22, 0.7, 0.2, 1),
+    background-color 220ms ease,
+    transform 220ms ease,
+    box-shadow 220ms ease;
+}
+
+.dl-wf-step-pip:hover .dl-wf-step-pip__dot {
+  background: var(--dl-steel-500);
+  transform: scale(1.18);
+}
+
+.dl-wf-step-pip.is-done .dl-wf-step-pip__dot {
+  background: var(--dl-steel-400);
+}
+
+.dl-wf-step-pip.is-active .dl-wf-step-pip__dot {
+  width: 22px;
+  background: var(--dl-accent-strong);
+  transform: none;
+  box-shadow: 0 1px 4px var(--dl-accent-glow);
+}
+
+.dl-wf-step-pip:focus-visible {
+  outline: none;
+}
+
+.dl-wf-step-pip:focus-visible .dl-wf-step-pip__dot {
+  box-shadow: 0 0 0 3px var(--dl-accent-surface);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .dl-wf-step-pip__dot {
+    transition: background-color 220ms ease;
+  }
 }
 
 .dl-wf-caret {
@@ -1731,6 +1883,9 @@ a {
   width: min(100%, 326px);
   padding: 18px 20px;
   border-radius: 22px;
+  /* The whole card is a button (walks the flow to its step) — make that tappable. */
+  cursor: pointer;
+  -webkit-tap-highlight-color: transparent;
   will-change: opacity, transform;
   /* Near-opaque face over the uniform matte wall — no backdrop-filter. A live       */
   /* backdrop blur on six cards was a per-frame recomposite that made scrolling janky */
@@ -1776,6 +1931,26 @@ a {
     0 1px 2px rgba(17, 19, 21, 0.04),
     0 18px 40px rgba(17, 19, 21, 0.09),
     0 0 0 3px var(--dl-accent-surface);
+}
+
+/* Hover/focus affordance — the cards are buttons. Faint neighbours brighten so they  */
+/* read as reachable; the edge darkens; keyboard focus gets a clear accent ring.       */
+.dl-wf-card:hover {
+  border-color: rgba(17, 19, 21, 0.18);
+}
+
+.dl-wf-card.is-prev:hover,
+.dl-wf-card.is-next:hover {
+  opacity: 0.62;
+}
+
+.dl-wf-card:focus-visible {
+  outline: none;
+  border-color: var(--dl-accent-line);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.85),
+    0 0 0 3px var(--dl-accent-surface),
+    0 18px 40px rgba(17, 19, 21, 0.10);
 }
 
 /* Previous step — sits faint, just ABOVE the active/contract centre line. */
@@ -1853,17 +2028,57 @@ a {
   color: var(--dl-accent-strong);
 }
 
+/* State tag — DONE / ACTIVE NOW / UPCOMING. Calm-confirmed, dominant, secondary, all */
+/* on one pill so the card's status is legible before any interaction.                 */
+.dl-wf-card__tag {
+  margin-left: auto;
+  font-family: var(--dl-mono);
+  font-size: 8.5px;
+  font-weight: 600;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  white-space: nowrap;
+  padding: 3px 8px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  transition: color 320ms ease, background 320ms ease, border-color 320ms ease;
+}
+
+.dl-wf-card__tag--active {
+  color: var(--dl-accent-strong);
+  background: var(--dl-accent-surface);
+  border-color: var(--dl-accent-line);
+}
+
+.dl-wf-card__tag--done {
+  color: var(--dl-success);
+  background: var(--dl-success-surface);
+}
+
+.dl-wf-card__tag--upcoming {
+  color: var(--dl-muted);
+  background: rgba(17, 19, 21, 0.045);
+}
+
+/* A true circle, fixed square footprint. The two digits are centred by the grid;     */
+/* letter-spacing is zeroed (trailing tracking after the 2nd digit was pushing "01"    */
+/* visually left of centre) and a hair of text-indent compensates the mono glyph's     */
+/* own left side-bearing so the pair sits dead-centre.                                  */
 .dl-wf-card__num {
   display: inline-grid;
   place-items: center;
-  min-width: 19px;
-  height: 19px;
-  padding: 0 5px;
-  border-radius: 999px;
+  /* Fixed square that never shrinks — it's a flex child in the meta row, and without */
+  /* this it collapses to its ~12px content width and renders as a vertical oval.      */
+  flex: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
   font-family: var(--dl-mono);
-  font-size: 10px;
+  font-size: 9.5px;
   font-weight: 500;
-  letter-spacing: 0.04em;
+  letter-spacing: 0;
+  font-variant-numeric: tabular-nums;
+  line-height: 1;
   color: var(--dl-muted);
   background: rgba(17, 19, 21, 0.05);
 }
@@ -1958,7 +2173,11 @@ a {
 .dl-contract-stage {
   position: relative;
   width: var(--wf-card-w);
-  height: var(--wf-card-h);
+  /* Wrap the card's own content (no plate to fill now): the stage is exactly the card, */
+  /* so it can never starve the rows, and the step dots sit right beneath the card with */
+  /* no dead gap. Height tracks the content, which the compact tiers reduce by dropping  */
+  /* rows on short windows. */
+  height: auto;
   min-width: 300px;
   display: flex;
   align-items: center;
@@ -2000,43 +2219,6 @@ a {
   50%      { transform: translateY(5px); }
 }
 
-/* ── Material plate (CSS backdrop) ───────────────────────────────────────────── */
-/* A polished metal/glass slab rendered purely in CSS, sitting BEHIND the readable  */
-/* card and a touch larger (inset < the overlay's margins) so its lit top edge,     */
-/* bevel and diagonal sheen frame the text like a mounting plate. Layers: a soft    */
-/* top-right light bloom, a single diagonal reflection streak, and a vertical       */
-/* brushed-metal base; inset highlights/shadows give it physical thickness, and the */
-/* drop shadow floats it off the matte wall. Decorative + non-interactive.          */
-
-.dl-contract-stage__material {
-  position: absolute;
-  inset: 6% 9%;
-  z-index: 0;
-  pointer-events: none;
-  border-radius: 28px;
-  background:
-    /* Faint vertical brush — milled aluminium, not stripes (very low contrast).         */
-    repeating-linear-gradient(90deg, rgba(255, 255, 255, 0.5) 0px, rgba(255, 255, 255, 0) 1.5px, rgba(17, 19, 21, 0.016) 3px, rgba(255, 255, 255, 0) 4.5px),
-    /* Soft top satin light + one quiet diagonal sheen — kept matte, no hard gloss.       */
-    radial-gradient(ellipse 86% 64% at 70% 6%, rgba(255, 255, 255, 0.6) 0%, rgba(255, 255, 255, 0) 60%),
-    linear-gradient(122deg, rgba(255, 255, 255, 0) 38%, rgba(255, 255, 255, 0.24) 50%, rgba(255, 255, 255, 0) 62%),
-    /* Satin body. */
-    linear-gradient(176deg, #f6f7f5 0%, #e9ebe7 52%, #d9dcd6 100%);
-  box-shadow:
-    /* Milled bevel: crisp lit top edge, side catch-lights, a defined dark bottom edge   */
-    /* (physical thickness), and a fine inner edge line.                                  */
-    inset 0 1.5px 0 rgba(255, 255, 255, 0.96),
-    inset 1.5px 0 0 rgba(255, 255, 255, 0.55),
-    inset -1.5px 0 0 rgba(17, 19, 21, 0.06),
-    inset 0 -1.5px 0 rgba(17, 19, 21, 0.05),
-    inset 0 0 0 1px rgba(255, 255, 255, 0.4),
-    inset 0 -26px 50px rgba(17, 19, 21, 0.08),
-    /* Soft, deep, ink-tinted float — quiet depth, not a hard drop. */
-    0 2px 4px rgba(17, 19, 21, 0.06),
-    0 26px 52px rgba(17, 19, 21, 0.16),
-    0 48px 96px rgba(17, 19, 21, 0.14);
-}
-
 /* ── Contract card UI (readable overlay) ─────────────────────────────────────── */
 /* Sits on the glass centre of the Spline card (~70% of the stage) so the metal     */
 /* rails frame it. Frosted but translucent enough that the 3D material/reflections   */
@@ -2048,11 +2230,19 @@ a {
   z-index: 1;
   display: flex;
   flex-direction: column;
-  justify-content: space-between;
-  width: 68%;
-  height: 76%;
-  gap: clamp(9px, 1.4vh, 15px);
-  padding: clamp(18px, 1.8vw, 28px);
+  /* Group from the top with a tight, even rhythm; the footer is pushed to the bottom  */
+  /* (margin-top:auto on .dl-contract__addr). This reads as deliberate grouping rather  */
+  /* than space-between loosely spreading every row apart on tall cards.                */
+  justify-content: flex-start;
+  /* The card IS the object now (no plate behind it), so it takes ~all of the stage      */
+  /* width — bigger and more substantial than the old 68% inset.                         */
+  width: 92%;
+  /* Content-driven height, NOT a fixed % of the stage. Tying it to a % meant a shorter  */
+  /* stage starved the rows and the amount module (overflow:hidden) clipped the USD      */
+  /* line; auto makes the card exactly its content, immune to the stage size.            */
+  height: auto;
+  gap: clamp(8px, 1.15vh, 13px);
+  padding: clamp(18px, 1.8vw, 26px);
   border-radius: 22px;
   font-variant-numeric: tabular-nums;
   /* Opaque satin panel inlaid into the metal housing: a soft top sheen over a warm     */
@@ -2109,32 +2299,14 @@ a {
   background: currentColor;
 }
 
-.dl-contract__chip--draft {
-  color: var(--dl-muted);
-  background: rgba(17, 19, 21, 0.05);
-  border-color: rgba(17, 19, 21, 0.08);
-}
-
-.dl-contract__chip--accepted {
-  color: var(--dl-steel-500);
-  background: rgba(109, 116, 116, 0.1);
-  border-color: rgba(109, 116, 116, 0.18);
-}
-
-.dl-contract__chip--funded {
+/* Two tones only: purple while the agreement is in flight, green once it's settled.   */
+.dl-contract__chip--progress {
   color: var(--dl-accent-strong);
   background: var(--dl-accent-surface);
   border-color: var(--dl-accent-line);
 }
 
-.dl-contract__chip--submitted {
-  color: var(--dl-info);
-  background: var(--dl-info-surface);
-  border-color: rgba(58, 94, 139, 0.2);
-}
-
-.dl-contract__chip--approved,
-.dl-contract__chip--released {
+.dl-contract__chip--done {
   color: var(--dl-success);
   background: var(--dl-success-surface);
   border-color: rgba(58, 125, 92, 0.22);
@@ -2153,10 +2325,13 @@ a {
   transition: background 360ms ease, box-shadow 360ms ease;
 }
 
+/* The progress rail is intentionally NOT in this set: its current node already glows  */
+/* "you are here", and a full-row wash there would stack against the purple CURRENT    */
+/* STEP block right below it — too much purple in the lower card. The rail stays a      */
+/* clean precision instrument; the parties capsule and amount module carry the wash.    */
 .is-active.dl-contract__title-row,
 .is-active.dl-contract__parties,
-.is-active.dl-contract__amount,
-.is-active.dl-contract__progress {
+.is-active.dl-contract__amount {
   --wf-ring: var(--dl-accent-line);
   --wf-wash: var(--dl-accent-surface);
 }
@@ -2201,12 +2376,15 @@ a {
   background: var(--dl-steel-400);
 }
 
-/* Recessed soft well — a genuine inset surface inside the panel, holding the parties. */
+/* Recessed soft well holding the money-flow model: Client → Escrow → Provider. The   */
+/* escrow capsule in the middle is where the funds actually sit, so it's the visual    */
+/* anchor of "DealLock never holds the money — the contract does".                     */
 .dl-contract__parties {
-  display: flex;
+  display: grid;
+  grid-template-columns: 1fr auto 1fr;
   align-items: center;
-  gap: 10px;
-  padding: 11px 13px;
+  gap: clamp(8px, 1.1vw, 14px);
+  padding: clamp(11px, 1.3vw, 14px) clamp(13px, 1.4vw, 16px);
   border-radius: 14px;
   background:
     linear-gradient(var(--wf-wash), var(--wf-wash)),
@@ -2220,9 +2398,78 @@ a {
 .dl-contract__party {
   display: flex;
   flex-direction: column;
-  gap: 2px;
-  flex: 1;
+  gap: 3px;
   min-width: 0;
+}
+
+/* The right-side party (Provider) mirrors the left one (Client) on the far side of */
+/* the escrow capsule. */
+.dl-contract__party--provider {
+  align-items: flex-end;
+  text-align: right;
+}
+
+/* Escrow capsule — the centre column. The lock icon lights lavender while funds are  */
+/* held and turns green (check) once released, so the money's location is always read. */
+.dl-contract__escrow {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 5px;
+}
+
+.dl-contract__escrow-flow {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+}
+
+.dl-contract__escrow-arrow {
+  color: var(--dl-steel-300);
+  font-size: 12px;
+  line-height: 1;
+  transition: color 320ms ease;
+}
+
+.dl-contract__escrow-icon {
+  display: grid;
+  place-items: center;
+  width: 28px;
+  height: 28px;
+  border-radius: 8px;
+  background: #fff;
+  border: 1px solid var(--dl-hairline-strong);
+  color: var(--dl-steel-500);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 1px 2px rgba(17, 19, 21, 0.06);
+  transition: color 320ms ease, border-color 320ms ease, box-shadow 320ms ease;
+}
+
+.dl-contract__escrow-label {
+  font-family: var(--dl-mono);
+  font-size: 8px;
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--dl-muted);
+}
+
+.dl-contract__escrow--locked .dl-contract__escrow-icon {
+  color: var(--dl-accent-strong);
+  border-color: var(--dl-accent-line);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.9),
+    0 0 0 3px var(--dl-accent-surface),
+    0 1px 5px var(--dl-accent-glow);
+}
+
+.dl-contract__escrow--locked .dl-contract__escrow-arrow {
+  color: var(--dl-accent);
+}
+
+.dl-contract__escrow--released .dl-contract__escrow-icon {
+  color: var(--dl-success);
+  border-color: rgba(58, 125, 92, 0.3);
 }
 
 .dl-contract__party-label {
@@ -2241,23 +2488,6 @@ a {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
-}
-
-.dl-contract__party--provider .dl-contract__party-addr {
-  color: var(--dl-muted);
-  font-style: italic;
-}
-
-.dl-contract__party--provider.is-revealed .dl-contract__party-addr {
-  color: var(--dl-ink);
-  font-style: normal;
-}
-
-.dl-contract__party-link {
-  flex: none;
-  width: 18px;
-  height: 1px;
-  background: var(--dl-hairline-strong);
 }
 
 .dl-contract__milestone {
@@ -2288,6 +2518,9 @@ a {
 .dl-contract__amount {
   position: relative;
   overflow: hidden;
+  /* The money is the anchor — it must NEVER be squeezed/clipped, even if a very short  */
+  /* window forces the other rows to compress. */
+  flex: none;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -2340,7 +2573,7 @@ a {
 
 .dl-contract__amount-eth {
   font-family: var(--dl-mono);
-  font-size: clamp(27px, 2.8vw, 36px);
+  font-size: clamp(26px, 2.6vw, 33px);
   font-weight: 500;
   letter-spacing: -0.018em;
   line-height: 1;
@@ -2354,32 +2587,45 @@ a {
   color: var(--dl-muted);
 }
 
-.dl-contract__amount-state {
+/* The lock pill lives INSIDE the amount module, so "Locked in escrow" reads as the    */
+/* status of this value — not a floating tag. It narrates pending → locked → released. */
+.dl-contract__lock {
   display: inline-flex;
   align-items: center;
-  justify-content: flex-end;
-  gap: 4px;
-  flex: 1;
-  min-width: 0;
+  gap: 6px;
+  flex: none;
   font-family: var(--dl-mono);
-  font-size: 8.5px;
+  font-size: 10px;
+  font-weight: 500;
   letter-spacing: 0.02em;
-  text-align: right;
-  line-height: 1.3;
-  color: var(--dl-muted);
-  transition: color 320ms ease;
+  white-space: nowrap;
+  padding: 7px 12px;
+  border-radius: 999px;
+  border: 1px solid transparent;
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.6);
+  transition: color 320ms ease, background 320ms ease, border-color 320ms ease;
 }
 
-.dl-contract__amount-state svg {
+.dl-contract__lock svg {
   flex: none;
 }
 
-.dl-contract__amount--locked .dl-contract__amount-state {
-  color: var(--dl-accent-strong);
+.dl-contract__amount--pending .dl-contract__lock {
+  color: var(--dl-muted);
+  background: rgba(17, 19, 21, 0.045);
+  border-color: rgba(17, 19, 21, 0.08);
 }
 
-.dl-contract__amount--released .dl-contract__amount-state {
+.dl-contract__amount--locked .dl-contract__lock {
+  color: var(--dl-accent-strong);
+  background: var(--dl-accent-surface);
+  border-color: var(--dl-accent-line);
+}
+
+.dl-contract__amount--released .dl-contract__lock {
   color: var(--dl-success);
+  background: var(--dl-success-surface);
+  border-color: rgba(58, 125, 92, 0.26);
 }
 
 .dl-contract__progress {
@@ -2501,46 +2747,112 @@ a {
   color: var(--dl-body);
 }
 
+/* CURRENT STEP — the plain-language "what's happening now" block. A permanent, gently */
+/* lavender-tinted module so the eye always has one place that says, in words, what    */
+/* the escrow just did and who acts next. This is the card's narrative voice.          */
+.dl-contract__current {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  padding: clamp(10px, 1.25vw, 13px) clamp(12px, 1.35vw, 15px);
+  border-radius: 13px;
+  background: linear-gradient(180deg, rgba(111, 99, 189, 0.075) 0%, rgba(111, 99, 189, 0.04) 100%);
+  border: 1px solid var(--dl-accent-line);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.55);
+}
+
+.dl-contract__current-dot {
+  flex: none;
+  position: relative;
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  display: grid;
+  place-items: center;
+  background: #fff;
+  border: 1px solid var(--dl-accent-line);
+}
+
+.dl-contract__current-dot::after {
+  content: "";
+  width: 9px;
+  height: 9px;
+  border-radius: 50%;
+  background: radial-gradient(circle at 38% 32%, #8a7fd0 0%, var(--dl-accent) 72%);
+  box-shadow: 0 0 0 3px var(--dl-accent-surface);
+}
+
+.dl-contract__current-body {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  min-width: 0;
+}
+
+.dl-contract__current-label {
+  font-family: var(--dl-mono);
+  font-size: 8px;
+  letter-spacing: 0.18em;
+  text-transform: uppercase;
+  color: var(--dl-accent-strong);
+}
+
+.dl-contract__current-text {
+  font-family: var(--dl-mono);
+  font-size: 11.5px;
+  line-height: 1.42;
+  color: var(--dl-ink);
+}
+
+/* Footer — on-chain verification (the trust signal) + the contract address. Pinned to */
+/* the card's bottom edge (margin-top:auto) so the content above can group tightly.    */
 .dl-contract__addr {
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding-top: clamp(10px, 1.4vh, 16px);
+  gap: 10px;
+  margin-top: auto;
+  padding-top: clamp(10px, 1.4vh, 15px);
   border-top: 1px solid var(--dl-hairline);
 }
 
-.dl-contract__addr-label {
+.dl-contract__verified {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
   font-family: var(--dl-mono);
-  font-size: 8.5px;
-  letter-spacing: 0.08em;
+  font-size: 9px;
+  font-weight: 500;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: var(--dl-muted);
+  color: var(--dl-success);
+}
+
+.dl-contract__verified svg {
+  flex: none;
 }
 
 .dl-contract__addr-hash {
   font-family: var(--dl-mono);
-  font-size: 11px;
-  color: var(--dl-body);
+  font-size: 10.5px;
+  color: var(--dl-muted);
+  white-space: nowrap;
 }
 
 /* ── Tablet / mobile: single-column stack with a sticky card ─────────────────── */
 
 @media (max-width: 960px) {
   .dl-workflow {
-    --wf-card-w: min(90vw, 430px);
-    --wf-card-h: min(124vw, 540px);
+    --wf-card-w: min(92vw, 440px);
+    /* Taller stage so the richer card (escrow capsule + current-step block + footer)  */
+    /* fits without clipping when it scrolls normally at the top of the mobile stack.   */
+    --wf-card-h: min(158vw, 668px);
   }
 
-  /* The readable panel takes more of the (smaller) stage so text stays legible;     */
-  /* the material plate sits tighter behind it.                                      */
+  /* The card fills nearly the whole (smaller) stage width so the text stays legible. */
   .dl-contract {
-    width: 84%;
-    height: 82%;
-  }
-
-  .dl-contract-stage__material {
-    inset: 4% 6%;
-    border-radius: 24px;
+    width: 94%;
+    height: auto;
   }
 
   /* Compact, narrative rhythm: the header is content-height (the old 24vh min-height +  */
@@ -2587,6 +2899,13 @@ a {
     background: none;
   }
 
+  /* The scene is a static scroll list here (the contract isn't pinned), so the step  */
+  /* dots would scroll away as a stray control near the top — the stacked cards are   */
+  /* the navigator. Hide them; the hint copy still cues the scroll/tap interaction.   */
+  .dl-wf-steps {
+    display: none;
+  }
+
   /* On mobile the stacked cards carry the narrative text — the typed line would     */
   /* sit in the sticky card's fade zone and overlap the first card, so hide it.      */
   .dl-workflow__narration {
@@ -2625,8 +2944,13 @@ a {
 
 @media (max-width: 540px) {
   .dl-workflow {
-    --wf-card-w: min(94vw, 380px);
-    --wf-card-h: min(128vw, 488px);
+    --wf-card-w: min(94vw, 390px);
+    --wf-card-h: min(176vw, 612px);
+  }
+
+  .dl-contract {
+    width: 96%;
+    height: auto;
   }
 
   .dl-wf-card {
@@ -2644,13 +2968,21 @@ a {
 
 @media (min-width: 961px) and (max-height: 860px) {
   .dl-workflow {
-    --wf-card-h: min(70vh, 600px);
+    /* Continuous with the 73vh base (no size jump across 860) and trimmed enough to    */
+    /* leave room for the step dots + hint below the card on short windows.             */
+    --wf-card-h: min(72vh, 660px);
   }
 }
 
 @media (min-width: 961px) and (max-height: 760px) {
   .dl-workflow {
-    --wf-card-h: min(66vh, 520px);
+    --wf-card-h: min(74vh, 600px);
+  }
+
+  /* Drop the least-essential row so the flow blocks (parties, amount, rail, current  */
+  /* step) keep room without crowding when the pinned area is short.                  */
+  .dl-contract__milestone {
+    display: none;
   }
 
   /* Only the active card — prev/next would fight the active card + contract for the   */
@@ -2681,7 +3013,21 @@ a {
 
 @media (min-width: 961px) and (max-height: 640px) {
   .dl-workflow {
-    --wf-card-h: min(70vh, 430px);
+    /* Content-sized contract no longer scales down here, so keep the plate big enough   */
+    /* to frame it (dots are already hidden at this height, freeing the room).           */
+    --wf-card-h: min(82vh, 512px);
+  }
+
+  /* Very short: drop the whole navigator (dots + hint) — the cards stay tappable and   */
+  /* scroll still walks the flow, and this frees the contract its full room.            */
+  .dl-workflow__nav {
+    display: none;
+  }
+
+  /* Very short: also fold away the current-step block's roomy padding + the milestone */
+  /* (already hidden above) so the core escrow story still fits without clipping.      */
+  .dl-contract__current {
+    padding: 9px 11px;
   }
 
   /* Below ~640px tall the 560 min-height would center content in a box taller than the */
@@ -2846,7 +3192,10 @@ a {
     radial-gradient(92% 52% at 50% 0%, rgba(255, 255, 255, 0.42) 0%, rgba(255, 255, 255, 0) 56%),
     /* central content spotlight — a big soft white glow lifting the code panel + proof */
     /* cards off the wall (premium "lit product" feel), fading well before the edges.    */
-    radial-gradient(78% 66% at 50% 46%, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0) 62%);
+    radial-gradient(78% 66% at 50% 46%, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0) 62%),
+    /* atmospheric pastel orbs drifting in the corners (ElevenLabs idiom) — sky + mint */
+    radial-gradient(46% 40% at 90% 16%, var(--dl-orb-sky) 0%, transparent 72%),
+    radial-gradient(50% 42% at 8% 92%, var(--dl-orb-mint) 0%, transparent 72%);
 }
 
 .dl-sec__inner {
@@ -2942,6 +3291,38 @@ a {
   min-width: 0;
 }
 
+/* ── Metal icon disc (shared primitive) ─────────────────────────────────────────── */
+/* A small RAISED brushed-silver coin that carries a quiet line icon — the page's      */
+/* "premium accessory" for card headers. Reuses the design-lab metal-disc material via  */
+/* the landing `--dl-disc-*` tokens. Size is driven by `--disc-size` so one class fits  */
+/* every context (security cards ~38px, FAQ lifecycle ~26px). Icon is graphite/silver;  */
+/* `.dl-metal-disc--accent` lifts it to the restrained violet for security/active use.  */
+.dl-root .dl-metal-disc {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: var(--disc-size, 40px);
+  height: var(--disc-size, 40px);
+  border-radius: 50%;
+  background: var(--dl-disc-face);
+  border: 1px solid var(--dl-disc-rim);
+  box-shadow: var(--dl-disc-shadow);
+  color: var(--dl-steel-500);
+  transition: color 200ms ease, box-shadow 200ms ease, transform 200ms ease;
+}
+
+.dl-root .dl-metal-disc svg {
+  width: var(--disc-icon, 18px);
+  height: var(--disc-icon, 18px);
+  display: block;
+}
+
+.dl-root .dl-metal-disc--accent {
+  /* Restrained grey-violet (the workflow accent value), with a literal fallback so the */
+  /* modifier holds outside the `.dl-workflow` scope where `--dl-accent-*` is defined.   */
+  color: var(--dl-accent-strong, #5a4fa6);
+}
+
 /* ── Security proof cards (left column) — plain-language trust before the code ─── */
 
 .dl-sec-proof {
@@ -2971,26 +3352,17 @@ a {
   transform: translateY(-1px);
 }
 
+/* The icon is a shared `.dl-metal-disc` (raised silver coin); this only sizes it for  */
+/* the security context. On card hover the icon lifts to the section's violet accent.  */
 .dl-sec-proof-card__icon {
-  flex: none;
-  display: grid;
-  place-items: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 10px;
-  color: var(--sc-text-soft);
-  background: var(--sc-inset-bg);
-  border: 1px solid var(--sc-inset-border);
-  box-shadow: inset 0 1px 0 var(--sc-edge-light);
+  --disc-size: 38px;
+  --disc-icon: 18px;
+  margin-top: 1px;
 }
 
 .dl-sec-proof-card:hover .dl-sec-proof-card__icon {
   color: var(--sc-accent-strong);
-}
-
-.dl-sec-proof-card__icon svg {
-  width: 18px;
-  height: 18px;
+  transform: translateY(-1px);
 }
 
 .dl-sec-proof-card__body {
@@ -3335,16 +3707,19 @@ a {
   min-width: 0;
 }
 
+/* Raised metal disc (shared `--dl-disc-*` material) so the GitHub mark matches the     */
+/* security proof-card icons above it — one machined-silver icon language section-wide.  */
 .dl-repo-cta__mark {
   flex-shrink: 0;
-  width: 40px;
-  height: 40px;
-  border-radius: 11px;
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
   display: grid;
   place-items: center;
-  color: var(--sc-text);
-  background: var(--sc-inset-bg);
-  border: 1px solid var(--sc-inset-border);
+  color: var(--dl-steel-500);
+  background: var(--dl-disc-face);
+  border: 1px solid var(--dl-disc-rim);
+  box-shadow: var(--dl-disc-shadow);
 }
 
 .dl-repo-cta__gh {
@@ -3605,7 +3980,10 @@ a {
     radial-gradient(92% 50% at 50% 0%, rgba(255, 255, 255, 0.4) 0%, rgba(255, 255, 255, 0) 56%),
     /* central content spotlight — lifts the intro + accordion off the wall, matching   */
     /* the Security section so the two read as one continuous lit environment.          */
-    radial-gradient(80% 64% at 50% 44%, rgba(255, 255, 255, 0.46) 0%, rgba(255, 255, 255, 0) 62%);
+    radial-gradient(80% 64% at 50% 44%, rgba(255, 255, 255, 0.46) 0%, rgba(255, 255, 255, 0) 62%),
+    /* atmospheric pastel orbs closing the page — lavender + peach, low + to the sides  */
+    radial-gradient(52% 44% at 88% 88%, var(--dl-orb-lavender) 0%, transparent 72%),
+    radial-gradient(48% 40% at 10% 78%, var(--dl-orb-peach) 0%, transparent 72%);
 }
 
 .dl-faq__inner {
@@ -3710,39 +4088,36 @@ a {
   position: relative;
   display: flex;
   align-items: center;
-  gap: 12px;
-  padding: 8px 0;
+  gap: 13px;
+  padding: 7px 0;
   font-family: var(--dl-mono);
   font-size: 13px;
   font-weight: 500;
   color: var(--fq-text-soft);
 }
 
+/* Rail connecting the metal discs — centred on the 26px disc (centre x = 13px) and    */
+/* running from this disc's centre down to the next one. Sits behind the discs.         */
 .dl-faq-lifecycle__step::before {
   content: "";
   position: absolute;
-  left: 4.25px;
+  left: 12.25px;
   top: 50%;
   bottom: -50%;
   width: 1.5px;
   background: var(--fq-accent-line);
-  opacity: 0.55;
+  opacity: 0.5;
 }
 
 .dl-faq-lifecycle__step.is-end::before {
   display: none;
 }
 
-.dl-faq-lifecycle__dot {
+.dl-faq-lifecycle__disc {
   position: relative;
   z-index: 1;
-  flex: none;
-  width: 10px;
-  height: 10px;
-  border-radius: 50%;
-  background: #fff;
-  border: 1.5px solid var(--fq-accent);
-  box-shadow: 0 0 0 3px var(--fq-accent-surface);
+  --disc-size: 26px;
+  --disc-icon: 14px;
 }
 
 .dl-faq-trust__note-copy {
@@ -3927,9 +4302,14 @@ a {
     gap: 11px;
   }
 
-  .dl-faq-lifecycle__dot {
-    width: 9px;
-    height: 9px;
+  /* Slightly smaller discs on phones; re-centre the rail on the 23px disc (centre 11.5). */
+  .dl-faq-lifecycle__disc {
+    --disc-size: 23px;
+    --disc-icon: 13px;
+  }
+
+  .dl-faq-lifecycle__step::before {
+    left: 10.75px;
   }
 
   /* Slimmer accordion rows + reduced open-answer padding on phones. */
@@ -4022,18 +4402,20 @@ a {
     /* specular sheens (MetalSheen) carry the brighter reflections on top.                */
     linear-gradient(115deg,
       rgba(255, 255, 255, 0) 0%,
-      rgba(255, 255, 255, 0.44) 26%,
-      rgba(122, 126, 118, 0.045) 54%,
-      rgba(255, 255, 255, 0.36) 78%,
+      rgba(255, 255, 255, 0.52) 26%,
+      rgba(122, 126, 118, 0.04) 54%,
+      rgba(255, 255, 255, 0.44) 78%,
       rgba(255, 255, 255, 0) 100%),
-    /* the wall: a top→foot tonal descent through a RICHER silver range (deeper foot =   */
-    /* more dimensional satin metal, less pale-paper SaaS canvas). Text stays dark ink,  */
-    /* so the deeper tone only helps the metallic read without touching contrast.        */
+    /* the wall: a top→foot tonal descent through a luminous silver range. Nudged COOLER  */
+    /* + a touch deeper at the foot (toward the login wall's neutral brushed-aluminium     */
+    /* silver) so the surface reads more metallic, while the top stays bright and the foot */
+    /* is still a light polished silver (never a dim grey). Text stays dark ink, so the    */
+    /* tone only carries the metallic read without touching contrast.                      */
     linear-gradient(180deg,
-      #fafbf8 0%,
-      #f1f2ed 30%,
-      #e7e9e2 64%,
-      #dcded7 100%);
+      #fafbfa 0%,
+      #eff1ef 32%,
+      #e5e8e6 66%,
+      #dadedc 100%);
 }
 
 /* Fine fractal-noise dither over the wall (kills gradient banding; neutral grain). */
@@ -4073,95 +4455,92 @@ a {
   mask-image: radial-gradient(118% 90% at 50% 42%, #000 0%, #000 40%, transparent 82%);
 }
 
-/* Brushed-aluminium grain across the whole page. The fine ~96deg groove layer makes   */
-/* the texture ANISOTROPIC (directional brush lines) so it reads as satin metal, not    */
-/* isotropic paper grain; the two micro-dots + faint satin band keep the matte micro-    */
-/* cement depth under it. All ink-tinted, multiply-blended, very low alpha.             */
+/* Brushed-aluminium grain across the whole page, modelled on the AUTH login wall
+ * (.dl-auth__vault-side::before): a fine VERTICAL brush — bright pearl crest / faint
+ * graphite valley at a ~3px pitch — under one broad directional sheen band raking down
+ * the panel. The previous version layered isotropic micro-DOTS + a 96deg groove on a
+ * multiply blend, which read as grey paper grain; this is the cleaner satin-metal look
+ * the login wall has. Normal blend, low alpha, GPU-cheap (static). */
 .dl-page__texture {
   position: absolute;
   inset: 0;
   z-index: 0;
   pointer-events: none;
-  opacity: 0.5;
-  mix-blend-mode: multiply;
+  opacity: 0.8;
   background-image:
-    repeating-linear-gradient(96deg, rgba(108, 112, 106, 0.05) 0px, rgba(108, 112, 106, 0.05) 1px, transparent 2px, transparent 5px),
-    radial-gradient(circle at 28% 18%, rgba(44, 48, 44, 0.05) 0 0.42px, transparent 0.9px),
-    radial-gradient(circle at 72% 66%, rgba(255, 255, 255, 0.5) 0 0.46px, transparent 0.94px),
-    linear-gradient(92deg, rgba(94, 100, 94, 0.022), rgba(255, 255, 255, 0.026) 47%, rgba(94, 100, 94, 0.018));
-  background-size: 7px 100%, 4px 4px, 5px 5px, 100% 100%;
+    /* directional brushed sheen — faint steel → bright crest → faint steel, raking down
+       the wall so it reads as one angled-lit aluminium panel (the login wall's 102deg
+       sheen, ported). */
+    linear-gradient(101deg,
+      rgba(120, 126, 122, 0.045) 0%,
+      rgba(255, 255, 255, 0.08) 30%,
+      rgba(255, 255, 255, 0.12) 52%,
+      rgba(120, 126, 122, 0.045) 76%,
+      rgba(120, 126, 122, 0.06) 100%),
+    /* fine vertical brush lines (the login idiom): 1px pearl crest, 2px graphite valley */
+    repeating-linear-gradient(90deg,
+      rgba(255, 255, 255, 0.075) 0px,
+      rgba(255, 255, 255, 0.075) 1px,
+      rgba(70, 76, 74, 0.05) 1px,
+      rgba(70, 76, 74, 0.05) 3px);
+  background-size: 100% 100%, 3px 100%;
 }
 
-/* ── Metallic orbital guide layer (MetalOrbitLines.tsx) ──────────────────────────── */
-/* A reusable decorative background: faint elliptical "orbital" arcs + glowing anchor  */
-/* dots drawn low in a section, behind the content. Pure surface — pointer-events off,  */
-/* masked so the arcs dissolve at the top edge (their strokes already fade left/right    */
-/* via the SVG gradient). Silver/graphite with one restrained lavender accent; size +    */
-/* placement come from the per-section modifier.                                         */
-.dl-orbit {
+/* ── Fluted pilasters — reeded-glass columns framing the wall ────────────────────
+ * Ports the auth login wall's signature ribbed side-panel (.dl-auth__flute) onto the
+ * landing: a pair of vertical reeded-glass pilasters standing at the far left/right of
+ * the page, out in the margins beside the centred content column. Bright crest → valley
+ * ribs (repeating 90deg), a soft groove + crisp seam where each column meets the wall
+ * (its INNER edge) and a faint pearl edge-light on the OUTER edge, so the page reads as
+ * an architectural panel set between two machined columns.
+ *
+ * Mounted twice, both BEHIND content (so they can never cover copy/cards/vault — they
+ * only ever paint in the empty gutters, which stay narrower than --dl-shell-pad at every
+ * breakpoint): once on .dl-page (z-index:0, before the sections in DOM → behind them, like
+ * .dl-page__texture) for the workflow/security/FAQ panels, and once inside .dl-hero-v2
+ * (z-index:0, after HeroBackground, before the stage) so they also show on screen one,
+ * where the hero paints its own opaque wall over the page-level pair. Both share these
+ * classes, so left/right columns line up continuously across the hero→workflow seam.
+ * Silver spectrum only; shadows ink-tinted (rgba(40,42,39,…)), never pure black. */
+.dl-flute {
   position: absolute;
+  top: 0;
+  bottom: 0;
+  z-index: 0;
+  width: clamp(24px, 4vw, 80px);
   pointer-events: none;
-  opacity: 0.72;
-  /* Dissolve the top of the box so the arcs fade INTO the wall instead of hard-edging.  */
-  -webkit-mask-image: radial-gradient(125% 118% at 50% 100%, #000 0%, #000 56%, transparent 88%);
-  mask-image: radial-gradient(125% 118% at 50% 100%, #000 0%, #000 56%, transparent 88%);
+  /* reeded ribs: pearl crest → wall show-through → graphite valley → … → crest */
+  background-image: repeating-linear-gradient(
+    90deg,
+    rgba(255, 255, 255, 0.50) 0px,
+    rgba(206, 211, 207, 0) 3.5px,
+    rgba(108, 116, 112, 0.18) 7px,
+    rgba(206, 211, 207, 0) 10.5px,
+    rgba(255, 255, 255, 0.50) 14px
+  );
+  /* dissolve into the wall at the extreme top + foot — the columns have no hard ends */
+  -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 150px, #000 calc(100% - 200px), transparent 100%);
+  mask-image: linear-gradient(180deg, transparent 0, #000 150px, #000 calc(100% - 200px), transparent 100%);
 }
-
-.dl-orbit__svg {
-  display: block;
-  width: 100%;
-  height: 100%;
+.dl-flute--left {
+  left: 0;
+  /* soft inner groove + crisp seam on the RIGHT edge; pearl edge-light on the far LEFT */
+  box-shadow:
+    inset -10px 0 14px -12px rgba(40, 42, 39, 0.20),
+    inset -1px 0 0 rgba(40, 42, 39, 0.10),
+    inset 1px 0 0 rgba(255, 255, 255, 0.50);
 }
-
-/* Pinned behind the contract: centred in the sticky scene, ringing its lower half.    */
-/* z-index:-1 keeps it under the scene content (and above the sticky's focal bloom).    */
-.dl-orbit--workflow {
-  left: 50%;
-  bottom: 5%;
-  width: min(900px, 78vw);
-  height: min(440px, 56vh);
-  transform: translateX(-50%);
-  z-index: -1;
-  opacity: 0.6;
+.dl-flute--right {
+  right: 0;
+  box-shadow:
+    inset 10px 0 14px -12px rgba(40, 42, 39, 0.20),
+    inset 1px 0 0 rgba(40, 42, 39, 0.10),
+    inset -1px 0 0 rgba(255, 255, 255, 0.50);
 }
-
-/* Low in the FAQ section — the page's calm closing beat. Lives inside .dl-faq__bg      */
-/* (already behind .dl-faq__inner), so it needs no extra z-index.                       */
-.dl-orbit--faq {
-  left: 50%;
-  bottom: 6%;
-  width: min(960px, 86vw);
-  height: min(420px, 46vh);
-  transform: translateX(-50%);
-  opacity: 0.7;
-}
-
-/* Subtle drift of the whole cluster (transform/opacity only → compositor-cheap). The   */
-/* wrapper keeps its static translateX(-50%) centring; the inner <g> does the float, so */
-/* the two transforms never fight. Fully parked under prefers-reduced-motion.           */
-@media (prefers-reduced-motion: no-preference) {
-  .dl-orbit__group {
-    transform-box: fill-box;
-    transform-origin: center;
-    animation: dl-orbit-float 17s ease-in-out infinite alternate;
-    will-change: transform, opacity;
-  }
-
-  @keyframes dl-orbit-float {
-    from { transform: translateY(0);    opacity: 0.78; }
-    to   { transform: translateY(-9px); opacity: 1; }
-  }
-}
-
-/* Short viewports: shrink the pinned orbit so it never crowds the compact scene. */
-@media (max-height: 760px) {
-  .dl-orbit--workflow { height: min(360px, 50vh); opacity: 0.5; }
-}
-
-/* Mobile: keep the silver wall + dots, but drop the orbit — the stacked layouts have   */
-/* no room for it and it would read as clutter at narrow widths.                        */
-@media (max-width: 639px) {
-  .dl-orbit { display: none; }
+/* Phones: the layout reflows to a near-full-width single column, so the columns would
+ * crowd the content — drop them and let the matte wall carry the small screen alone. */
+@media (max-width: 600px) {
+  .dl-flute { display: none; }
 }
 
 /* ── Specular metal sheen (MetalSheen.tsx) ───────────────────────────────────────── */
