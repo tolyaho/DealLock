@@ -28,7 +28,9 @@ export default function Hero() {
             Ship the Work.
           </h1>
           <p className="dl-hero-sub">
-            Escrow for client-provider work. Funds stay locked until the job is delivered and approved.
+            The client locks the full payment in a smart contract up front. Each milestone is
+            released only when the work is approved — so the freelancer knows the money is there,
+            and the client only pays for what's delivered.
           </p>
           <div className="dl-hero-cta-row">
             <a href="#demo" className="dl-cta-primary">

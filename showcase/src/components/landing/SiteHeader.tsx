@@ -7,6 +7,7 @@ import { DEMO_MODE } from "../../demoMode";
 const NAV_LINKS = [
   { label: "Demo", href: "#demo" },
   { label: "Workflow", href: "#workflow" },
+  { label: "Safeguards", href: "#safeguards" },
   { label: "Security", href: "#security" },
   { label: "FAQ", href: "#faq" },
 ] as const;

@@ -43,6 +43,7 @@ platform fees). Everything is wrapped in persistent **"Simulated · No real fund
 ```bash
 npm ci
 npm run dev        # http://localhost:5173
+npm test           # escrow-simulator invariant tests (Node's built-in runner; needs Node ≥ 22.6)
 npm run build      # typecheck + production build → dist/
 npm run preview    # serve the production build locally
 ```
