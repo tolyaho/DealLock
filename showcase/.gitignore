@@ -1,0 +1,14 @@
+# dependencies & build output
+node_modules/
+dist/
+*.tsbuildinfo
+vite.config.d.ts
+
+# vercel & local env (never commit real values)
+.vercel/
+.env
+.env.*
+!.env.example
+
+# os / editor
+.DS_Store
