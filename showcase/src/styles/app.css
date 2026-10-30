@@ -1,0 +1,2823 @@
+/* ============================================================================
+ * DealLock — app foundation styles
+ * ----------------------------------------------------------------------------
+ * Built entirely on tokens.css. Three layers, in order:
+ *   1. metal-surface system   — the satin-aluminum material
+ *   2. app shell + layout      — AppShell · Sidebar · Topbar · PageContainer
+ *   3. primitive components    — Button … BottomActionBar (the reusable kit)
+ *
+ * Everything renders inside `.dl-app`, so component class names (`.dl-btn`,
+ * `.dl-card`, …) never collide with the marketing landing. Edit the look here;
+ * components only compose these classes + add semantics/a11y.
+ * ========================================================================== */
+
+@import "./tokens.css";
+
+/* ── App baseline ──────────────────────────────────────────────────────────*/
+.dl-app,
+.dl-app *,
+.dl-app *::before,
+.dl-app *::after { box-sizing: border-box; }
+
+.dl-app {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  padding: var(--shell-gap);
+  /* soft vertical illumination down the wall (a column of light behind the shell),
+   * then the satin wall — supports the chassis, never a loud pattern.            */
+  background:
+    linear-gradient(90deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.10) 50%, rgba(255, 255, 255, 0) 100%),
+    var(--metal-wall);
+  font-family: var(--font-ui);
+  font-size: var(--text-base);
+  line-height: var(--leading-normal);
+  color: var(--ink);
+  -webkit-font-smoothing: antialiased;
+  text-rendering: optimizeLegibility;
+  overflow: hidden;
+}
+/* brushed grain + faint technical dot texture over the wall */
+.dl-app::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    var(--metal-grain),
+    radial-gradient(rgba(28, 28, 22, 0.05) 0.5px, transparent 0.6px);
+  background-size: auto, 22px 22px;
+  mix-blend-mode: multiply;
+  opacity: 0.5;
+  pointer-events: none;
+}
+
+.dl-app button { font: inherit; color: inherit; background: none; border: 0; cursor: pointer; }
+.dl-app a { color: inherit; text-decoration: none; }
+.dl-app :focus-visible { outline: 2px solid var(--focus-ring); outline-offset: 2px; }
+.dl-app ::selection { background: var(--surface-selected); }
+
+/* ============================================================================
+ * 1 · METAL SURFACE
+ * Reusable satin-aluminum block. Default = the wall; `--panel` = a lit plate.
+ *   <div class="metal-surface"><div class="metal-surface__shine"/>…</div>
+ * ========================================================================== */
+.metal-surface {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  background: var(--metal-wall);
+  /* soft vignette so the plate has depth, not flat paper */
+  box-shadow: inset 0 0 120px 30px rgba(28, 28, 22, 0.05);
+}
+.metal-surface--panel { background: var(--metal-panel); }
+/* diagonal specular sweep — lightens only */
+.metal-surface::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--metal-sweep);
+  mix-blend-mode: screen;
+  opacity: 0.85;
+  pointer-events: none;
+  z-index: 0;
+}
+/* brushed grain + dot texture */
+.metal-surface::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background-image:
+    var(--metal-grain),
+    radial-gradient(rgba(28, 28, 22, 0.045) 0.5px, transparent 0.6px);
+  background-size: auto, 22px 22px;
+  mix-blend-mode: multiply;
+  opacity: 0.55;
+  pointer-events: none;
+  z-index: 0;
+}
+/* top specular bloom (rendered as a child so it can sit above ::before) */
+.metal-surface__shine {
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 60%;
+  background: var(--metal-shine);
+  mix-blend-mode: screen;
+  pointer-events: none;
+  z-index: 0;
+}
+.metal-surface > *:not(.metal-surface__shine) { position: relative; z-index: 1; }
+/* optional faint orbital linework */
+.metal-surface--orbits {
+  background-image:
+    radial-gradient(circle at 78% 18%, transparent 118px, rgba(28, 28, 22, 0.05) 119px, transparent 121px),
+    radial-gradient(circle at 78% 18%, transparent 168px, rgba(28, 28, 22, 0.04) 169px, transparent 171px),
+    radial-gradient(circle at 78% 18%, transparent 228px, rgba(28, 28, 22, 0.03) 229px, transparent 231px),
+    var(--metal-wall);
+}
+
+/* ============================================================================
+ * 2 · APP SHELL + LAYOUT
+ * Fixed frame: wall → lit panel → [sidebar | (topbar / scroll)].
+ * Topbar is fixed-height; sidebar + content scroll internally → survives short
+ * viewports with no clipping or overlap (handled by flex + min-height:0).
+ * ========================================================================== */
+.app-shell {
+  position: relative;
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  border-radius: var(--radius-shell);
+  background: var(--metal-panel);
+  border: 1px solid var(--border);
+  /* The chassis reads as one machined object: a soft outer shadow seats it on the
+   * wall, while inset edges cut a precise rim — bright top/left light-catch over a
+   * dark lower/right contact edge. Thin and exact, never a metal picture frame.  */
+  box-shadow:
+    var(--shadow-4),
+    inset 0 1px 0 rgba(255, 255, 255, 0.92),
+    inset 1px 0 0 rgba(255, 255, 255, 0.55),
+    inset 0 -1px 0 rgba(64, 68, 60, 0.13),
+    inset -1px 0 0 rgba(64, 68, 60, 0.08);
+  overflow: hidden;
+}
+.app-shell::before { /* shell specular sweep */
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: var(--metal-sweep);
+  mix-blend-mode: screen;
+  opacity: 0.9;
+  pointer-events: none;
+  z-index: 0;
+}
+.app-shell__shine {
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 60%;
+  background: var(--metal-shine);
+  mix-blend-mode: screen;
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ── Sidebar ────────────────────────────────────────────────────────────── */
+.app-sidebar {
+  position: relative;
+  z-index: var(--z-rail);
+  flex: 0 0 var(--sidebar-w);
+  width: var(--sidebar-w);
+  display: flex;
+  flex-direction: column;
+  min-height: 0;
+  /* vertical brushed-silver control panel: a real silver plate, a top light-catch
+   * over the brand area, a faint machined grain, closed by a precise right seam
+   * (dark border + a soft bright inner catch). Opaque, so the mobile drawer reads
+   * as solid metal rather than letting content bleed through.                    */
+  border-right: 1px solid var(--border-strong);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.42), rgba(255, 255, 255, 0) 170px),
+    var(--surface-sidebar);
+  box-shadow: inset -1px 0 0 rgba(255, 255, 255, 0.5), inset 1px 0 0 rgba(255, 255, 255, 0.4);
+  transition: flex-basis var(--dur-3) var(--ease-out), width var(--dur-3) var(--ease-out);
+}
+.app-sidebar__brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  height: var(--topbar-h);
+  flex: 0 0 auto;
+  padding: 0 var(--space-5);
+  border-bottom: 1px solid var(--border-hairline);
+}
+.app-sidebar__mark {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  flex: 0 0 auto;
+  border-radius: var(--radius-control);
+  background: var(--surface-primary);
+  color: var(--ink-on-dark);
+  box-shadow: var(--shadow-1), var(--edge-on-dark);
+}
+.app-sidebar__mark svg { width: 18px; height: 18px; }
+.app-sidebar__wordmark {
+  font-family: var(--font-brand);
+  font-size: var(--text-lg);
+  letter-spacing: 0.02em;
+  color: var(--ink);
+  white-space: nowrap;
+  overflow: hidden;
+}
+.app-sidebar__scroll {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  padding: var(--space-4) var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+}
+/* the navigation spine — a faint vertical silver rail the items mount onto;
+ * purely structural (neutral silver), the active item reads via its framed pill */
+.app-sidebar__scroll::before {
+  content: "";
+  position: absolute;
+  top: var(--space-4);
+  bottom: var(--space-4);
+  left: 2px;
+  width: 2px;
+  border-radius: var(--radius-pill);
+  background: var(--rail-beam-v);
+  opacity: 0.55;
+  pointer-events: none;
+}
+.app-sidebar__footer {
+  flex: 0 0 auto;
+  border-top: 1px solid var(--border-hairline);
+  padding: var(--space-3);
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.app-nav-group { display: flex; flex-direction: column; gap: 2px; }
+.app-nav-group__label {
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  font-weight: var(--weight-medium);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--ink-muted); /* legible on the silver surface */
+  padding: var(--space-2) var(--space-3) var(--space-1);
+  white-space: nowrap;
+  overflow: hidden;
+}
+.app-nav-item {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  min-height: 40px;
+  border-radius: var(--radius-control);
+  color: var(--ink-soft);
+  font-size: var(--text-base);
+  font-weight: var(--weight-medium);
+  white-space: nowrap;
+  transition: background var(--dur-1) var(--ease-standard), color var(--dur-1) var(--ease-standard);
+}
+.app-nav-item:hover { background: var(--surface-hover); color: var(--ink); }
+/* Active = selected by FORM, not colour: a raised brushed-silver pill, a precise
+ * machined rim, a bright top edge-catch and a tight seat shadow. Role identity
+ * is only a barely-there inner tint glow (--ws-glow) — silver reads first. */
+.app-nav-item.is-active {
+  background: var(--surface-plate);
+  color: var(--ink);
+  box-shadow:
+    var(--edge-highlight),                                   /* bright top light-catch */
+    inset 0 0 0 1px var(--rail-strong),                       /* machined silver frame */
+    inset 0 0 14px -6px var(--ws-glow),                       /* whisper of role temperature */
+    var(--shadow-2);                                          /* tight lifted seat */
+}
+.app-nav-item:active { transform: translateY(0.5px); }
+.app-nav-item__icon { width: 19px; height: 19px; flex: 0 0 auto; opacity: 0.92; }
+.app-nav-item.is-active .app-nav-item__icon { opacity: 1; } /* small metallic lift on the active glyph */
+.app-nav-item__label { flex: 1; overflow: hidden; text-overflow: ellipsis; }
+.app-nav-item__dot {
+  width: 6px; height: 6px; border-radius: var(--radius-pill);
+  background: var(--accent-review); flex: 0 0 auto;
+}
+
+/* Hover flourish — the nav glyph re-inks itself, stroke by stroke, in a slow,
+ * smooth draw. One mechanism, but reads as bespoke per item because each icon
+ * draws its OWN geometry, and multi-stroke glyphs reveal in sequence (Home:
+ * roof→walls · Agreements: page→fold→lines · Counterparties: head→body→head→body
+ * · Settings: hub→gear). pathLength=1 on every shape (see icons.tsx) normalises
+ * the draw so the rate is even regardless of path length. Filled bits (the wallet
+ * chip) fade in via the opacity track. --ease-out glides it to a gentle stop.
+ * Off under reduced-motion (below). */
+@keyframes dl-nav-draw {
+  0%   { stroke-dasharray: 1; stroke-dashoffset: 1; opacity: 0; }
+  45%  { opacity: 1; }
+  100% { stroke-dasharray: 1; stroke-dashoffset: 0; opacity: 1; }
+}
+.app-nav-item:hover .app-nav-item__icon > * {
+  animation: dl-nav-draw 700ms var(--ease-out) both;
+}
+.app-nav-item:hover .app-nav-item__icon > *:nth-child(2) { animation-delay: 100ms; }
+.app-nav-item:hover .app-nav-item__icon > *:nth-child(3) { animation-delay: 200ms; }
+.app-nav-item:hover .app-nav-item__icon > *:nth-child(4) { animation-delay: 300ms; }
+@media (prefers-reduced-motion: reduce) {
+  .app-nav-item:hover .app-nav-item__icon > * { animation: none; }
+}
+
+/* collapsed icon-rail variant (desktop) */
+.dl-app.is-rail .app-sidebar { flex-basis: var(--sidebar-w-rail); width: var(--sidebar-w-rail); }
+.dl-app.is-rail .app-sidebar__wordmark,
+.dl-app.is-rail .app-nav-group__label,
+.dl-app.is-rail .app-nav-item__label { display: none; }
+.dl-app.is-rail .app-sidebar__brand { justify-content: center; padding: 0; }
+.dl-app.is-rail .app-nav-item { justify-content: center; padding: var(--space-2); }
+.dl-app.is-rail .app-nav-item__dot { position: absolute; top: 7px; right: 9px; }
+
+/* ── Main column ───────────────────────────────────────────────────────────*/
+.app-main {
+  position: relative;
+  z-index: var(--z-raised);
+  flex: 1;
+  min-width: 0;
+  min-height: 0;
+  display: flex;
+  flex-direction: column;
+}
+.app-topbar {
+  position: relative;
+  flex: 0 0 auto;
+  height: var(--topbar-h);
+  display: flex;
+  align-items: center;
+  justify-content: center;        /* center the capped inner row; rail stays full-bleed */
+  /* Machined control rail: a top-lit satin face, a bright top light-catch, a soft
+   * inner shadow that recesses the strip, and a drop below — so the bar reads as a
+   * fixed silver rail the page hangs from (closed by the 4px beam in ::after).   */
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0.10) 58%, rgba(255, 255, 255, 0) 100%);
+  box-shadow:
+    inset 0 1px 0 var(--rail-highlight),
+    inset 0 -12px 18px -16px var(--rail-shadow),
+    0 12px 26px -20px var(--rail-shadow);
+}
+.app-topbar::after { /* the structural 4px brushed-silver beam closing the strip */
+  content: "";
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  height: 4px;
+  background: var(--rail-beam);
+  box-shadow: 0 7px 14px -10px var(--rail-shadow);
+  pointer-events: none;
+}
+/* the bar's content shares the page grid (same max-width + gutter), so the nav
+ * toggle and avatar align to the page's left/right content edges — no floating chrome */
+.app-topbar__inner {
+  width: 100%;
+  max-width: var(--page-max);
+  margin: 0 auto;
+  padding: 0 var(--page-pad-x);
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+}
+.app-topbar__left { display: flex; align-items: center; gap: var(--space-3); flex: 1 1 0; min-width: 0; }
+.app-topbar__center { display: flex; align-items: center; justify-content: center; flex: 0 0 auto; }
+.app-topbar__right { display: flex; align-items: center; gap: var(--space-2); flex: 1 1 0; min-width: 0; justify-content: flex-end; }
+.app-topbar__search { width: clamp(180px, 22vw, 280px); }
+
+/* Account avatar → profile. The avatar itself is decorative; this link carries
+ * the affordance (pointer + focus ring) and a subtle hover lift. */
+.app-topbar__account {
+  display: inline-flex;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  transition: transform var(--dur-2) var(--ease-out), box-shadow var(--dur-2) var(--ease-out);
+}
+.app-topbar__account:hover { transform: translateY(-1px); }
+.app-topbar__account:hover .dl-avatar { box-shadow: var(--orb-shadow), var(--edge-shadow); }
+.app-topbar__account:focus-visible { outline: none; box-shadow: var(--focus-ring); }
+
+/* ── Profile page ─────────────────────────────────────────────────────────── */
+.dl-profile__identity {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  margin-bottom: var(--space-5);
+}
+.dl-profile__identity-text { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.dl-profile__name {
+  font-weight: var(--weight-semibold);
+  font-size: var(--text-lg);
+  color: var(--ink);
+}
+.dl-profile__meta {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--ink-muted);
+}
+.dl-profile__form { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-3); }
+.dl-profile__actions { display: flex; align-items: center; gap: var(--space-3); margin-top: var(--space-4); }
+.dl-profile__saved { font-size: var(--text-sm); color: var(--accent-secure-ink); }
+.dl-profile__addr {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  word-break: break-all;
+}
+@media (max-width: 560px) {
+  .dl-profile__form { grid-template-columns: 1fr; }
+}
+@media (max-width: 860px) { .app-topbar__search { display: none; } }
+
+.app-scroll {
+  position: relative;
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  overflow-x: hidden;
+  /* soft studio-light pool pinned to the top of the content zone (stays put as
+   * content scrolls — background-attachment defaults to the element box) */
+  background-image: var(--bg-zone);
+  background-repeat: no-repeat;
+  background-position: top center;
+  background-size: 100% 360px;
+}
+.app-scroll::-webkit-scrollbar { width: 11px; }
+.app-scroll::-webkit-scrollbar-thumb {
+  background: var(--border-strong);
+  border-radius: var(--radius-pill);
+  border: 3px solid transparent;
+  background-clip: padding-box;
+}
+
+/* ── PageContainer ─────────────────────────────────────────────────────────*/
+.app-page {
+  max-width: var(--page-max);
+  margin: 0 auto;
+  padding: var(--page-pad-y) var(--page-pad-x);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-7);            /* 32px between top-level sections → distinct tiers */
+}
+.app-page--wide { max-width: none; }
+.app-page--actionbar { padding-bottom: calc(var(--space-11) + var(--space-5)); }
+/* fill page — the content fills the scroll viewport so a single body element (an
+ * empty-state stage) can stretch to the bottom margin, matching the top. Used by
+ * EmptyStatePage so a no-data screen fits the whole page with no dead space.    */
+.app-page--fill { min-height: 100%; }
+.app-page--fill .dl-stage {
+  flex: 1 1 auto;                         /* grow to fill leftover height (shrink to fit) */
+  min-height: clamp(320px, 38vh, 560px);  /* floor so content never clips on short screens */
+}
+/* atmospheric page (Agreements / data-table surfaces) — a deeper satin-silver
+ * pool painted behind the content via a ::before so it never disturbs the
+ * `.app-page > *` entrance stagger or nth-child cadence. Children are pinned a
+ * layer above it. The pool bleeds to the content padding and fades downward.   */
+.app-page--atmos { position: relative; }
+.app-page--atmos::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 720px;
+  max-height: 100%;
+  background: var(--bg-agreements);
+  pointer-events: none;
+  z-index: 0;
+}
+.app-page--atmos > * { position: relative; z-index: 1; }
+
+/* ── PageHeader ────────────────────────────────────────────────────────────*/
+.dl-pagehead {
+  display: flex;
+  align-items: flex-start;        /* action sits on the greeting line, not the subtitle */
+  justify-content: space-between;
+  gap: var(--space-4);
+  flex-wrap: wrap;
+}
+.dl-pagehead__eyebrow {
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  font-weight: var(--weight-medium);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--ink-muted);
+  margin-bottom: var(--space-2);
+}
+.dl-pagehead__title {
+  margin: 0;
+  font-family: var(--font-ui);
+  font-size: var(--text-2xl);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-tight);
+  line-height: var(--leading-tight);
+  color: var(--ink);
+}
+.dl-pagehead__sub {
+  margin: var(--space-2) 0 0;
+  font-size: var(--text-md);
+  color: var(--ink-muted);
+  max-width: 64ch;
+}
+.dl-pagehead__actions { display: flex; align-items: center; gap: var(--space-2); }
+
+/* ── WorkspaceSwitch — the workspace SELECTOR (top-bar center) ─────────────
+ * Not a tab. A trigger that states the active identity ("Operating as Client")
+ * and opens a premium menu of full workspace cards. Role "temperature" rides a
+ * single subtle accent token (--ws-accent*, mapped to the existing sage /
+ * champagne semantic palette) — a micro-accent, never a second brand. The root
+ * accent is set on .dl-app[data-workspace] (see below) and inherited here. */
+/* Role temperature is "role-aware, not role-colored": --ws-accent stays the
+ * semantic hue (for the few legit accent moments), but ROLE cues use the muted
+ * tokens below — a heavily desaturated tint for tiny dots and a barely-there
+ * glow for faint inner washes. Silver dominates; the tint only whispers. */
+.dl-app[data-workspace="client"] {
+  --ws-accent: var(--accent-secure);
+  --ws-accent-soft: var(--accent-secure-soft);
+  --ws-accent-ink: var(--accent-secure-ink);
+  --rail-accent: var(--rail-client-accent);
+  --ws-tint: color-mix(in srgb, var(--accent-secure) 42%, var(--ink-faint));
+  --ws-glow: color-mix(in srgb, var(--accent-secure) 14%, transparent);
+  --ws-chip: color-mix(in srgb, var(--accent-secure-soft) 62%, var(--surface-card));
+}
+.dl-app[data-workspace="provider"] {
+  --ws-accent: var(--accent-review);
+  --ws-accent-soft: var(--accent-review-soft);
+  --ws-accent-ink: var(--accent-review-ink);
+  --rail-accent: var(--rail-provider-accent);
+  --ws-tint: color-mix(in srgb, var(--accent-review) 42%, var(--ink-faint));
+  --ws-glow: color-mix(in srgb, var(--accent-review) 16%, transparent);
+  --ws-chip: color-mix(in srgb, var(--accent-review-soft) 62%, var(--surface-card));
+}
+/* Each menu option carries its OWN role accent, independent of the active mode,
+ * so the inactive workspace still previews its temperature. */
+.dl-ws-opt[data-workspace="client"] {
+  --ws-accent: var(--accent-secure);
+  --ws-accent-soft: var(--accent-secure-soft);
+  --ws-accent-ink: var(--accent-secure-ink);
+}
+.dl-ws-opt[data-workspace="provider"] {
+  --ws-accent: var(--accent-review);
+  --ws-accent-soft: var(--accent-review-soft);
+  --ws-accent-ink: var(--accent-review-ink);
+}
+
+.dl-ws { position: relative; display: inline-flex; }
+
+/* ⚠ Scoped under `.dl-app` ON PURPOSE: the global `.dl-app button { background:none;
+ * border:0 }` reset (0,1,1) outranks a bare `.dl-ws__trigger` (0,1,0) and was silently
+ * stripping this control's fill + rim — it rendered as a transparent (white-looking)
+ * pill. `.dl-app .dl-ws__trigger` (0,2,0) reclaims the surface. Same gotcha as the
+ * `.dl-btn--disc` / `.dl-btn--glass` variants. */
+.dl-app .dl-ws__trigger {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 6px 12px 6px 7px;
+  border-radius: var(--radius-pill);
+  /* The soft silver ORB pill — see `--orb-*` in tokens.css (the reusable atmospheric
+   * silver-light-grey surface; ElevenLabs idiom in cool neutral grey). Hairline rim +
+   * single soft drop, diffuse blooms, no machined bevel/brush. The whole soft
+   * capsule/medallion/coin family shares these tokens via the `.dl-orb` helper. */
+  background: var(--orb-surface);
+  border: 1px solid var(--orb-rim);
+  box-shadow: var(--orb-shadow);
+  color: var(--ink);
+  text-align: left;
+  transition: border-color var(--dur-2) var(--ease-out),
+    box-shadow var(--dur-2) var(--ease-out), transform var(--dur-1) var(--ease-out);
+}
+.dl-app .dl-ws__trigger:hover {
+  /* the orb glows a touch brighter and it lifts gently — no hard state change */
+  border-color: var(--orb-rim-strong);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.85),
+    0 6px 20px rgba(44, 48, 58, 0.08), 0 1px 2px rgba(44, 48, 58, 0.05);
+}
+/* Open: the menu is showing — the orb settles in softly (a gentle inner shade, no
+ * hard recess). */
+.dl-app .dl-ws__trigger[aria-expanded="true"] {
+  border-color: var(--orb-rim-strong);
+  box-shadow: inset 0 2px 6px rgba(44, 48, 58, 0.1),
+    inset 0 1px 0 rgba(255, 255, 255, 0.45), 0 2px 8px rgba(44, 48, 58, 0.05);
+}
+.dl-app .dl-ws__trigger:active { transform: translateY(1px); }
+/* Custom soft silver-grey focus ring (keeps the resting orb shadow, adds a crisp white
+ * inner edge + a faint cool-silver halo; outranks the global graphite :focus-visible). */
+.dl-app .dl-ws__trigger:focus-visible {
+  outline: none;
+  border-color: var(--orb-rim-strong);
+  box-shadow: var(--orb-shadow), 0 0 0 1px rgba(255, 255, 255, 0.7),
+    0 0 0 4px rgba(150, 156, 168, 0.32);
+}
+
+/* Silver-orb surface helper — apply to any soft capsule / medallion / coin / pill so
+ * the family stays consistent (see `--orb-*` in tokens.css). Scoped under `.dl-app` so
+ * a <button> using it still beats the `.dl-app button` background/border reset. Pair
+ * `.dl-orb` (rim + drop) with `.dl-orb--deep` for the deeper, inset medallion face. */
+.dl-app .dl-orb {
+  background: var(--orb-surface);
+  border: 1px solid var(--orb-rim);
+  box-shadow: var(--orb-shadow);
+}
+.dl-app .dl-orb--deep {
+  background: var(--orb-surface-deep);
+  box-shadow: var(--orb-inset);
+}
+
+/* icon chamber — a recessed silver well holding the role glyph. Fully neutral:
+ * a machined brushed-silver recess (grain over the sunken silver face) framed by a
+ * silver rim, with a graphite glyph. The persistent trigger stays all-silver; role
+ * "temperature" lives only in the menu option cards below, not on this control. */
+.dl-ws__glyph {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  flex: none;
+  border-radius: var(--radius-control);
+  /* a soft silver-grey orb plate (--orb-surface-deep + --orb-inset) — a shade deeper
+   * than the pill, calm and diffuse to match it, not a machined recess. (A span, not a
+   * button, so the `.dl-app button` reset never touched it.) */
+  background: var(--orb-surface-deep);
+  color: var(--ink-soft);
+  box-shadow: var(--orb-inset);
+}
+.dl-ws__glyph svg { width: 16px; height: 16px; }
+
+/* a structural silver seam (dark divider + white catch) splits the chamber from
+ * the identity text — neutral hardware, no coloured underline. */
+.dl-ws__id {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  line-height: 1.15;
+  min-width: 0;
+  padding-left: var(--space-3);
+  /* soft hairline seam — a faint cool-grey divider with a gentle white catch */
+  border-left: 1px solid rgba(120, 126, 138, 0.2);
+  box-shadow: -1px 0 0 rgba(255, 255, 255, 0.6);
+}
+.dl-ws__op { font-size: var(--text-sm); font-weight: var(--weight-semibold); color: var(--ink); white-space: nowrap; }
+.dl-ws__hint {
+  font-size: var(--text-2xs);
+  font-weight: var(--weight-medium);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-muted); /* legible on the metal face */
+  white-space: nowrap;
+}
+
+/* the chevron sits in its own small metal zone of the same key, divided off by a
+ * matching engraved seam (graphite hairline + white catch) so it reads as part of
+ * the metal control, not a detached affordance. */
+.dl-ws__chev {
+  display: grid;
+  place-items: center;
+  padding-left: var(--space-2);
+  margin-left: 2px;
+  align-self: stretch;
+  color: var(--ink-muted);
+  border-left: 1px solid rgba(120, 126, 138, 0.18);
+  box-shadow: -1px 0 0 rgba(255, 255, 255, 0.55);
+}
+.dl-ws__chev svg {
+  width: 16px;
+  height: 16px;
+  transform: rotate(90deg);
+  transition: transform var(--dur-2) var(--ease-standard);
+}
+.dl-ws__chev.is-open svg { transform: rotate(-90deg); }
+
+/* The workspace menu — each option is a full workspace card, not a row. */
+.dl-ws-menu {
+  position: absolute;
+  top: calc(100% + 8px);
+  left: 50%;
+  width: 340px;
+  max-width: min(92vw, 360px);
+  padding: var(--space-2);
+  border-radius: var(--radius-panel);
+  background: var(--surface-glass);
+  -webkit-backdrop-filter: var(--blur-glass);
+  backdrop-filter: var(--blur-glass);
+  border: 1px solid var(--border-glass);
+  box-shadow: var(--shadow-3), var(--edge-highlight);
+  transform: translateX(-50%);
+  z-index: 60;
+  animation: dl-ws-menu-in var(--dur-2) var(--ease-out);
+}
+@keyframes dl-ws-menu-in {
+  from { opacity: 0; transform: translate(-50%, -4px); }
+  to { opacity: 1; transform: translate(-50%, 0); }
+}
+@media (prefers-reduced-motion: reduce) { .dl-ws-menu { animation: none; } }
+
+.dl-ws-menu__head {
+  padding: 6px 8px 8px;
+  font-size: var(--text-2xs);
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
+.dl-ws-opt {
+  display: grid;
+  grid-template-columns: auto 1fr auto;
+  align-items: start;
+  gap: var(--space-3);
+  width: 100%;
+  padding: var(--space-3);
+  border-radius: var(--radius-card);
+  border: 1px solid transparent;
+  text-align: left;
+  transition: background var(--dur-1) var(--ease-out), border-color var(--dur-1) var(--ease-out);
+}
+.dl-ws-opt + .dl-ws-opt { margin-top: 4px; }
+.dl-ws-opt:hover { background: var(--surface-hover); }
+.dl-ws-opt.is-active {
+  background: var(--surface-selected);
+  border-color: color-mix(in srgb, var(--ws-accent) 18%, var(--border-strong));
+  box-shadow: var(--edge-highlight), inset 0 0 0 1px var(--rail-soft);
+}
+
+.dl-ws-opt__glyph {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  flex: none;
+  border-radius: var(--radius-control);
+  background: var(--ws-accent-soft);
+  color: var(--ws-accent-ink);
+  box-shadow: inset 0 0 0 1px color-mix(in srgb, var(--ws-accent) 24%, transparent);
+}
+.dl-ws-opt__glyph svg { width: 18px; height: 18px; }
+
+.dl-ws-opt__body { display: flex; flex-direction: column; gap: 3px; min-width: 0; }
+.dl-ws-opt__title { font-size: var(--text-sm); font-weight: var(--weight-semibold); color: var(--ink); }
+.dl-ws-opt__journey {
+  font-size: var(--text-2xs);
+  font-weight: var(--weight-medium);
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+  color: var(--ws-accent-ink);
+}
+.dl-ws-opt__desc { font-size: var(--text-xs); color: var(--ink-muted); line-height: 1.45; }
+
+.dl-ws-opt__check { display: grid; place-items: center; width: 20px; height: 20px; color: var(--ws-accent-ink); }
+.dl-ws-opt__check svg { width: 16px; height: 16px; }
+
+/* ── Workspace switch transition ──────────────────────────────────────────
+ * Switching modes is a reboot, not a filter flip: the scroll region desaturates
+ * and fades for the switch window while a status pill announces the new mode.
+ * The heavier motion (blur) is gated behind no-preference; the opacity dip is
+ * mild enough to keep under reduced-motion. */
+.app-scroll { transition: opacity var(--dur-3) var(--ease-out), filter var(--dur-3) var(--ease-out); }
+.app-scroll[data-switching="true"] { opacity: 0.5; }
+@media (prefers-reduced-motion: no-preference) {
+  .app-scroll[data-switching="true"] { filter: saturate(0.8) blur(1.5px); }
+}
+
+.dl-ws-status {
+  position: fixed;
+  left: 50%;
+  bottom: 28px;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 9px 16px;
+  border-radius: var(--radius-pill);
+  background: var(--surface-glass);
+  -webkit-backdrop-filter: var(--blur-glass);
+  backdrop-filter: var(--blur-glass);
+  border: 1px solid var(--border-glass);
+  box-shadow: var(--shadow-3), var(--edge-highlight);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+  color: var(--ink-soft);
+  opacity: 0;
+  pointer-events: none;
+  transform: translate(-50%, 8px);
+  transition: opacity var(--dur-2) var(--ease-out), transform var(--dur-2) var(--ease-out);
+  z-index: 80;
+}
+.dl-ws-status::before {
+  content: "";
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: var(--ws-accent);
+  box-shadow: 0 0 0 3px color-mix(in srgb, var(--ws-accent) 20%, transparent);
+}
+.dl-ws-status[data-show="true"] { opacity: 1; transform: translate(-50%, 0); }
+
+/* ============================================================================
+ * 3 · PRIMITIVES
+ * ========================================================================== */
+
+/* ── Text utilities ──────────────────────────────────────────────────────── */
+.dl-label {
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  font-weight: var(--weight-medium);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+.dl-mono { font-family: var(--font-mono); font-variant-numeric: tabular-nums; }
+.dl-num { font-variant-numeric: tabular-nums; }
+.dl-display { font-family: var(--font-display); letter-spacing: var(--tracking-tight); }
+.dl-note { font-size: var(--text-sm); color: var(--ink-muted); }
+.dl-muted { color: var(--ink-muted); margin: 0; }
+
+/* ── Button + IconButton ─────────────────────────────────────────────────── */
+.dl-btn {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-2);
+  padding: 0 var(--space-4);
+  min-height: 40px;
+  border-radius: var(--radius-control);
+  font-family: var(--font-ui);
+  font-size: var(--text-base);
+  font-weight: var(--weight-medium);
+  white-space: nowrap;
+  user-select: none;
+  overflow: hidden;
+  transition: transform var(--dur-1) var(--ease-out), box-shadow var(--dur-2) var(--ease-out),
+    background var(--dur-2) var(--ease-standard), border-color var(--dur-2) var(--ease-standard);
+}
+.dl-btn svg { width: 17px; height: 17px; flex: 0 0 auto; }
+.dl-btn--sm { min-height: 32px; padding: 0 var(--space-3); font-size: var(--text-sm); border-radius: var(--radius-sm); }
+.dl-btn--lg { min-height: 48px; padding: 0 var(--space-5); font-size: var(--text-md); }
+.dl-btn--block { display: flex; width: 100%; }
+
+/* primary — the polished silver key. The most prominent control on a screen, but
+ * it earns that by WEIGHT and LIGHT, never by going dark: a brushed satin keycap
+ * with a machined rim, a glossy top crown, semibold label, and the strongest
+ * resting lift. Hover BRIGHTENS the face and lifts further (never darkens). */
+.dl-btn--primary {
+  background: var(--metal-keycap);
+  color: var(--ink);
+  border: 1px solid var(--border-strong);
+  font-weight: var(--weight-semibold);
+  box-shadow: var(--shadow-2), var(--edge-highlight);
+}
+.dl-btn--primary::before {
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 52%;
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.72) 0%, rgba(255, 255, 255, 0) 100%);
+  pointer-events: none;
+}
+.dl-btn--primary:hover { background: var(--metal-keycap-hover); border-color: var(--border-strong); transform: translateY(-1px); box-shadow: var(--shadow-3), var(--edge-highlight); }
+.dl-btn--primary:active { transform: translateY(1px); box-shadow: var(--shadow-inset), var(--edge-highlight-soft); }
+
+/* secondary — satin aluminum face */
+.dl-btn--secondary {
+  background: var(--surface-action);
+  color: var(--ink);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-1), var(--edge-highlight-soft);
+}
+.dl-btn--secondary:hover { border-color: var(--border-strong); background: var(--surface-card); transform: translateY(-1px); box-shadow: var(--shadow-2), var(--edge-highlight); }
+.dl-btn--secondary:active { transform: translateY(1px); box-shadow: none; }
+
+/* metal — brushed satin keycap (the design-lab metal material). A premium
+ * silver alternative to the dark graphite primary: hover BRIGHTENS the face and
+ * lifts (never darkens), press settles it in. Text stays graphite. */
+.dl-btn--metal {
+  background: var(--metal-keycap);
+  color: var(--ink);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-1), var(--edge-highlight-disc);
+}
+.dl-btn--metal:hover {
+  background: var(--metal-keycap-hover);
+  border-color: var(--border-strong);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-2), var(--edge-highlight-disc);
+}
+.dl-btn--metal:active { transform: translateY(1px); box-shadow: var(--shadow-inset), var(--edge-highlight-soft); }
+
+/* a single calm light-sweep across the silver keys on hover — light travelling
+ * over machined metal, not a flashy glint. One pass, clipped by the btn's
+ * overflow:hidden. Off under reduced-motion (below).                            */
+.dl-btn--primary::after,
+.dl-btn--metal::after {
+  content: "";
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: -45%;
+  width: 45%;
+  background: linear-gradient(100deg, rgba(255, 255, 255, 0) 0%, rgba(255, 255, 255, 0.42) 50%, rgba(255, 255, 255, 0) 100%);
+  transform: skewX(-14deg);
+  opacity: 0;
+  pointer-events: none;
+}
+.dl-btn--primary:hover::after,
+.dl-btn--metal:hover::after { animation: dl-btn-sweep 640ms var(--ease-out); }
+@keyframes dl-btn-sweep {
+  0%   { left: -45%; opacity: 0; }
+  24%  { opacity: 1; }
+  100% { left: 120%; opacity: 0; }
+}
+
+/* disc — brushed-aluminum DISC surface. Uses the same --metal-disc radial
+ * material as the MetalCTA leading disc / action tiles, but shaped as a compact
+ * control: a genuine metallic disc face with a top edge catch, a soft inner
+ * bottom shade for dimensionality, and a screen-blended specular that brightens
+ * on hover. Text stays graphite; press settles it in.
+ *
+ * Scoped under `.dl-app` ON PURPOSE: the global `.dl-app button { background:none;
+ * border:0 }` reset (specificity 0,1,1) outranks a bare `.dl-btn--disc` (0,1,0)
+ * and would strip the metal face/border. `.dl-app .dl-btn--disc` (0,2,0) wins. */
+.dl-app .dl-btn--disc {
+  background: var(--metal-disc);
+  color: var(--ink);
+  border: 1px solid var(--border);
+  box-shadow: var(--edge-highlight-disc), var(--shadow-1), inset 0 -1px 2px rgba(28, 28, 22, 0.14);
+  isolation: isolate;            /* own stacking context so the specular layers under the label */
+}
+/* screen-blended specular highlight; z-index:-1 keeps it above the metal face
+ * yet below the label (the .dl-app .dl-btn--disc isolate makes -1 resolve here) */
+.dl-btn--disc::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: radial-gradient(78% 120% at 30% 16%, rgba(255, 255, 255, 0.92) 0%, rgba(255, 255, 255, 0) 60%);
+  mix-blend-mode: screen;
+  opacity: 0.6;
+  pointer-events: none;
+  transition: opacity var(--dur-2) var(--ease-out);
+}
+.dl-app .dl-btn--disc:hover {
+  transform: translateY(-1px);
+  border-color: var(--border-strong);
+  box-shadow: var(--edge-highlight-disc), var(--shadow-2), inset 0 -1px 2px rgba(28, 28, 22, 0.14);
+}
+.dl-btn--disc:hover::after { opacity: 1; }
+.dl-app .dl-btn--disc:active { transform: translateY(1px); box-shadow: var(--shadow-inset), var(--edge-highlight-disc); }
+
+/* glass — a cool frosted control: translucent white over the glass blur with a
+ * soft top light-catch and hairline edge. Deliberately NON-metallic — calm and
+ * premium (used for the Agreements row actions). Scoped under `.dl-app` for the
+ * same reason as --disc: it must outrank the `.dl-app button` background reset. */
+.dl-app .dl-btn--glass {
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.62), rgba(255, 255, 255, 0.20)),
+    var(--surface-glass);
+  -webkit-backdrop-filter: var(--blur-glass);
+  backdrop-filter: var(--blur-glass);
+  color: var(--ink);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-1), var(--edge-highlight);
+}
+.dl-app .dl-btn--glass:hover {
+  border-color: var(--border-strong);
+  background:
+    linear-gradient(180deg, rgba(255, 255, 255, 0.74), rgba(255, 255, 255, 0.30)),
+    var(--surface-glass);
+  transform: translateY(-1px);
+  box-shadow: var(--shadow-2), var(--edge-highlight);
+}
+.dl-app .dl-btn--glass:active { transform: translateY(1px); box-shadow: var(--shadow-inset), var(--edge-highlight-soft); }
+
+/* positive — sage filled (secure / confirm) */
+.dl-btn--positive {
+  background: var(--accent-secure);
+  color: var(--ink-on-accent);
+  box-shadow: var(--shadow-1), inset 0 1px 0 rgba(255,255,255,0.22);
+}
+.dl-btn--positive:hover { background: var(--accent-secure-hover); transform: translateY(-1px); box-shadow: var(--shadow-2); }
+.dl-btn--positive:active { transform: translateY(1px); box-shadow: none; }
+
+/* ghost — chromeless */
+.dl-btn--ghost { color: var(--ink-soft); }
+.dl-btn--ghost:hover { background: var(--surface-hover); color: var(--ink); }
+.dl-btn--ghost:active { background: var(--surface-selected); }
+
+/* danger — muted, destructive only */
+.dl-btn--danger { color: var(--accent-danger-ink); border: 1px solid var(--border); background: var(--surface-action); }
+.dl-btn--danger:hover { background: var(--accent-danger-soft); border-color: var(--accent-danger); }
+
+.dl-btn:disabled,
+.dl-btn[aria-disabled="true"] { opacity: 0.45; cursor: not-allowed; transform: none; box-shadow: var(--shadow-1); }
+.dl-btn.is-loading { color: transparent; pointer-events: none; }
+.dl-btn.is-loading .dl-spinner { color: currentColor; }
+.dl-btn .dl-spinner { position: absolute; inset: 0; margin: auto; }
+.dl-btn--primary.is-loading .dl-spinner { color: var(--ink); }
+
+/* IconButton */
+.dl-iconbtn {
+  position: relative;
+  display: inline-grid;
+  place-items: center;
+  width: 40px; height: 40px;
+  flex: 0 0 auto;
+  border-radius: var(--radius-control);
+  color: var(--ink-soft);
+  transition: background var(--dur-1) var(--ease-standard), color var(--dur-1) var(--ease-standard),
+    box-shadow var(--dur-2) var(--ease-out), transform var(--dur-1) var(--ease-out);
+}
+.dl-iconbtn svg { width: 19px; height: 19px; }
+.dl-iconbtn:hover { background: var(--surface-hover); color: var(--ink); }
+.dl-iconbtn:active { transform: translateY(1px); }
+.dl-iconbtn--sm { width: 32px; height: 32px; }
+.dl-iconbtn--sm svg { width: 16px; height: 16px; }
+.dl-iconbtn--metal {
+  background: var(--surface-action);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-1), var(--edge-highlight-soft);
+}
+.dl-iconbtn--metal:hover { border-color: var(--border-strong); background: var(--surface-card); }
+.dl-iconbtn.is-selected { background: var(--surface-selected); color: var(--ink); }
+.dl-iconbtn:disabled { opacity: 0.45; cursor: not-allowed; }
+.dl-iconbtn__dot {
+  position: absolute; top: 8px; right: 9px;
+  width: 7px; height: 7px; border-radius: var(--radius-pill);
+  background: var(--accent-review);
+  border: 1.5px solid var(--surface-metal);
+}
+
+/* ── MetalCTA (signature action: frosted pill + leading metal-disc) ────────
+ * The disc is brushed satin aluminum (the same --metal-disc material as keycap
+ * centers / action tiles); the pill stays restrained frosted-white so the
+ * control reads as premium and deliberate, never glossy or toy-like.           */
+.dl-metal-cta {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: 4px var(--space-4) 4px 4px;     /* disc hugs the left; label breathes */
+  min-height: 40px;
+  border-radius: var(--radius-pill);
+  background: var(--surface-glass);
+  -webkit-backdrop-filter: var(--blur-glass);
+  backdrop-filter: var(--blur-glass);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-2), var(--edge-highlight);
+  color: var(--ink);
+  font-family: var(--font-ui);
+  font-size: var(--text-base);
+  font-weight: var(--weight-medium);
+  white-space: nowrap;
+  user-select: none;
+  transition: transform var(--dur-1) var(--ease-out), box-shadow var(--dur-2) var(--ease-out),
+    border-color var(--dur-2) var(--ease-standard);
+}
+.dl-metal-cta:hover { transform: translateY(-1px); box-shadow: var(--shadow-3), var(--edge-highlight); border-color: var(--border-strong); }
+.dl-metal-cta:active { transform: translateY(1px); box-shadow: var(--shadow-1), var(--edge-highlight-soft); }
+.dl-metal-cta:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: var(--shadow-1); }
+/* the brushed-aluminum disc — subtle radial highlight, thin edge catch, soft
+ * bevel; a screen-blended specular that brightens on hover (not a chrome glare) */
+.dl-metal-cta__disc {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 30px; height: 30px;
+  flex: 0 0 auto;
+  border-radius: var(--radius-pill);
+  background: var(--metal-disc);
+  color: var(--ink);
+  box-shadow: var(--edge-highlight-disc), var(--shadow-1), inset 0 -1px 2px rgba(28, 28, 22, 0.14);
+  overflow: hidden;
+}
+.dl-metal-cta__disc::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(72% 60% at 32% 24%, rgba(255, 255, 255, 0.92) 0%, rgba(255, 255, 255, 0) 62%);
+  mix-blend-mode: screen;
+  opacity: 0.7;
+  pointer-events: none;
+  transition: opacity var(--dur-2) var(--ease-out);
+}
+.dl-metal-cta:hover .dl-metal-cta__disc::after { opacity: 1; }
+.dl-metal-cta__disc svg { position: relative; width: 17px; height: 17px; }
+.dl-metal-cta__label { padding-right: var(--space-1); }
+/* --lg — a slightly larger variant for hero moments (e.g. the empty-state CTA, where
+ * it's the single primary action). Same material/shape, gently scaled up. */
+.dl-metal-cta--lg {
+  min-height: 48px;
+  gap: var(--space-3);
+  padding: 5px var(--space-5) 5px 5px;
+  font-size: var(--text-md);
+}
+.dl-metal-cta--lg .dl-metal-cta__disc { width: 38px; height: 38px; }
+.dl-metal-cta--lg .dl-metal-cta__disc svg { width: 19px; height: 19px; }
+
+/* ── Card + MetricCard ───────────────────────────────────────────────────── */
+.dl-card {
+  position: relative;
+  /* frosted light cool-silver plate: a whisper of vertical brushed grain over the cool
+   * plate gradient, framed by a bright top light-catch and a dark lower edge. Cool
+   * (blue-neutral) so every dashboard panel reads as one consistent silver family.  */
+  background: var(--metal-grain-v), var(--surface-plate-cool);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card), var(--edge-highlight), var(--edge-shadow);
+  padding: var(--space-6);
+  overflow: hidden;
+  transition: box-shadow var(--dur-3) var(--ease-out), border-color var(--dur-2) var(--ease-standard);
+}
+.dl-card::before { /* crisper brushed specular catch along the top edge */
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 46%;
+  background: var(--sheen-plate-strong);
+  opacity: 0.85;
+  pointer-events: none;
+}
+.dl-card > * { position: relative; }
+/* static info cards stay calm — only the top edge brightens on hover (alive
+ * material, not "clickable"). Interactive cards add the lift below.            */
+.dl-card:not(.dl-card--flush):hover { border-color: var(--border-strong); }
+.dl-card--flush { padding: 0; }
+.dl-card--raised { box-shadow: var(--shadow-card-hover), var(--edge-highlight); }
+.dl-card--glass {
+  background: var(--surface-glass);
+  backdrop-filter: var(--blur-glass);
+  -webkit-backdrop-filter: var(--blur-glass);
+  border-color: var(--border-glass);
+}
+/* inset — a recessed secondary panel (nested inside a card or as a quiet
+ * supporting surface). Sits below the plane rather than lifted above it.       */
+.dl-card--inset {
+  background: var(--surface-sunken-cool);
+  border-color: var(--border-hairline);
+  box-shadow: var(--shadow-inset);
+}
+.dl-card--inset::before { display: none; }
+.dl-card--interactive { cursor: pointer; transition: transform var(--dur-2) var(--ease-out), box-shadow var(--dur-2) var(--ease-out), border-color var(--dur-2) var(--ease-standard); text-align: left; width: 100%; }
+.dl-card--interactive:hover { transform: translateY(-2px); box-shadow: var(--shadow-card-hover), var(--edge-highlight); border-color: var(--border-strong); }
+.dl-card--interactive:active { transform: translateY(0); }
+/* clean, minimal header — just the label and its action, no divider lines */
+.dl-card__head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+.dl-card__title { font-size: var(--text-md); font-weight: var(--weight-semibold); color: var(--ink); }
+.dl-card__actions { display: inline-flex; align-items: center; gap: var(--space-3); flex: 0 0 auto; }
+
+/* MetricCard — KPI tiles. Frosted silver plates: a crisp top light-catch and a
+ * very faint top-left inner glow over the white surface, restrained metal/glass
+ * icon capsules, tabular figures. The strip's first tile (--primary, e.g.
+ * "In escrow") reads as the anchor metric via a larger value and a slightly
+ * richer, more-lifted plate — light, not colour, and NOT a bigger card. */
+.dl-metric {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  min-height: 132px;
+  /* light cool-silver plate (not the warmer green-leaning --surface-plate) */
+  background: var(--surface-plate-cool);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-card);
+  box-shadow: var(--shadow-card), var(--edge-highlight);
+  padding: var(--space-5);
+  overflow: hidden;
+  text-align: left;
+  width: 100%;
+  transition: transform var(--dur-3) var(--ease-out), box-shadow var(--dur-3) var(--ease-out), border-color var(--dur-2) var(--ease-standard);
+}
+.dl-metric::before { /* a crisp top light-catch — the plate's brushed sheen. Bright
+  * enough that EVERY tile reads as the same light cool-silver; the primary anchor is
+  * set apart by its larger value + extra lift, not by a brighter plate. */
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 54%;
+  background: var(--sheen-plate-strong);
+  opacity: 1;
+  pointer-events: none;
+}
+.dl-metric::after { /* very subtle inner glow, top-left */
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(120% 92% at 14% -8%, rgba(255, 255, 255, 0.55) 0%, rgba(255, 255, 255, 0) 54%);
+  opacity: 0.9;
+  pointer-events: none;
+}
+.dl-metric > * { position: relative; z-index: 1; }
+.dl-metric__label { font-family: var(--font-mono); font-size: var(--text-2xs); font-weight: var(--weight-medium); letter-spacing: var(--tracking-label); text-transform: uppercase; color: var(--ink-muted); }
+.dl-metric__value { font-size: var(--text-2xl); font-weight: var(--weight-semibold); color: var(--ink); letter-spacing: var(--tracking-tight); font-variant-numeric: tabular-nums; line-height: var(--leading-tight); white-space: nowrap; }
+.dl-metric__meta { font-size: var(--text-sm); color: var(--ink-muted); }
+.dl-metric__meta--up { color: var(--accent-secure-ink); }
+.dl-metric__meta--down { color: var(--accent-danger-ink); }
+.dl-metric--interactive { cursor: pointer; }
+.dl-metric--interactive:hover { transform: translateY(-2px); box-shadow: var(--shadow-card-hover), var(--edge-highlight); border-color: var(--border-strong); }
+.dl-metric--interactive:active { transform: translateY(0); }
+/* primary anchor tile — richer, more-lifted plate + a larger value. Same width;
+ * the grid stretches the row so every tile keeps a matching height.            */
+/* The anchor tile shares the EXACT same cool-silver plate, sheen AND elevation as the
+ * others, so the whole strip reads as one consistent material — it's set apart only by
+ * its larger value (a stronger drop here made it "pop" while the others looked duller
+ * by contrast, which read as inconsistent). */
+.dl-metric--primary .dl-metric__value { font-size: var(--text-3xl); }
+/* identity glyph — a frosted metal capsule, top-right. On an interactive card it
+ * crossfades to the drill-down arrow on hover. */
+.dl-metric__icon {
+  position: absolute; top: var(--space-5); right: var(--space-5);
+  display: grid; place-items: center;
+  width: 30px; height: 30px;
+  border-radius: var(--radius-control);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.92), rgba(243, 243, 239, 0.62));
+  border: 1px solid var(--rail-medium); /* a clear metallic rim around the chip */
+  color: var(--ink-muted);
+  box-shadow: var(--edge-highlight-soft), inset 0 -1px 1px rgba(28, 28, 22, 0.05);
+  transition: opacity var(--dur-2) var(--ease-out);
+}
+.dl-metric__icon svg { width: 16px; height: 16px; }
+.dl-metric__icon--secure { background: var(--accent-secure-soft); color: var(--accent-secure-ink); }
+.dl-metric__icon--review { background: var(--accent-review-soft); color: var(--accent-review-ink); }
+.dl-metric__icon--technical { background: var(--accent-technical-soft); color: var(--accent-technical); }
+.dl-metric__go { position: absolute; top: var(--space-5); right: var(--space-5); display: grid; place-items: center; width: 30px; height: 30px; color: var(--ink-soft); opacity: 0; transition: opacity var(--dur-2) var(--ease-out); }
+.dl-metric__go svg { width: 17px; height: 17px; }
+.dl-metric--interactive:hover .dl-metric__go { opacity: 1; }
+.dl-metric--interactive:hover .dl-metric__icon { opacity: 0; }
+/* leave headroom for the medallion so it never collides with the value */
+.dl-metric:has(.dl-metric__icon) .dl-metric__value,
+.dl-metric:has(.dl-metric__icon) .dl-metric__label { padding-right: var(--space-8); }
+
+/* ── StatusChip ──────────────────────────────────────────────────────────── */
+.dl-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 24px;
+  padding: 3px 11px 3px 9px;
+  border-radius: var(--radius-pill);
+  font-size: var(--text-xs);
+  font-weight: var(--weight-medium);
+  line-height: var(--leading-snug);
+  background: var(--surface-inset);
+  color: var(--ink-soft);
+  border: 1px solid var(--border-hairline);
+  white-space: nowrap;
+}
+.dl-chip__dot { width: 7px; height: 7px; border-radius: var(--radius-pill); background: var(--ink-faint); flex: 0 0 auto; }
+/* tone chips carry a soft accent glow — the chip halos faintly and the status
+ * dot reads as a lit indicator (a small light), not a flat circle */
+.dl-chip--secure { background: var(--accent-secure-soft); color: var(--accent-secure-ink); border-color: transparent; box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent-secure) 18%, transparent), 0 1px 10px -2px color-mix(in srgb, var(--accent-secure) 45%, transparent); }
+.dl-chip--secure .dl-chip__dot { background: var(--accent-secure); box-shadow: 0 0 6px color-mix(in srgb, var(--accent-secure) 80%, transparent); }
+.dl-chip--review { background: var(--accent-review-soft); color: var(--accent-review-ink); border-color: transparent; box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent-review) 18%, transparent), 0 1px 10px -2px color-mix(in srgb, var(--accent-review) 45%, transparent); }
+.dl-chip--review .dl-chip__dot { background: var(--accent-review); box-shadow: 0 0 6px color-mix(in srgb, var(--accent-review) 80%, transparent); }
+.dl-chip--danger { background: var(--accent-danger-soft); color: var(--accent-danger-ink); border-color: transparent; box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent-danger) 18%, transparent), 0 1px 10px -2px color-mix(in srgb, var(--accent-danger) 45%, transparent); }
+.dl-chip--danger .dl-chip__dot { background: var(--accent-danger); box-shadow: 0 0 6px color-mix(in srgb, var(--accent-danger) 80%, transparent); }
+.dl-chip--technical { background: var(--accent-technical-soft); color: var(--accent-technical); border-color: transparent; box-shadow: 0 0 0 1px color-mix(in srgb, var(--accent-technical) 18%, transparent), 0 1px 10px -2px color-mix(in srgb, var(--accent-technical) 45%, transparent); }
+.dl-chip--technical .dl-chip__dot { background: var(--accent-technical); box-shadow: 0 0 6px color-mix(in srgb, var(--accent-technical) 80%, transparent); }
+.dl-chip--neutral { }
+
+/* ── SegmentedControl ────────────────────────────────────────────────────── */
+.dl-seg {
+  display: inline-flex;
+  padding: 3px;
+  gap: 2px;
+  border-radius: var(--radius-control);
+  background: var(--surface-inset);
+  box-shadow: var(--shadow-inset);
+  border: 1px solid var(--border-hairline);
+}
+.dl-seg__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 6px 14px;
+  border-radius: var(--radius-sm);
+  font-size: var(--text-sm);
+  font-weight: var(--weight-medium);
+  color: var(--ink-muted);
+  white-space: nowrap;
+  transition: color var(--dur-1) var(--ease-standard), background var(--dur-2) var(--ease-out), box-shadow var(--dur-2) var(--ease-out);
+}
+.dl-seg__btn svg { width: 15px; height: 15px; }
+.dl-seg__btn:hover { color: var(--ink-soft); }
+.dl-seg__btn.is-active { background: var(--surface-card); color: var(--ink); box-shadow: var(--shadow-1), var(--edge-highlight); }
+
+/* ── SearchInput ─────────────────────────────────────────────────────────────
+ * A machined silver capsule: a recessed groove (inner top shade + a bright lower
+ * inner catch), a leading glyph, and our OWN clear key. All native browser search
+ * chrome is stripped — no blue/grey WebKit cancel "x", no black focus rectangle —
+ * and the WRAPPER carries the focus indicator (:focus-within) so the input itself
+ * needs no raw outline. Layout is flex, so the glyph/text/clear never shift or
+ * collide as you type. Shared by every search field (topbar + page toolbars).   */
+.dl-search {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  padding: 0 var(--space-3);
+  height: 40px;
+  border-radius: var(--radius-control);
+  background: var(--surface-sunken);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-inset), inset 0 -1px 0 rgba(255, 255, 255, 0.6);
+  transition: border-color var(--dur-2) var(--ease-standard), box-shadow var(--dur-2) var(--ease-out);
+  min-width: 0;
+}
+.dl-search:hover { border-color: var(--border-strong); }
+/* premium DealLock focus — silver rim + inner light-catch + a soft silver halo
+ * (never the browser black/blue/purple outline). */
+.dl-search:focus-within {
+  border-color: var(--rail-medium);
+  box-shadow:
+    inset 0 1px 0 rgba(255, 255, 255, 0.7),
+    0 0 0 3px rgba(185, 190, 180, 0.22),
+    var(--shadow-2);
+}
+.dl-search__icon { width: 17px; height: 17px; color: var(--ink-muted); flex: 0 0 auto; }
+.dl-search__field {
+  flex: 1;
+  min-width: 0;
+  border: 0;
+  background: none;
+  outline: none;
+  -webkit-appearance: none;
+  appearance: none;
+  font-family: var(--font-ui);
+  font-size: var(--text-base);
+  color: var(--ink);
+}
+.dl-search__field::placeholder { color: var(--ink-faint); }
+/* suppress the raw field outline (focus shows on the wrapper) — scoped under
+ * .dl-app so it outranks the global :focus-visible graphite ring. */
+.dl-app .dl-search__field:focus,
+.dl-app .dl-search__field:focus-visible { outline: none; }
+/* strip ALL native search chrome — the duplicate / blue WebKit cancel "x" and
+ * search decorations — across every search input in the app. */
+.dl-app input[type="search"] { -webkit-appearance: none; appearance: none; }
+.dl-app input[type="search"]::-webkit-search-cancel-button,
+.dl-app input[type="search"]::-webkit-search-decoration,
+.dl-app input[type="search"]::-webkit-search-results-button,
+.dl-app input[type="search"]::-webkit-search-results-decoration {
+  -webkit-appearance: none;
+  appearance: none;
+  display: none;
+}
+/* our own clear key — a small calm silver control, transparent at rest, a soft
+ * silver surface on hover, settling in on press. Muted graphite glyph. */
+.dl-search__clear {
+  display: grid;
+  place-items: center;
+  width: 24px;
+  height: 24px;
+  flex: 0 0 auto;
+  border-radius: var(--radius-pill);
+  color: var(--ink-muted);
+  transition: background var(--dur-1) var(--ease-standard), color var(--dur-1) var(--ease-standard),
+    box-shadow var(--dur-1) var(--ease-standard);
+}
+.dl-search__clear:hover { background: var(--surface-hover); color: var(--ink-soft); }
+.dl-search__clear:active { background: var(--surface-selected); box-shadow: var(--shadow-inset); }
+.dl-search__clear svg { width: 14px; height: 14px; }
+.dl-search--block { display: flex; width: 100%; }
+
+/* ── ActionTile (quick action: keycap medallion + label + sub) ───────────── */
+.dl-action {
+  position: relative;
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding: var(--space-4);
+  border-radius: var(--radius-inner);
+  /* lightest cool-silver tier — a calm secondary surface in the silver family */
+  background: var(--surface-plate-cool-soft);
+  border: 1px solid var(--border);
+  box-shadow: var(--shadow-card), var(--edge-highlight);
+  text-align: left;
+  width: 100%;
+  transition: transform var(--dur-2) var(--ease-out), box-shadow var(--dur-2) var(--ease-out), border-color var(--dur-2) var(--ease-standard);
+}
+.dl-action::before { /* crisp top light-catch, matching the cards */
+  content: "";
+  position: absolute;
+  inset: 0 0 auto 0;
+  height: 50%;
+  border-radius: var(--radius-inner) var(--radius-inner) 0 0;
+  background: var(--sheen-plate-strong);
+  opacity: 0.7;
+  pointer-events: none;
+}
+.dl-action > * { position: relative; }
+.dl-action:hover { transform: translateY(-2px); box-shadow: var(--shadow-card-hover), var(--edge-highlight); border-color: var(--border-strong); }
+.dl-action:hover .dl-action__icon { box-shadow: inset 0 0 0 1px rgba(120, 126, 138, 0.2), inset 0 1px 1px rgba(255, 255, 255, 0.9), 0 3px 8px rgba(44, 48, 58, 0.08); }
+.dl-action:active { transform: translateY(0) scale(0.99); }
+.dl-action:disabled { opacity: 0.5; cursor: not-allowed; transform: none; box-shadow: var(--shadow-1); }
+.dl-action__icon {
+  display: grid;
+  place-items: center;
+  width: 40px; height: 40px;
+  flex: 0 0 auto;
+  border-radius: var(--radius-control);
+  /* soft silver-orb medallion — same family as the switcher glyph (see --orb-*) */
+  background: var(--orb-surface-deep);
+  color: var(--ink);
+  box-shadow: var(--orb-inset);
+}
+.dl-action__icon svg { width: 19px; height: 19px; }
+.dl-action__body { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.dl-action__label { font-size: var(--text-base); font-weight: var(--weight-medium); color: var(--ink); }
+.dl-action__sub { font-size: var(--text-sm); color: var(--ink-muted); }
+
+/* ── TableShell ──────────────────────────────────────────────────────────── */
+.dl-table-wrap { overflow-x: auto; }
+.dl-table { width: 100%; border-collapse: collapse; font-size: var(--text-base); }
+.dl-table thead th {
+  text-align: left;
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  font-weight: var(--weight-medium);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--ink-muted);
+  padding: var(--space-3) var(--space-4);
+  /* a metallic header beam: a satin band behind the labels closed by a 2px dark
+   * silver rail with a white catch beneath — a real structural ledger divider */
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.66), rgba(234, 234, 229, 0.42));
+  border-bottom: 2px solid var(--rail-strong);
+  box-shadow: 0 2px 0 rgba(255, 255, 255, 0.7);
+  white-space: nowrap;
+}
+.dl-table th[data-align="right"], .dl-table td[data-align="right"] { text-align: right; }
+.dl-table th[data-align="center"], .dl-table td[data-align="center"] { text-align: center; }
+/* rows carry a faint silver seam at rest — enough to read as a precision ledger,
+ * soft enough that it never looks like a raw spreadsheet grid */
+.dl-table tbody td { padding: var(--space-4); border-bottom: 1px solid var(--rail-soft); color: var(--ink-soft); vertical-align: middle; }
+.dl-table tbody tr { transition: background var(--dur-2) var(--ease-out); }
+/* row hover = a brushed-silver surface lift (top-lit → soft silver foot), never a
+ * coloured fill — the row reads as a polished plate catching light.             */
+.dl-table tbody tr:hover { background: linear-gradient(180deg, rgba(255, 255, 255, 0.66) 0%, rgba(222, 225, 218, 0.5) 100%); }
+.dl-table tbody tr:last-child td { border-bottom: 0; }
+.dl-table--clickable tbody tr { cursor: pointer; }
+.dl-table__num { font-variant-numeric: tabular-nums; }
+/* primary cell: bold name + muted sub-line (e.g. agreement title + summary) */
+.dl-table__name { font-family: var(--font-ui); font-weight: var(--weight-semibold); color: var(--ink); }
+.dl-table__sub { font-family: var(--font-ui); font-size: var(--text-sm); color: var(--ink-muted); margin-top: 1px; }
+
+/* ── Identity cell — metal-token avatar + name (+ optional subtitle) ─────────
+ * Flex with min-width:0 the whole way down so the name ellipsizes against the
+ * available width (a fixed table cell or a flexible row), never mid-word fluff. */
+.dl-identity { display: flex; align-items: center; gap: var(--space-3); min-width: 0; max-width: 100%; }
+.dl-identity__text { display: flex; flex-direction: column; min-width: 0; }
+.dl-identity__name {
+  font-family: var(--font-ui);
+  font-weight: var(--weight-medium);
+  color: var(--ink);
+  line-height: var(--leading-snug);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.dl-identity__sub {
+  font-family: var(--font-ui);
+  font-size: var(--text-xs);
+  color: var(--ink-muted);
+  line-height: var(--leading-snug);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+/* ── EmptyState (object-like, not a bare placeholder) ─────────────────────── */
+.dl-empty {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  gap: var(--space-3);
+  padding: var(--space-9) var(--space-6);
+}
+.dl-empty__icon {
+  display: grid;
+  place-items: center;
+  width: 56px; height: 56px;
+  border-radius: var(--radius-inner);
+  /* soft silver-orb medallion floating above the empty-state copy (see --orb-*) */
+  background: var(--orb-surface-deep);
+  border: 1px solid var(--orb-rim);
+  color: var(--ink-soft);
+  box-shadow: var(--orb-shadow);
+  margin-bottom: var(--space-1);
+}
+.dl-empty__icon svg { width: 26px; height: 26px; }
+.dl-empty__title { font-size: var(--text-lg); font-weight: var(--weight-semibold); color: var(--ink); }
+.dl-empty__text { font-size: var(--text-base); color: var(--ink-muted); max-width: 46ch; }
+.dl-empty__action { margin-top: var(--space-3); }
+
+/* ── EmptyStateStage — the large "product moment" panel for a no-data page ───
+ * A spacious frosted-silver stage: a centered metal object, a confident title,
+ * one calm line, and a clear CTA. The blank space is intentional. Surface only
+ * (plate gradient + top illumination + a sheen catch + darker base falloff) —
+ * NO divider lines, per the minimal-metal direction.                          */
+.dl-stage {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  gap: var(--space-5);
+  min-height: clamp(340px, 46vh, 480px);
+  padding: clamp(28px, 3.5vw, 52px) var(--space-6);
+  border-radius: var(--radius-panel);
+  border: 1px solid var(--border);
+  background:
+    radial-gradient(120% 78% at 50% -8%, rgba(255, 255, 255, 0.72) 0%, rgba(255, 255, 255, 0) 58%),
+    var(--metal-grain-v),
+    var(--surface-plate);
+  box-shadow:
+    var(--edge-highlight),                                 /* inner top light-catch */
+    var(--shadow-card),                                    /* soft outer shadow      */
+    var(--edge-shadow),                                    /* dark lower edge        */
+    inset 0 -44px 64px -44px rgba(40, 44, 38, 0.12);       /* darker edge falloff     */
+  overflow: hidden;
+}
+/* faint specular top sheen — material, not a line */
+.dl-stage::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: var(--sheen-plate);
+  opacity: 0.8;
+  pointer-events: none;
+}
+.dl-stage > * { position: relative; }
+.dl-stage__title {
+  margin: 0;
+  font-family: var(--font-ui);
+  font-size: var(--text-xl);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-tight);
+  color: var(--ink);
+}
+.dl-stage__text {
+  margin: 0;
+  font-size: var(--text-md);
+  line-height: var(--leading-normal);
+  color: var(--ink-muted);
+  max-width: 42ch;
+}
+.dl-stage__actions {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+  margin-top: var(--space-2);
+}
+
+/* ── SplineObjectSlot — a metal object stage, ready to mount a Spline scene ───
+ * Soft radial glow → brushed aluminum tile (machined rim + top catch + lower
+ * shade + faint concentric pattern) → a floating silver sculpture. Looks like a
+ * premium object, never a broken/missing asset.                               */
+.dl-slot {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 168px;
+  height: 168px;
+}
+.dl-slot--lg { width: 196px; height: 196px; }
+/* soft contact shadow on the stage floor beneath the floating tile — grounds the
+ * object so the slot reads as a machined module sitting in the space (it tightens
+ * as the tile lifts). Sits below the tile (which is position:relative).         */
+.dl-slot::after {
+  content: "";
+  position: absolute;
+  left: 50%;
+  bottom: 6%;
+  width: 60%;
+  height: 16px;
+  transform: translateX(-50%);
+  border-radius: 50%;
+  background: radial-gradient(50% 50% at 50% 50%, rgba(40, 44, 38, 0.22) 0%, rgba(40, 44, 38, 0) 72%);
+  filter: blur(3px);
+  pointer-events: none;
+  animation: dl-slot-shadow 6s var(--ease-standard) infinite;
+}
+@keyframes dl-slot-shadow {
+  0%, 100% { opacity: 0.7; transform: translateX(-50%) scale(1); }
+  50%      { opacity: 0.42; transform: translateX(-50%) scale(0.88); }
+}
+.dl-slot__glow {
+  position: absolute;
+  inset: 6%;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 42%, rgba(255, 255, 255, 0.92) 0%, rgba(212, 215, 208, 0.5) 32%, rgba(212, 215, 208, 0) 70%);
+  animation: dl-slot-glow 6s var(--ease-standard) infinite;
+  pointer-events: none;
+}
+.dl-slot__tile {
+  position: relative;
+  display: grid;
+  place-items: center;
+  width: 128px;
+  height: 128px;
+  border-radius: 28px;
+  background: var(--metal-keycap);
+  box-shadow:
+    inset 0 0 0 1px var(--rail-medium),                    /* machined rim          */
+    inset 0 2px 1px rgba(255, 255, 255, 0.92),             /* top light-catch       */
+    inset 0 -8px 14px -8px rgba(40, 44, 38, 0.24),         /* lower shade           */
+    var(--shadow-3);                                       /* lifts off the stage   */
+  animation: dl-slot-float 6s var(--ease-standard) infinite;
+}
+.dl-slot--lg .dl-slot__tile { width: 144px; height: 144px; border-radius: 32px; }
+/* faint internal geometric pattern (concentric machined rings) */
+.dl-slot__tile::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: repeating-radial-gradient(circle at 50% 50%, rgba(40, 44, 38, 0.045) 0 1px, transparent 1px 11px);
+  opacity: 0.7;
+  pointer-events: none;
+}
+.dl-slot__obj {
+  position: relative;
+  width: 72px;
+  height: 72px;
+}
+.dl-slot--lg .dl-slot__obj { width: 80px; height: 80px; }
+.dl-slot__obj svg {
+  width: 100%;
+  height: 100%;
+  display: block;
+  filter: drop-shadow(0 2px 3px rgba(40, 44, 38, 0.20));
+}
+.dl-slot__dev {
+  position: absolute;
+  bottom: -22px;
+  left: 50%;
+  transform: translateX(-50%);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  white-space: nowrap;
+}
+
+/* ── Spline empty-state object — a clean, transparent, premium 3D object placed
+ * above the empty-state title. NO plate, NO mask/crop, NO center-pinned glow.
+ *
+ * Why no center-pinned glow: Spline scenes don't frame their object dead-centre, so
+ * a glow/shadow pinned to the BOX centre reads as a detached circle offset to one
+ * side (the "bottom-right artifact") — and it's invisible in the Spline editor
+ * because it's pure CSS. Grounding therefore lives ONLY on a `drop-shadow` filter on
+ * the object layer: it's computed from the canvas alpha, so it tracks the object's
+ * real silhouette and CANNOT detach into a separate circle.
+ *
+ * Fixed 1:1 box (no layout shift), centered, pointer-events:none (never blocks the
+ * CTA). The placeholder is UNMOUNTED on load (component-side), so only the live
+ * canvas layer remains afterwards. */
+.dl-spline-object {
+  position: relative;
+  width: 170px;
+  aspect-ratio: 1 / 1;
+  margin-inline: auto;
+  flex: 0 0 auto;
+  pointer-events: none;
+  display: grid;
+  place-items: center;
+}
+/* the object layer — transparent canvas, fades in smoothly on load (opacity 0 →
+ * 0.97). The grounding shadow tracks the object's own alpha (drop-shadow), so it
+ * hugs the object and never becomes a detached circle. */
+.dl-spline-object__object {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  z-index: 1;
+  /* --spline-scale normalizes apparent object size: the canvas renders at this
+   * multiple of the wrapper (native res → sharp), centred over the fixed footprint. */
+  width: calc(100% * var(--spline-scale, 1));
+  height: calc(100% * var(--spline-scale, 1));
+  transform: translate(-50%, -50%);
+  opacity: 0;
+  filter: drop-shadow(0 4px 7px rgba(70, 74, 68, 0.16));
+  transition: opacity var(--dur-4) var(--ease-out);
+}
+.dl-spline-object.is-loaded .dl-spline-object__object { opacity: 0.97; }
+/* the scene fills the box — react-spline may render a <canvas> (optionally wrapped
+ * in a <div>); cover both, and force the canvas clear transparent. */
+.dl-spline-object__scene,
+.dl-spline-object__object > div { width: 100%; height: 100%; }
+.dl-spline-object canvas {
+  width: 100% !important;
+  height: 100% !important;
+  display: block;
+  background: transparent !important;
+}
+/* ── loader — a brushed pearl medallion with a specular arc sweeping its rim, like
+ * light catching polished silver. Shown alone (centred is correct) from the first
+ * frame until the scene loads, then CROSSFADED out + UNMOUNTED (component-side) so it
+ * never lingers behind the live object. */
+.dl-spline-object__loader {
+  position: absolute;
+  inset: 16%;
+  z-index: 2;            /* above the object layer (z-index:1) through the crossfade */
+  border-radius: 50%;
+  display: grid;
+  place-items: center;
+  /* pearl medallion bed: soft top-lit silver disc */
+  background: radial-gradient(circle at 50% 38%,
+    rgba(255, 255, 255, 0.82) 0%,
+    rgba(229, 231, 225, 0.46) 50%,
+    rgba(206, 209, 202, 0.18) 82%,
+    rgba(206, 209, 202, 0) 100%);
+  box-shadow:
+    0 6px 16px rgba(70, 74, 68, 0.10),
+    inset 0 1px 1px rgba(255, 255, 255, 0.65);
+  opacity: 1;
+  transform: scale(1);
+  transition: opacity var(--dur-4) var(--ease-out), transform var(--dur-4) var(--ease-out);
+  pointer-events: none;
+}
+/* breathing inner core — gives the disc quiet life while it waits */
+.dl-spline-object__loader::before {
+  content: "";
+  position: absolute;
+  inset: 20%;
+  border-radius: 50%;
+  background: radial-gradient(circle at 50% 44%, rgba(255, 255, 255, 0.92) 0%, rgba(255, 255, 255, 0) 70%);
+  animation: dl-spline-pulse 2.4s var(--ease-standard) infinite;
+}
+/* specular arc travelling around the rim — a conic highlight clipped to a thin ring */
+.dl-spline-object__loader-ring {
+  position: absolute;
+  inset: -4%;
+  border-radius: 50%;
+  background: conic-gradient(from 90deg,
+    rgba(255, 255, 255, 0) 0deg,
+    rgba(255, 255, 255, 0) 48deg,
+    rgba(255, 255, 255, 0.92) 118deg,
+    rgba(214, 217, 210, 0.22) 196deg,
+    rgba(255, 255, 255, 0) 268deg,
+    rgba(255, 255, 255, 0) 360deg);
+  -webkit-mask: radial-gradient(circle, transparent 60%, #000 63%, #000 84%, transparent 87%);
+  mask: radial-gradient(circle, transparent 60%, #000 63%, #000 84%, transparent 87%);
+  animation: dl-spline-spin 1.5s linear infinite;
+}
+/* crossfade out once the scene reports loaded; the slight scale-up reads as the
+ * medallion "opening" into the object, not a hard cut */
+.dl-spline-object__loader[data-done] {
+  opacity: 0;
+  transform: scale(1.06);
+}
+.dl-spline-object__loader[data-done] .dl-spline-object__loader-ring,
+.dl-spline-object__loader[data-done]::before { animation-play-state: paused; }
+@keyframes dl-spline-spin { to { transform: rotate(360deg); } }
+@keyframes dl-spline-pulse { 0%, 100% { opacity: 0.4; } 50% { opacity: 0.95; } }
+/* mild floating bob — opt-in via the `float` prop (e.g. Messages, whose scene is
+ * otherwise static). Straight up/down only; amplitude small enough it never clips the
+ * box. Keyframes carry the -50%/-50% centering so they compose with the positioning. */
+.dl-spline-object--float .dl-spline-object__object {
+  animation: dl-spline-float 4s var(--ease-standard) infinite;
+}
+@keyframes dl-spline-float {
+  0%, 100% { transform: translate(-50%, calc(-50% - 4px)); }
+  50%      { transform: translate(-50%, calc(-50% + 4px)); }
+}
+@media (max-width: 640px) {
+  .dl-spline-object { width: 125px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dl-spline-object__loader-ring,
+  .dl-spline-object__loader::before { animation: none; }
+  .dl-spline-object__object { transition: none; animation: none; }
+}
+
+/* ── Skeletons — silver/pearl loading placeholders with a soft L→R light sweep ──
+ * Recessed pearl surface (no flat grey), rounded to match real components, sweep
+ * disabled under reduced-motion. Markup is aria-hidden; loading regions set
+ * aria-busy. No spinners for normal dashboard data. */
+.dl-skel {
+  position: relative;
+  overflow: hidden;
+  background: var(--surface-sunken);
+  border-radius: var(--radius-sm);
+}
+.dl-skel::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(100deg, rgba(255, 255, 255, 0) 20%, rgba(255, 255, 255, 0.55) 50%, rgba(255, 255, 255, 0) 80%);
+  transform: translateX(-100%);
+  animation: dl-skel-sweep 1.5s var(--ease-standard) infinite;
+}
+@keyframes dl-skel-sweep { 100% { transform: translateX(100%); } }
+
+.dl-skel-line { display: block; height: 12px; border-radius: var(--radius-pill); }
+.dl-skel-line--sm { height: 10px; }
+.dl-skel-lines { display: flex; flex-direction: column; gap: var(--space-2); }
+.dl-skel-circle { display: block; border-radius: 50%; flex: 0 0 auto; }
+.dl-skel-btn { display: block; height: 36px; border-radius: var(--radius-control); }
+.dl-skel-chip { display: inline-block; width: 76px; height: 24px; border-radius: var(--radius-pill); }
+.dl-skel-bar { display: block; height: 6px; border-radius: var(--radius-pill); }
+
+/* card skeleton reuses the real .dl-card shell; just space its inner bits */
+.dl-skel-card { display: flex; flex-direction: column; gap: var(--space-4); }
+.dl-skel-card__body { margin-top: var(--space-1); }
+.dl-skel-metric { min-height: 132px; gap: var(--space-3); }     /* matches MetricCard height */
+.dl-skel-cardhead { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); }
+
+/* generic list/table row skeleton — matches the .dl-list__row rhythm */
+.dl-skel-row { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-4) 0; }
+.dl-skel-row + .dl-skel-row { border-top: 1px solid var(--rail-soft); }
+.dl-skel-row__main { display: flex; flex-direction: column; gap: var(--space-2); flex: 1; min-width: 0; }
+.dl-skel-table__head { padding: var(--space-3) 0; border-bottom: 2px solid var(--rail-soft); }
+
+/* empty-state stage skeleton bits */
+.dl-skel-stage__obj { border-radius: 28px; }
+.dl-skel-stage__text { width: 320px; max-width: 80%; }
+.dl-skel-stage__cta { height: 40px; margin-top: var(--space-2); }
+
+@media (prefers-reduced-motion: reduce) {
+  .dl-skel::after { animation: none; }
+}
+
+@keyframes dl-slot-float {
+  0%, 100% { transform: translateY(0); }
+  50% { transform: translateY(-6px); }
+}
+@keyframes dl-slot-glow {
+  0%, 100% { opacity: 0.7; transform: scale(1); }
+  50% { opacity: 1; transform: scale(1.05); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .dl-slot__tile, .dl-slot__glow, .dl-slot::after { animation: none; }
+  .dl-btn--primary:hover::after, .dl-btn--metal:hover::after { animation: none; }
+}
+@media (max-width: 640px) {
+  .dl-stage { min-height: 360px; }
+  .dl-stage__actions { width: 100%; }
+  .dl-stage__actions .dl-btn { flex: 1 1 auto; justify-content: center; }
+  .dl-slot { width: 136px; height: 136px; }
+  .dl-slot--lg { width: 148px; height: 148px; }
+  .dl-slot__tile,
+  .dl-slot--lg .dl-slot__tile { width: 104px; height: 104px; border-radius: 24px; }
+  .dl-slot__obj,
+  .dl-slot--lg .dl-slot__obj { width: 60px; height: 60px; }
+}
+
+/* ── BottomActionBar (frosted, sticky to the scroll region) ──────────────── */
+.dl-actionbar {
+  position: sticky;
+  bottom: var(--space-4);
+  z-index: var(--z-actionbar);
+  margin: var(--space-4) auto 0;
+  max-width: var(--page-max);
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-3) var(--space-3) var(--space-3) var(--space-5);
+  border-radius: var(--radius-pill);
+  background: var(--surface-glass);
+  backdrop-filter: var(--blur-glass);
+  -webkit-backdrop-filter: var(--blur-glass);
+  border: 1px solid var(--border-glass);
+  box-shadow: var(--shadow-3), var(--edge-highlight);
+}
+.dl-actionbar__info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 1px; }
+.dl-actionbar__label { font-family: var(--font-mono); font-size: var(--text-2xs); letter-spacing: var(--tracking-label); text-transform: uppercase; color: var(--ink-muted); }
+.dl-actionbar__value { font-size: var(--text-md); font-weight: var(--weight-semibold); color: var(--ink); font-variant-numeric: tabular-nums; }
+.dl-actionbar__actions { display: flex; align-items: center; gap: var(--space-2); flex: 0 0 auto; }
+
+/* ── Avatar — an engraved metal identity token ─────────────────────────────
+ * A calm, perfectly-circular satin face: low-contrast silver gradient, a thin
+ * inner light border, and a soft shadow. No glossy bubble / 3D highlight. The
+ * monogram is the UI sans (Inter), semibold, graphite — readable, not mono.    */
+.dl-avatar {
+  display: inline-grid;
+  place-items: center;
+  flex: 0 0 auto;
+  border-radius: var(--radius-pill);
+  font-family: var(--font-ui);
+  font-weight: var(--weight-semibold);
+  letter-spacing: 0;
+  line-height: 1;
+  color: var(--ink-soft);
+  /* a soft silver-orb coin — same atmospheric family as the switcher pill (see --orb-*),
+   * so the monogram reads on a calm light-grey orb rather than a struck-metal disc */
+  background: var(--orb-surface-deep);
+  border: 1px solid var(--orb-rim);
+  box-shadow: var(--orb-shadow);
+  user-select: none;
+  overflow: hidden;
+}
+.dl-avatar--sm { width: 32px; height: 32px; font-size: var(--text-xs); }
+.dl-avatar--md { width: 40px; height: 40px; font-size: var(--text-sm); }
+.dl-avatar--lg { width: 48px; height: 48px; font-size: var(--text-lg); }
+/* `metal` no longer means a separate glossy disc — every avatar is the calm
+ * token. The modifier is kept as a no-op so existing call sites stay valid.    */
+.dl-avatar--metal { }
+
+/* ── Switch — a machined silver rocker. State reads through MATERIAL, not colour:
+ * OFF = a darker recessed silver channel, pearl knob seated LEFT; ON = a brighter
+ * silver channel with a soft silver bloom behind the knob, seated RIGHT. The knob
+ * is a clearly RAISED pearl-metal button (rim + bevel + cast shadow). No colour. */
+.dl-switch {
+  position: relative;
+  width: 46px; height: 28px;
+  flex: 0 0 auto;
+  border-radius: var(--radius-pill);
+  /* recessed silver capsule — darker under the top rim, lighter at the foot */
+  background: linear-gradient(180deg, #cdd0c9 0%, #dee0d9 52%, #e7e8e2 100%);
+  border: 1px solid var(--rail-medium);
+  --switch-shadow:
+    inset 0 2px 3px rgba(40, 44, 38, 0.24),    /* deep recess from the top rim   */
+    inset 0 -1px 0 rgba(255, 255, 255, 0.6),    /* bright lower inner catch        */
+    0 1px 0 rgba(255, 255, 255, 0.55);          /* carved outer lower edge         */
+  box-shadow: var(--switch-shadow);
+  transition: background var(--dur-2) var(--ease-standard), border-color var(--dur-2) var(--ease-standard),
+    box-shadow var(--dur-2) var(--ease-out);
+}
+/* soft silver bloom behind the knob — only when ON (right side) */
+.dl-switch::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  border-radius: inherit;
+  background: radial-gradient(58% 120% at 78% 50%, rgba(255, 255, 255, 0.85) 0%, rgba(255, 255, 255, 0) 62%);
+  opacity: 0;
+  transition: opacity var(--dur-2) var(--ease-out);
+  pointer-events: none;
+}
+.dl-switch__knob {
+  position: absolute;
+  top: 2px; left: 2px;
+  width: 22px; height: 22px;
+  border-radius: var(--radius-pill);
+  background: var(--metal-disc);                  /* raised pearl-aluminum button */
+  box-shadow:
+    0 0 0 1px var(--rail-strong),                 /* machined rim                 */
+    inset 0 1px 1px rgba(255, 255, 255, 0.92),     /* top bevel highlight          */
+    inset 0 -2px 3px rgba(40, 44, 38, 0.22),       /* lower inner shade (bevel)    */
+    0 1px 2px rgba(40, 44, 38, 0.30),              /* tight contact shadow         */
+    0 3px 6px -1px rgba(40, 44, 38, 0.20);         /* soft cast shadow             */
+  transition: transform var(--dur-2) var(--ease-spring), box-shadow var(--dur-2) var(--ease-out);
+}
+.dl-switch:hover { border-color: var(--rail-strong); }
+.dl-switch.is-on {
+  /* brighter silver-SAGE channel + the subtle sage ON halo (restored) */
+  background: linear-gradient(180deg, #e3e9e2 0%, #edf2ec 60%, #f4f8f3 100%);
+  border-color: color-mix(in srgb, var(--accent-secure) 44%, var(--rail-strong));
+  --switch-shadow:
+    inset 0 1px 2px rgba(40, 44, 38, 0.16),
+    inset 0 -1px 0 rgba(255, 255, 255, 0.78),
+    0 1px 0 rgba(255, 255, 255, 0.6),
+    var(--glow-secure);                            /* soft sage under-glow */
+}
+/* soft sage aura behind the knob (right side) — muted, never neon/bright */
+.dl-switch.is-on::before {
+  opacity: 1;
+  background: radial-gradient(62% 120% at 78% 50%, rgba(96, 142, 112, 0.6) 0%, rgba(96, 142, 112, 0) 64%);
+}
+.dl-switch.is-on .dl-switch__knob {
+  transform: translateX(18px);
+  box-shadow:
+    0 0 0 1px var(--rail-strong),
+    inset 0 1px 1px rgba(255, 255, 255, 0.96),
+    inset 0 -2px 3px rgba(40, 44, 38, 0.20),
+    0 1px 2px rgba(40, 44, 38, 0.30),
+    0 4px 8px -1px rgba(40, 44, 38, 0.22);
+}
+/* custom silver focus ring — no browser outline (scoped under .dl-app to beat the
+ * global :focus-visible graphite ring; same gotcha as the search field). */
+.dl-app .dl-switch:focus-visible {
+  outline: none;
+  border-color: var(--rail-strong);
+  box-shadow: var(--switch-shadow), 0 0 0 3px rgba(185, 190, 180, 0.34);
+}
+
+/* ── SettingRow (label/description · control) — moodboard settings pattern ── */
+.dl-setting-list { display: flex; flex-direction: column; }
+.dl-setting {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-5);
+  padding: var(--space-4) 0;
+  border-bottom: 1px solid var(--border-hairline);
+}
+.dl-setting:first-child { padding-top: 0; }
+.dl-setting:last-child { border-bottom: 0; padding-bottom: 0; }
+.dl-setting__text { min-width: 0; }
+.dl-setting__title { font-size: var(--text-base); font-weight: var(--weight-medium); color: var(--ink); }
+.dl-setting__desc { font-size: var(--text-sm); color: var(--ink-muted); margin-top: 1px; }
+
+/* ── Spinner ─────────────────────────────────────────────────────────────── */
+.dl-spinner {
+  width: 17px; height: 17px;
+  border-radius: var(--radius-pill);
+  border: 2px solid currentColor;
+  border-top-color: transparent;
+  opacity: 0.85;
+  animation: dl-spin 0.7s linear infinite;
+}
+@keyframes dl-spin { to { transform: rotate(360deg); } }
+
+/* ── Drawer / scrim (mobile sidebar) ─────────────────────────────────────── */
+.app-scrim {
+  position: absolute;
+  inset: 0;
+  z-index: var(--z-scrim);
+  background: rgba(24, 24, 20, 0.28);
+  backdrop-filter: blur(2px);
+  opacity: 0;
+  visibility: hidden;
+  transition: opacity var(--dur-3) var(--ease-out), visibility var(--dur-3) var(--ease-out);
+}
+
+/* ============================================================================
+ * 4 · PRODUCT MODULES
+ * Reusable composition patterns built from tokens — used by the real product
+ * surfaces (Home, Agreements). Not one-offs: a page composes these classes.
+ *   .dl-home   two-column dashboard scaffold
+ *   .dl-list   row list (title/sub · trailing chip + action) — attention lists
+ *   .dl-feed   activity timeline (icon · text/meta · time)
+ *   .dl-progress milestone progress rows (label · value · track)
+ *   .dl-toolbar filter/search bar above a table
+ * ========================================================================== */
+
+/* generic vertical stack */
+.dl-stack { display: flex; flex-direction: column; gap: var(--space-3); }
+
+/* Home dashboard scaffold — a true 2×2 grid: primary (wider) + supporting
+ * (narrower) columns. Cards flow row-by-row (Needs attention | Recent activity,
+ * then Milestone progress | Quick actions). align-items:stretch equalises each
+ * row's pair so the SECOND row starts on one clean horizontal edge — the two
+ * stacks no longer drift apart. min-width:0 lets the tracks shrink cleanly. */
+.dl-home__grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1.45fr) minmax(0, 0.95fr);
+  gap: var(--space-6);
+  align-items: stretch;
+}
+.dl-home__grid > * { min-width: 0; }
+@media (max-width: 860px) { .dl-home__grid { grid-template-columns: 1fr; } }
+
+/* Row list — title + sub on the left, status/action on the right. Rows bleed to
+ * the card's padded edge so the hover wash reads as a full-width row highlight. */
+.dl-list { display: flex; flex-direction: column; }
+.dl-list__row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+  padding: var(--space-4) var(--space-6);
+  margin: 0 calc(var(--space-6) * -1);
+  border-bottom: 1px solid var(--border-hairline);
+  transition: background var(--dur-2) var(--ease-out);
+}
+.dl-list__row:hover { background: var(--surface-hover); }
+.dl-list__row:first-child { padding-top: var(--space-2); }
+.dl-list__row:last-child { border-bottom: 0; padding-bottom: var(--space-2); }
+.dl-list__main { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 2px; }
+.dl-list__title { font-size: var(--text-base); font-weight: var(--weight-medium); color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dl-list__sub { font-size: var(--text-sm); color: var(--ink-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dl-list__end { display: flex; align-items: center; gap: var(--space-3); flex: 0 0 auto; }
+@media (max-width: 560px) {
+  .dl-list__row { flex-wrap: wrap; }
+  .dl-list__end { width: 100%; justify-content: space-between; }
+}
+
+/* ── "Needs your attention" — the dashboard's primary working area ───────────
+ * A scoped elevation of the raised card + its row list: a richer frosted plate
+ * with a faint internal glow, a stronger title, roomier rows, status pills that
+ * line up in a clean column, and REAL tactile silver action controls. The
+ * global `.dl-app button` reset (0,1,1) strips variant fills/borders, so the
+ * buttons re-establish a proper surface here at 0,3,0. All rules are scoped to
+ * this card, so Recent activity / the Counterparties list / every other card
+ * stay exactly as they were. */
+.dl-card--attention { border-radius: 24px; } /* a touch stronger than --radius-card */
+.dl-card--attention::before { opacity: 1; height: 52%; } /* crisper top-edge light-catch */
+.dl-card--attention::after { /* very subtle internal glow, top-left */
+  content: "";
+  position: absolute;
+  inset: 0;
+  background: radial-gradient(120% 82% at 12% -10%, rgba(255, 255, 255, 0.5) 0%, rgba(255, 255, 255, 0) 54%);
+  opacity: 0.7;
+  pointer-events: none;
+}
+.dl-card--attention > * { position: relative; z-index: 1; } /* keep content above the glow */
+.dl-card--attention .dl-card__head { margin-bottom: var(--space-3); }
+/* The primary card fills its grid row, so a short list (2–3 items) never leaves a
+ * dead area below: the list takes the remaining height and its rows share it
+ * evenly (roomy, intentional ledger rows), and the empty state centres. The grid
+ * stays `stretch`, so the second row (progress | quick actions) still aligns. */
+.dl-card--attention { display: flex; flex-direction: column; }
+.dl-card--attention .dl-list { flex: 1; display: flex; flex-direction: column; }
+.dl-card--attention .dl-list__row { flex: 1 1 0; }
+.dl-card--attention .dl-mini-empty { flex: 1; justify-content: center; }
+
+/* rows — roomier and calmer */
+.dl-card--attention .dl-list__row { padding: var(--space-5) var(--space-6); }
+.dl-card--attention .dl-list__row:first-child { padding-top: var(--space-2); }
+.dl-card--attention .dl-list__row:last-child { padding-bottom: var(--space-2); }
+.dl-card--attention .dl-list__main { gap: 4px; }
+.dl-card--attention .dl-list__title { font-weight: var(--weight-semibold); } /* strongest text in the row */
+.dl-card--attention .dl-list__end { gap: var(--space-3); } /* 12px status ↔ action */
+
+/* status pills line up in a column: the action buttons share a fixed width and
+ * anchor the right edge, so the pills to their left keep a constant right edge. */
+.dl-card--attention .dl-list__end .dl-btn {
+  width: 112px;
+  min-height: 36px;
+  padding: 0 var(--space-3);
+  border-radius: var(--radius-control); /* rounded, not pill */
+  font-size: var(--text-sm);
+  background: var(--metal-keycap);
+  color: var(--ink);
+  border: 1px solid var(--border);
+  box-shadow: var(--edge-highlight), var(--shadow-1);
+}
+.dl-card--attention .dl-list__end .dl-btn:hover {
+  background: var(--metal-keycap-hover);
+  border-color: var(--border-strong);
+  transform: translateY(-1px);
+  box-shadow: var(--edge-highlight), var(--shadow-2);
+}
+.dl-card--attention .dl-list__end .dl-btn:active {
+  transform: translateY(1px);
+  box-shadow: var(--shadow-inset), var(--edge-highlight-soft);
+}
+/* Release keeps its sage affordance */
+.dl-card--attention .dl-list__end .dl-btn--positive {
+  background: var(--accent-secure);
+  color: var(--ink-on-accent);
+  border-color: transparent;
+}
+.dl-card--attention .dl-list__end .dl-btn--positive:hover { background: var(--accent-secure-hover); border-color: transparent; }
+/* on row hover, firm up the control (a calm "reveal") */
+.dl-card--attention .dl-list__row:hover .dl-btn { border-color: var(--border-strong); box-shadow: var(--edge-highlight), var(--shadow-2); }
+.dl-card--attention .dl-list__row:hover .dl-btn--positive { border-color: transparent; }
+
+/* mobile — let the header controls drop to a second line (so the label keeps
+ * one clean line), and stack each row's control row under the title. */
+@media (max-width: 560px) {
+  .dl-card--attention .dl-card__head { flex-wrap: wrap; row-gap: var(--space-3); }
+  .dl-card--attention .dl-list__end { width: 100%; justify-content: space-between; }
+  .dl-card--attention .dl-list__end .dl-btn { width: auto; min-width: 112px; }
+}
+
+/* ── Recent activity — the dashboard's SECONDARY surface ─────────────────────
+ * Deliberately calmer and lighter than "Needs your attention": no dividers, no
+ * action controls, softer/lighter icon capsules, and a single stacked column
+ * (title → meta → time) so the eye reads each event top-down instead of
+ * travelling out to a far-right timestamp. A faint full-bleed wash plus a
+ * subtle icon "sharpen" is the only hover. The header gap is scoped to this
+ * card so the shared Card primitive is untouched. */
+.dl-card--activity .dl-card__head { margin-bottom: var(--space-3); } /* + 8px row pad ≈ 20px calm gap */
+
+.dl-feed { display: flex; flex-direction: column; }
+.dl-feed__item {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: start;
+  column-gap: 14px;                      /* icon → text */
+  padding: var(--space-2) var(--space-6);
+  margin: 0 calc(var(--space-6) * -1);   /* bleed the hover wash to the card's padded edge */
+  border-radius: var(--radius-control);
+  transition: background var(--dur-2) var(--ease-out);
+}
+.dl-feed__item:hover { background: var(--surface-hover); } /* very light, calm — no lift */
+.dl-feed__icon {
+  display: grid;
+  place-items: center;
+  width: 28px; height: 28px;
+  flex: 0 0 auto;
+  border-radius: var(--radius-pill);
+  background: var(--surface-inset);
+  border: 1px solid transparent;
+  color: var(--ink-muted);               /* lighter than the attention rows */
+  transition: border-color var(--dur-2) var(--ease-out), box-shadow var(--dur-2) var(--ease-out);
+}
+/* "sharpen slightly" on hover — gain a hairline edge + soft top-light, keeping
+ * any status tint intact (border/shadow only, never the fill or icon colour). */
+.dl-feed__item:hover .dl-feed__icon { border-color: var(--border); box-shadow: var(--edge-highlight-soft); }
+.dl-feed__icon svg { width: 14px; height: 14px; }
+.dl-feed__icon--secure { background: var(--accent-secure-soft); color: var(--accent-secure-ink); }   /* released / approved */
+.dl-feed__icon--review { background: var(--accent-review-soft); color: var(--accent-review-ink); }   /* submitted / revision */
+.dl-feed__body { min-width: 0; display: flex; flex-direction: column; gap: 4px; } /* title → meta */
+.dl-feed__text { font-size: var(--text-sm); color: var(--ink); line-height: 1.35; }
+.dl-feed__text b { font-weight: var(--weight-medium); color: var(--ink); }
+.dl-feed__meta { font-size: var(--text-xs); color: var(--ink-muted); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dl-feed__meta .dl-feed__amount { color: var(--ink-soft); font-variant-numeric: tabular-nums; }
+.dl-feed__time { margin-top: 2px; font-family: var(--font-mono); font-size: var(--text-2xs); color: var(--ink-faint); } /* +4px body gap ≈ 6px below the meta */
+
+/* Milestone progress */
+.dl-progress { display: flex; flex-direction: column; gap: var(--space-5); }
+.dl-progress__row { display: flex; flex-direction: column; gap: var(--space-2); }
+
+/* Instrument panel — ONLY the Milestone Progress card. A slightly more dimensional
+ * brushed-silver plate (this card holds precision progress instrumentation): a soft
+ * top-left pearl highlight, a gentle bottom-right silver falloff, a barely-there
+ * vertical brushed texture, a clearer metallic rim + inner edge highlight, and a
+ * touch more lift. Stays light and refined — never raw steel, never dark. */
+.dl-card--instrument {
+  background:
+    radial-gradient(115% 80% at 12% -10%, rgba(255, 255, 255, 0.92) 0%, rgba(255, 255, 255, 0) 44%),
+    radial-gradient(120% 120% at 104% 112%, rgba(150, 156, 148, 0.16) 0%, rgba(255, 255, 255, 0) 48%),
+    repeating-linear-gradient(90deg, rgba(120, 124, 116, 0) 0px, rgba(120, 124, 116, 0.016) 1px, rgba(255, 255, 255, 0) 2px, rgba(255, 255, 255, 0.012) 3px),
+    linear-gradient(180deg, #fbfbf9 0%, #eef0ea 100%);
+  border-color: var(--border-strong);
+  box-shadow: var(--shadow-card-hover), var(--edge-highlight),
+    inset 0 0 0 1px rgba(255, 255, 255, 0.55);
+}
+/* each milestone sits in a subtle recessed lane (integrated, not a boxed sub-card):
+ * a faint top seam + a hairline of channel depth under the row's track region */
+.dl-card--instrument .dl-progress__row { gap: var(--space-3); }
+.dl-card--instrument .dl-progress__track { height: 9px; }
+.dl-progress__head { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-3); }
+.dl-progress__name { font-size: var(--text-sm); font-weight: var(--weight-medium); color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dl-progress__val { font-size: var(--text-xs); color: var(--ink-muted); font-variant-numeric: tabular-nums; white-space: nowrap; flex: 0 0 auto; }
+/* Card milestone bar — shares the instrument-rail tokens (see tokens.css): a
+ * recessed silver channel + satin-metal insert. 8px base (9px inside the
+ * instrument panel). All shine is contained inside the fill (inset shadows + a
+ * clipped ::after leading-edge catch), so the fill's width is the only thing that
+ * communicates progress — nothing bleeds past its edge. */
+.dl-progress__track {
+  height: 8px;
+  border-radius: var(--radius-pill);
+  background: var(--prog-track-bg);
+  box-shadow: var(--prog-track-shadow);
+}
+.dl-progress__fill {
+  position: relative;
+  height: 100%;
+  border-radius: var(--radius-pill);
+  background: var(--prog-fill-bg);
+  box-shadow: var(--prog-fill-shadow);
+  overflow: hidden; /* clips the ::after light-catch; the box-shadow bloom is unaffected */
+  transition: width var(--dur-4) var(--ease-out), box-shadow var(--dur-3) var(--ease-out);
+}
+/* leading-edge light-catch — a soft polished vertical highlight where the insert ends */
+.dl-progress__fill::after {
+  content: "";
+  position: absolute;
+  inset: 0 0 0 auto;
+  width: 24px;
+  background: var(--prog-edge);
+  pointer-events: none;
+}
+/* hover & completed — a touch more luminous, no layout shift */
+.dl-progress__row:hover .dl-progress__fill,
+.dl-progress__fill--full { box-shadow: var(--prog-fill-shadow-strong); }
+.dl-progress__meta { font-size: var(--text-xs); color: var(--ink-muted); font-variant-numeric: tabular-nums; }
+
+/* "all caught up" inline state inside a card */
+.dl-mini-empty { display: flex; flex-direction: column; align-items: center; text-align: center; gap: var(--space-1); padding: var(--space-6) var(--space-4); }
+.dl-mini-empty__icon {
+  display: grid; place-items: center;
+  width: 40px; height: 40px;
+  border-radius: var(--radius-pill);
+  background: var(--accent-secure-soft); color: var(--accent-secure-ink);
+  box-shadow: var(--edge-highlight-soft);
+  margin-bottom: var(--space-1);
+}
+.dl-mini-empty__icon svg { width: 20px; height: 20px; }
+.dl-mini-empty__title { font-size: var(--text-base); font-weight: var(--weight-medium); color: var(--ink); }
+.dl-mini-empty__text { font-size: var(--text-sm); color: var(--ink-muted); }
+
+/* Table toolbar — the browsing console: status filter (primary, left) + a
+ * quieter results count and search (right). Reads left→right: filter → count →
+ * search, so the segmented control is clearly the main control.                */
+.dl-toolbar { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); flex-wrap: wrap; }
+.dl-toolbar__filters { min-width: 0; max-width: 100%; overflow-x: auto; scrollbar-width: none; }
+.dl-toolbar__filters::-webkit-scrollbar { display: none; }
+.dl-toolbar__end { display: flex; align-items: center; gap: var(--space-4); min-width: 0; }
+.dl-toolbar__count {
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  letter-spacing: 0.04em;
+  color: var(--ink-faint);
+  white-space: nowrap;
+  font-variant-numeric: tabular-nums;
+}
+.dl-toolbar__search { width: clamp(200px, 24vw, 264px); flex: 0 0 auto; }
+@media (max-width: 640px) {
+  .dl-toolbar { align-items: stretch; }
+  .dl-toolbar__end { width: 100%; }
+  .dl-toolbar__count { display: none; }
+  .dl-toolbar__search { width: 100%; flex: 1; }
+}
+
+/* Agreements table — STABLE column widths (table-layout: fixed). The widths are
+ * declared on the columns (AgreementsPage COLUMNS); Agreement is the one auto
+ * column, so it absorbs the slack and stays the largest. `min-width` keeps the
+ * columns from crushing on narrow viewports — the card scrolls horizontally
+ * there instead of overflowing the page. */
+.dl-table--agreements { table-layout: fixed; min-width: 920px; }
+/* scoped with thead/tbody so this wins over the base `.dl-table tbody td`
+ * padding (equal specificity, later in the file) — otherwise the intended
+ * tighter 12px column padding silently loses to the 16px base. */
+.dl-table--agreements thead th,
+.dl-table--agreements tbody td {
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  padding-left: var(--space-3);
+  padding-right: var(--space-3);
+}
+.dl-table--agreements thead th:first-child,
+.dl-table--agreements tbody td:first-child { padding-left: var(--space-5); }
+.dl-table--agreements thead th:last-child,
+.dl-table--agreements tbody td:last-child { padding-right: var(--space-5); }
+/* premium row hover — a whisper tint + a top light-catch so the row reads as a
+ * lit plate (glass/metal emphasis), not a flat grey fill. Painted on the cells
+ * so the inset highlight spans the full row. */
+.dl-table--agreements tbody td { transition: background var(--dur-2) var(--ease-out), box-shadow var(--dur-2) var(--ease-out); }
+.dl-table--agreements tbody tr:hover td {
+  background: var(--surface-row-hover);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7);
+}
+/* hover reveals a slim 2px silver left edge anchoring the row — a quiet "you are
+ * here" cue, not a heavy coloured bar */
+.dl-table--agreements tbody tr:hover td:first-child {
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7), inset 2px 0 0 var(--rail-medium);
+}
+.dl-cell-agreement .dl-table__name,
+.dl-cell-agreement .dl-table__sub { overflow: hidden; text-overflow: ellipsis; }
+.dl-cell-agreement .dl-table__sub { font-size: var(--text-xs); }
+/* counterparty cell — tighten the avatar↔name gap for the compact sm token so
+ * it reads as one identity unit, not two loose objects */
+.dl-cell-party .dl-identity { gap: var(--space-2); }
+/* role — a plain quiet mono label (NOT a pill), so it stays clearly subordinate
+ * to the status chip and the two never read as the same kind of thing */
+.dl-role {
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+}
+/* current milestone — fraction + a slim progress track (the "where are we"
+ * indicator) on line one, the milestone name quietly beneath. Two lines, so it
+ * matches the agreement cell's height and the row rhythm stays even. */
+.dl-ms { display: flex; align-items: center; gap: var(--space-2); }
+.dl-ms__count {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  color: var(--ink-soft);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+  flex: 0 0 auto;
+}
+/* Table mini-bar — same instrument-rail tokens as the card bar (see tokens.css),
+ * just the compact 6px scale. Pale recessed groove + luminous satin silver-sage
+ * fill with a leading-edge light-catch. No overflow:hidden so the faint bloom can
+ * read; the fill's pill radius keeps the leading edge rounded. */
+.dl-ms__track {
+  flex: 1;
+  min-width: 28px;
+  height: 6px;
+  border-radius: var(--radius-pill);
+  background: var(--prog-track-bg);
+  box-shadow: var(--prog-track-shadow);
+}
+.dl-ms__fill {
+  position: relative;
+  display: block;
+  height: 100%;
+  border-radius: var(--radius-pill);
+  background: var(--prog-fill-bg);
+  box-shadow: var(--prog-fill-shadow);
+  overflow: hidden; /* clips the ::after light-catch; the box-shadow bloom is unaffected */
+  transition: width var(--dur-4) var(--ease-out), box-shadow var(--dur-3) var(--ease-out);
+}
+/* compact leading-edge light-catch — same language, smaller */
+.dl-ms__fill::after {
+  content: "";
+  position: absolute;
+  inset: 0 0 0 auto;
+  width: 12px;
+  background: var(--prog-edge);
+  pointer-events: none;
+}
+/* row hover & completed milestone — a slightly stronger bloom, geometry unchanged */
+.dl-table--agreements tbody tr:hover .dl-ms__fill,
+.dl-ms__fill--full { box-shadow: var(--prog-fill-shadow-strong); }
+.dl-cell-ms .dl-table__sub { overflow: hidden; text-overflow: ellipsis; font-size: var(--text-xs); margin-top: 3px; }
+
+/* ============================================================================
+ * Design-lab page (component gallery) — reads like a spec sheet: numbered
+ * sections, specimens on a faint satin tray. Built only from tokens above.
+ * ========================================================================== */
+.dl-lab { display: flex; flex-direction: column; gap: var(--space-9); }
+
+.dl-lab__section { display: flex; flex-direction: column; gap: var(--space-5); }
+.dl-lab__head {
+  display: flex;
+  align-items: baseline;
+  gap: var(--space-3);
+  padding-bottom: var(--space-3);
+  border-bottom: 1px solid var(--border);
+}
+.dl-lab__idx {
+  font-family: var(--font-mono);
+  font-size: var(--text-xs);
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-faint);
+}
+.dl-lab__section-title {
+  font-size: var(--text-lg);
+  font-weight: var(--weight-semibold);
+  letter-spacing: var(--tracking-tight);
+  color: var(--ink);
+}
+.dl-lab__caption { margin-left: auto; font-size: var(--text-sm); color: var(--ink-muted); }
+
+/* specimen tray — a faint frosted plate the loose primitives sit on */
+.dl-lab__stage {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-5);
+  padding: var(--space-6);
+  border-radius: var(--radius-card);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0.46), rgba(255, 255, 255, 0.14));
+  border: 1px solid var(--border-hairline);
+  box-shadow: var(--edge-highlight-soft);
+}
+
+.dl-lab__row { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-4); }
+.dl-lab__grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(176px, 1fr)); gap: var(--space-4); }
+.dl-lab__note { font-size: var(--text-sm); color: var(--ink-muted); }
+.dl-lab__specimen-label {
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+.dl-lab__field { width: min(320px, 100%); }
+/* metal-surface demo stage */
+.dl-lab__metal { height: 200px; border-radius: var(--radius-panel); border: 1px solid var(--border-hairline); display: grid; place-items: center; }
+
+/* token swatches */
+.dl-swatch { display: flex; flex-direction: column; gap: var(--space-2); }
+.dl-swatch__chip { height: 60px; border-radius: var(--radius-control); border: 1px solid var(--border-hairline); box-shadow: var(--edge-highlight-soft), var(--shadow-1); }
+.dl-swatch__name { font-family: var(--font-mono); font-size: var(--text-2xs); color: var(--ink-muted); }
+
+/* type specimens — role label · live specimen, no inline styling */
+.dl-type-row {
+  display: grid;
+  grid-template-columns: 210px 1fr;
+  gap: var(--space-5);
+  align-items: baseline;
+  padding: var(--space-4) 0;
+  border-bottom: 1px solid var(--border-hairline);
+}
+.dl-type-row:first-child { padding-top: 0; }
+.dl-type-row:last-child { border-bottom: 0; padding-bottom: 0; }
+.dl-type-row__meta {
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  letter-spacing: var(--tracking-label);
+  text-transform: uppercase;
+  color: var(--ink-faint);
+  line-height: var(--leading-snug);
+}
+.dl-type--display { font-family: var(--font-display); font-size: var(--text-3xl); letter-spacing: var(--tracking-tight); color: var(--ink); line-height: var(--leading-tight); }
+.dl-type--title { font-size: var(--text-2xl); font-weight: var(--weight-semibold); letter-spacing: var(--tracking-tight); color: var(--ink); }
+.dl-type--body { font-size: var(--text-base); color: var(--ink-soft); }
+.dl-type--mono { font-family: var(--font-mono); font-size: var(--text-sm); color: var(--ink-muted); }
+
+/* generic grids reused by skeleton pages */
+/* KPI summary row — explicit 4→2→1 so the four cards never orphan into a 3+1
+ * (the old auto-fit wrapped awkwardly at mid widths). */
+.dl-grid-metrics { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); gap: var(--space-4); }
+@media (max-width: 1080px) { .dl-grid-metrics { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+@media (max-width: 560px) { .dl-grid-metrics { grid-template-columns: 1fr; } }
+.dl-grid-2 { display: grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: var(--space-5); }
+
+@media (max-width: 560px) {
+  .dl-type-row { grid-template-columns: 1fr; gap: var(--space-2); }
+}
+
+/* ============================================================================
+ * Responsive
+ * ========================================================================== */
+@media (max-width: 960px) {
+  .app-sidebar {
+    position: absolute;
+    inset: 0 auto 0 0;
+    z-index: var(--z-drawer);
+    width: var(--sidebar-w);
+    flex-basis: var(--sidebar-w);
+    background: var(--metal-panel);
+    box-shadow: var(--shadow-4);
+    transform: translateX(-100%);
+    transition: transform var(--dur-3) var(--ease-out);
+  }
+  .dl-app.is-drawer-open .app-sidebar { transform: translateX(0); }
+  .dl-app.is-drawer-open .app-scrim { opacity: 1; visibility: visible; }
+  .app-topbar__menu { display: inline-grid; }
+  /* desktop rail collapse is irrelevant on mobile */
+  .dl-app.is-rail .app-sidebar { width: var(--sidebar-w); flex-basis: var(--sidebar-w); }
+  .dl-app.is-rail .app-sidebar__wordmark,
+  .dl-app.is-rail .app-nav-group__label,
+  .dl-app.is-rail .app-nav-item__label { display: block; }
+}
+
+@media (max-width: 720px) {
+  /* Collapse the selector to glyph + chevron; the menu still carries the copy. */
+  .dl-ws__id { display: none; }
+  /* keep specificity ≥ the base `.dl-app .dl-ws__trigger` (0,2,0) so this still wins */
+  .dl-app .dl-ws__trigger { gap: var(--space-1); padding: 6px 8px 6px 6px; }
+}
+
+@media (max-width: 560px) {
+  .dl-actionbar { flex-wrap: wrap; border-radius: var(--radius-panel); }
+  .dl-actionbar__actions { width: 100%; }
+  .dl-actionbar__actions .dl-btn { flex: 1; }
+}
+
+/* Reduced browser height: trim the chrome so content keeps a usable scroll area.
+ * Brand + topbar both key off --topbar-h, so they stay aligned when it shrinks. */
+@media (max-height: 600px) {
+  .dl-app { --topbar-h: 54px; --shell-gap: 8px; --radius-shell: 20px; }
+  .app-page { padding-top: var(--space-5); padding-bottom: var(--space-5); }
+}
+@media (max-height: 420px) {
+  .dl-app { --topbar-h: 48px; --shell-gap: 6px; }
+}
+
+/* ============================================================================
+ * Motion — entrance choreography
+ * Page blocks settle in with a short fade + upward rise, lightly staggered so a
+ * screen "composes" itself top-down. Hover/press micro-motion lives on each
+ * primitive above. Both are turned off under prefers-reduced-motion (below).
+ * ========================================================================== */
+@keyframes dl-rise {
+  from { opacity: 0; transform: translateY(8px); }
+  to   { opacity: 1; transform: none; }
+}
+.app-page > * { animation: dl-rise var(--dur-3) var(--ease-out) both; }
+.app-page > *:nth-child(1) { animation-delay: 40ms; }
+.app-page > *:nth-child(2) { animation-delay: 90ms; }
+.app-page > *:nth-child(3) { animation-delay: 140ms; }
+.app-page > *:nth-child(4) { animation-delay: 180ms; }
+.app-page > *:nth-child(n + 5) { animation-delay: 210ms; }
+
+/* ============================================================================
+ * Reduced motion
+ * ========================================================================== */
+@media (prefers-reduced-motion: reduce) {
+  .dl-app *, .dl-app *::before, .dl-app *::after {
+    transition-duration: 0.01ms !important;
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+  }
+}
+
+/* ==========================================================================
+ * Create flow — the guided wizard (pages/app/create). The recessed-satin field
+ * language (TextInput/TextArea/Field), the calm centred wizard card + stepper,
+ * the collapsible milestone editor, the ETH/USDC pickers, the review summary,
+ * and the success seal. All silver/pearl on the existing tokens — no new
+ * palette, no shell changes. Reduced-motion is handled by the global block above.
+ * ========================================================================== */
+
+/* ── Form fields ──────────────────────────────────────────────────────────── */
+.dl-field { display: flex; flex-direction: column; gap: var(--space-2); min-width: 0; }
+.dl-field__label { font-family: var(--font-ui); font-size: var(--text-sm); font-weight: var(--weight-medium); color: var(--ink-soft); }
+.dl-field__req { color: var(--accent-review-ink); margin-left: 2px; }
+.dl-field__hint { font-size: var(--text-sm); color: var(--ink-muted); line-height: var(--leading-snug); }
+.dl-field__error { font-size: var(--text-sm); color: var(--accent-danger-ink); line-height: var(--leading-snug); }
+
+/* the recessed satin field — same groove as SearchInput, block-level. Scoped
+ * under .dl-app so the silver focus ring outranks the global graphite one. */
+.dl-app .dl-input {
+  width: 100%; min-height: 44px; padding: 0 var(--space-4);
+  border-radius: var(--radius-control);
+  background: var(--surface-sunken); border: 1px solid var(--border);
+  box-shadow: var(--shadow-inset), inset 0 -1px 0 rgba(255, 255, 255, 0.6);
+  font-family: var(--font-ui); font-size: var(--text-base); color: var(--ink);
+  outline: none; -webkit-appearance: none; appearance: none;
+  transition: border-color var(--dur-2) var(--ease-standard), box-shadow var(--dur-2) var(--ease-out);
+}
+.dl-app .dl-input--area { min-height: 88px; padding: var(--space-3) var(--space-4); line-height: var(--leading-normal); resize: vertical; }
+.dl-app .dl-input::placeholder { color: var(--ink-faint); }
+.dl-app .dl-input:hover { border-color: var(--border-strong); }
+.dl-app .dl-input:focus,
+.dl-app .dl-input:focus-visible {
+  border-color: var(--rail-medium);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.7), 0 0 0 3px rgba(185, 190, 180, 0.22), var(--shadow-2);
+}
+.dl-app .dl-input[aria-invalid="true"] { border-color: color-mix(in srgb, var(--accent-danger) 50%, var(--border-strong)); }
+.dl-app .dl-input[aria-invalid="true"]:focus { box-shadow: inset 0 1px 0 rgba(255,255,255,.6), 0 0 0 3px var(--accent-danger-soft), var(--shadow-2); }
+.dl-app .dl-input[type="date"] { padding-right: var(--space-3); }
+.dl-app .dl-input[type="date"]::-webkit-calendar-picker-indicator { opacity: .5; cursor: pointer; }
+.dl-app .dl-input[type="date"]::-webkit-calendar-picker-indicator:hover { opacity: .8; }
+.dl-app .dl-input[type="number"] { -moz-appearance: textfield; }
+.dl-app .dl-input[type="number"]::-webkit-outer-spin-button,
+.dl-app .dl-input[type="number"]::-webkit-inner-spin-button { -webkit-appearance: none; margin: 0; }
+
+.dl-amount { position: relative; }
+.dl-amount .dl-input { padding-right: 56px; font-variant-numeric: tabular-nums; }
+.dl-amount__suffix {
+  position: absolute; right: var(--space-4); top: 50%; transform: translateY(-50%);
+  font-family: var(--font-mono); font-size: var(--text-sm); color: var(--ink-muted); pointer-events: none; letter-spacing: .02em;
+}
+
+/* ── Wizard frame ─────────────────────────────────────────────────────────── */
+.dl-wizard { width: 100%; max-width: 720px; margin: 0 auto; display: flex; flex-direction: column; gap: var(--space-6); }
+.dl-wizard__top { display: flex; align-items: flex-start; justify-content: space-between; gap: var(--space-4); }
+.dl-wizard__lede { display: flex; flex-direction: column; gap: var(--space-3); min-width: 0; }
+.dl-wizard__kicker { font-family: var(--font-mono); font-size: var(--text-2xs); text-transform: uppercase; letter-spacing: var(--tracking-label); color: var(--ink-muted); }
+/* keep the top-bar Cancel dainty (compact secondary control, not a loud pill) */
+.dl-wizard__top .dl-btn svg { width: 15px; height: 15px; }
+
+/* The card is a raised satin-metal TRAY: the same cool brushed-silver plate as
+ * the dashboard cards (grain over the cool plate gradient), but lifted higher and
+ * framed by a full machined rim — a bright top edge over a dark lower edge — with
+ * a crisp top light-catch. --wiz-pad keeps the edge padding and the bled action
+ * zone in sync (re-set at the mobile breakpoint).                                */
+.dl-wizard__card {
+  --wiz-pad: var(--space-8);
+  position: relative;
+  background: var(--metal-grain-v), var(--surface-plate-cool-raised);
+  border: 1px solid var(--border);
+  border-radius: var(--radius-panel);
+  box-shadow: var(--shadow-card-hover), var(--edge-highlight), var(--edge-shadow);
+  padding: var(--wiz-pad);
+  overflow: hidden;
+}
+.dl-wizard__card::before { content: ""; position: absolute; inset: 0 0 auto 0; height: 46%; background: var(--sheen-plate-strong); opacity: .9; pointer-events: none; }
+.dl-wizard__head { position: relative; z-index: 1; margin-bottom: var(--space-5); }
+.dl-wizard__eyebrow { font-family: var(--font-mono); font-size: var(--text-2xs); text-transform: uppercase; letter-spacing: var(--tracking-label); color: var(--ink-muted); }
+.dl-wizard__title { font-family: var(--font-ui); font-size: var(--text-xl); font-weight: var(--weight-semibold); color: var(--ink); margin-top: 6px; letter-spacing: var(--tracking-tight); }
+.dl-wizard__sub { font-size: var(--text-md); color: var(--ink-muted); margin-top: 6px; line-height: var(--leading-normal); max-width: 52ch; }
+
+/* the form sits in a calmer pearl well, recessed into the tray. min-height keeps
+ * short steps (e.g. step 1) from leaving the tray looking empty on desktop.      */
+.dl-wizard__panel {
+  position: relative; z-index: 1;
+  background: var(--surface-sunken-cool);
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-inner);
+  box-shadow: var(--shadow-inset), inset 0 1px 0 rgba(255, 255, 255, 0.7);
+  padding: var(--space-6);
+  min-height: 196px;
+}
+.dl-wizard__body { display: flex; flex-direction: column; gap: var(--space-5); }
+@media (prefers-reduced-motion: no-preference) { .dl-wizard__body { animation: dl-wizard-step var(--dur-3) var(--ease-out) both; } }
+@keyframes dl-wizard-step { from { opacity: 0; transform: translateY(8px); } to { opacity: 1; transform: none; } }
+
+/* action zone — bleeds to the tray edges as a machined base plate, cut from the
+ * form by an engraved divider (a dark hairline with a light catch just beneath). */
+.dl-wizard__foot {
+  position: relative; z-index: 1;
+  display: flex; align-items: center; justify-content: space-between; gap: var(--space-3);
+  margin: var(--space-6) calc(-1 * var(--wiz-pad)) calc(-1 * var(--wiz-pad));
+  padding: var(--space-5) var(--wiz-pad);
+  background: linear-gradient(180deg, rgba(255, 255, 255, 0) 0%, rgba(28, 28, 22, 0.028) 100%);
+  border-top: 1px solid var(--border-strong);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.8);
+}
+.dl-wizard__foot .dl-btn svg { width: 16px; height: 16px; }
+
+/* ── Stepper — a machined silver progress rail ────────────────────────────────
+ * Three disc states: future = recessed pale well · current = raised pearl disc
+ * with a strong rim + soft silver halo · complete = a filled brushed-silver coin
+ * with a check. Connectors are thin engraved rails. Only the current step shows
+ * its label (the card eyebrow always states "Step n of 5 · Title").             */
+.dl-stepper { display: flex; align-items: center; gap: var(--space-2); list-style: none; margin: 0; padding: 0; }
+.dl-stepper__item { display: inline-flex; }
+.dl-stepper__line {
+  flex: 1 1 auto; min-width: 14px; height: 2px; border-radius: 2px;
+  background: var(--rail-soft); box-shadow: 0 1px 0 rgba(255, 255, 255, 0.6);
+  transition: background var(--dur-2) var(--ease-standard);
+}
+.dl-stepper__line[data-filled="true"] { background: var(--rail-strong); }
+.dl-stepper__step { display: inline-flex; align-items: center; gap: var(--space-2); padding: 3px 5px; border: 0; background: none; border-radius: var(--radius-sm); font-family: var(--font-ui); color: var(--ink-muted); cursor: pointer; }
+.dl-stepper__step:disabled { cursor: default; }
+.dl-app .dl-stepper__step:not(:disabled):hover { color: var(--ink-soft); }
+.dl-app .dl-stepper__step:not(:disabled):hover .dl-stepper__dot { border-color: var(--rail-strong); }
+/* future (default) — a recessed pale well with a faint number */
+.dl-stepper__dot {
+  width: 26px; height: 26px; flex: 0 0 auto; border-radius: var(--radius-pill); display: grid; place-items: center;
+  font-family: var(--font-mono); font-size: var(--text-xs); color: var(--ink-faint);
+  background: var(--surface-sunken-cool); border: 1px solid var(--border-hairline); box-shadow: var(--shadow-inset);
+  transition: background var(--dur-2) var(--ease-out), box-shadow var(--dur-2) var(--ease-out),
+    border-color var(--dur-2) var(--ease-out), color var(--dur-2) var(--ease-out);
+}
+.dl-stepper__dot svg { width: 14px; height: 14px; }
+.dl-stepper__label { display: none; font-size: var(--text-sm); white-space: nowrap; }
+.dl-stepper__step.is-current { color: var(--ink); }
+.dl-stepper__step.is-current .dl-stepper__label { display: inline; }
+/* current — raised pearl disc, strong rim, soft silver halo */
+.dl-stepper__step.is-current .dl-stepper__dot {
+  background: var(--orb-surface-deep); color: var(--ink); border-color: var(--rail-strong);
+  box-shadow: var(--orb-shadow), 0 0 0 3px rgba(185, 190, 180, 0.30);
+}
+/* complete — a filled brushed-silver coin with a graphite check */
+.dl-stepper__step.is-complete .dl-stepper__dot {
+  background: var(--metal-keycap); color: var(--ink); border-color: var(--border-strong);
+  box-shadow: var(--shadow-1), var(--edge-highlight-disc);
+}
+
+/* ── Milestone editor (step 3) ────────────────────────────────────────────── */
+.dl-ms-list { display: flex; flex-direction: column; gap: var(--space-3); }
+.dl-ms-edit { border: 1px solid var(--border); border-radius: var(--radius-card); background: var(--surface-card); box-shadow: var(--shadow-1); overflow: hidden; transition: box-shadow var(--dur-2) var(--ease-out), border-color var(--dur-2) var(--ease-out); }
+.dl-ms-edit:hover { box-shadow: var(--shadow-2); }
+.dl-ms-edit.is-open { border-color: var(--border-strong); box-shadow: var(--shadow-2); }
+.dl-ms-edit__head { display: flex; align-items: center; }
+.dl-ms-edit__toggle { flex: 1; min-width: 0; display: flex; align-items: center; gap: var(--space-3); padding: var(--space-3) var(--space-4); border: 0; background: none; cursor: pointer; text-align: left; }
+.dl-ms-edit__index { width: 26px; height: 26px; flex: 0 0 auto; border-radius: var(--radius-pill); display: grid; place-items: center; font-family: var(--font-mono); font-size: var(--text-xs); color: var(--ink-soft); background: var(--orb-surface); border: 1px solid var(--orb-rim); box-shadow: var(--orb-shadow); }
+.dl-ms-edit__title { flex: 1; min-width: 0; font-size: var(--text-base); font-weight: var(--weight-medium); color: var(--ink); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.dl-ms-edit__amount { font-size: var(--text-sm); color: var(--ink-muted); flex: 0 0 auto; }
+.dl-ms-edit__chevron { flex: 0 0 auto; color: var(--ink-muted); display: grid; place-items: center; transition: transform var(--dur-2) var(--ease-out); }
+.dl-ms-edit__chevron svg { width: 16px; height: 16px; }
+.dl-ms-edit.is-open .dl-ms-edit__chevron { transform: rotate(90deg); }
+.dl-ms-edit__remove { flex: 0 0 auto; width: 36px; height: 36px; margin-right: var(--space-2); display: grid; place-items: center; border: 0; background: none; border-radius: var(--radius-sm); color: var(--ink-muted); cursor: pointer; transition: color var(--dur-1) var(--ease-standard), background var(--dur-2) var(--ease-out); }
+.dl-ms-edit__remove svg { width: 16px; height: 16px; }
+.dl-app .dl-ms-edit__remove:hover { color: var(--accent-danger-ink); background: var(--accent-danger-soft); }
+.dl-ms-edit__body { display: grid; grid-template-rows: 0fr; transition: grid-template-rows var(--dur-3) var(--ease-out); }
+.dl-ms-edit.is-open .dl-ms-edit__body { grid-template-rows: 1fr; }
+.dl-ms-edit__bodyinner { overflow: hidden; min-height: 0; }
+.dl-ms-edit__fields { display: flex; flex-direction: column; gap: var(--space-4); padding: 0 var(--space-4) var(--space-4); }
+.dl-ms-edit__row { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); }
+
+.dl-ms-add { width: 100%; display: inline-flex; align-items: center; justify-content: center; gap: var(--space-2); padding: var(--space-4); border: 1.5px dashed var(--border-strong); border-radius: var(--radius-card); background: var(--surface-sunken); color: var(--ink-soft); font-family: var(--font-ui); font-size: var(--text-base); font-weight: var(--weight-medium); cursor: pointer; transition: border-color var(--dur-2) var(--ease-standard), background var(--dur-2) var(--ease-out), color var(--dur-2) var(--ease-out), transform var(--dur-1) var(--ease-out); }
+.dl-ms-add svg { width: 16px; height: 16px; }
+.dl-app .dl-ms-add:hover { border-color: var(--rail-strong); background: var(--surface-hover); color: var(--ink); }
+.dl-app .dl-ms-add:active { transform: translateY(1px); }
+.dl-ms-subtotal { display: flex; align-items: baseline; justify-content: space-between; padding: 0 var(--space-1); font-size: var(--text-sm); color: var(--ink-muted); }
+.dl-ms-subtotal .dl-num { font-size: var(--text-base); font-weight: var(--weight-medium); color: var(--ink); }
+
+/* ── Payment (step 4) ─────────────────────────────────────────────────────── */
+.dl-asset-grid { display: grid; grid-template-columns: 1fr 1fr; gap: var(--space-4); }
+.dl-asset { position: relative; display: flex; align-items: center; gap: var(--space-3); padding: var(--space-4); border: 1px solid var(--border); border-radius: var(--radius-card); background: var(--surface-card); box-shadow: var(--shadow-1); cursor: pointer; text-align: left; transition: border-color var(--dur-2) var(--ease-standard), box-shadow var(--dur-2) var(--ease-out), transform var(--dur-2) var(--ease-out), background var(--dur-2) var(--ease-out); }
+.dl-app .dl-asset:hover { border-color: var(--border-strong); box-shadow: var(--shadow-2); transform: translateY(-1px); }
+.dl-asset__icon { width: 40px; height: 40px; flex: 0 0 auto; border-radius: var(--radius-pill); display: grid; place-items: center; background: var(--orb-surface); border: 1px solid var(--orb-rim); box-shadow: var(--orb-shadow); color: var(--ink-soft); }
+.dl-asset__icon svg { width: 20px; height: 20px; }
+.dl-asset__text { display: flex; flex-direction: column; gap: 1px; min-width: 0; }
+.dl-asset__name { font-family: var(--font-ui); font-size: var(--text-base); font-weight: var(--weight-semibold); color: var(--ink); }
+.dl-asset__desc { font-size: var(--text-sm); color: var(--ink-muted); }
+.dl-asset__check { position: absolute; top: var(--space-3); right: var(--space-3); width: 20px; height: 20px; border-radius: var(--radius-pill); display: grid; place-items: center; background: var(--accent-secure); color: var(--ink-on-accent); opacity: 0; transform: scale(.7); transition: opacity var(--dur-2) var(--ease-out), transform var(--dur-2) var(--ease-spring); }
+.dl-asset__check svg { width: 13px; height: 13px; }
+.dl-asset.is-active { border-color: var(--rail-strong); background: var(--surface-selected); box-shadow: 0 0 0 1px var(--rail-strong), 0 0 0 4px rgba(185, 190, 180, 0.22), var(--shadow-2); }
+.dl-asset.is-active .dl-asset__check { opacity: 1; transform: none; }
+.dl-asset.is-active .dl-asset__icon { color: var(--ink); border-color: var(--orb-rim-strong); }
+
+.dl-readonly { display: inline-flex; align-items: center; gap: var(--space-2); padding: 0 var(--space-4); height: 44px; border-radius: var(--radius-control); background: var(--surface-inset); border: 1px solid var(--border-hairline); color: var(--ink-soft); font-family: var(--font-ui); font-size: var(--text-base); }
+.dl-readonly__dot { width: 8px; height: 8px; border-radius: var(--radius-pill); background: var(--accent-secure); box-shadow: var(--glow-secure); flex: 0 0 auto; }
+.dl-readonly__note { font-size: var(--text-sm); color: var(--ink-muted); margin-left: var(--space-3); }
+
+.dl-paytotal { display: flex; align-items: center; justify-content: space-between; gap: var(--space-4); padding: var(--space-4) var(--space-5); border-radius: var(--radius-card); background: var(--surface-sunken); border: 1px solid var(--border); box-shadow: var(--shadow-inset); }
+.dl-paytotal__text { display: flex; flex-direction: column; gap: 2px; }
+.dl-paytotal__sub { font-size: var(--text-sm); color: var(--ink-muted); }
+.dl-paytotal__value { font-family: var(--font-mono); font-size: var(--text-2xl); color: var(--ink); font-variant-numeric: tabular-nums; }
+.dl-paynote { display: flex; align-items: center; gap: var(--space-2); font-size: var(--text-sm); color: var(--ink-muted); }
+.dl-paynote svg { width: 15px; height: 15px; color: var(--accent-secure); flex: 0 0 auto; }
+
+/* ── Review (step 5) ──────────────────────────────────────────────────────── */
+.dl-review { display: flex; flex-direction: column; gap: var(--space-4); }
+.dl-review__section { border: 1px solid var(--border); border-radius: var(--radius-card); background: var(--surface-card); padding: var(--space-4) var(--space-5); box-shadow: var(--shadow-1); }
+.dl-review__head { display: flex; align-items: center; justify-content: space-between; gap: var(--space-3); margin-bottom: var(--space-3); }
+.dl-review__row { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-5); padding: 5px 0; }
+.dl-review__row dt { font-size: var(--text-sm); color: var(--ink-muted); flex: 0 0 auto; }
+.dl-review__row dd { font-size: var(--text-base); color: var(--ink); text-align: right; min-width: 0; word-break: break-word; }
+.dl-review__ms { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; }
+.dl-review__msrow { display: flex; align-items: baseline; justify-content: space-between; gap: var(--space-4); padding: 6px 0; border-top: 1px solid var(--border-hairline); }
+.dl-review__msrow:first-child { border-top: 0; }
+.dl-review__msname { font-size: var(--text-base); color: var(--ink); min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.dl-review__msmeta { display: inline-flex; align-items: baseline; gap: var(--space-4); color: var(--ink-muted); font-size: var(--text-sm); flex: 0 0 auto; }
+.dl-review__msmeta .dl-num { color: var(--ink); font-weight: var(--weight-medium); }
+.dl-review__total { font-size: var(--text-lg); font-weight: var(--weight-semibold); }
+
+/* ── Success seal (final) ─────────────────────────────────────────────────── */
+.dl-create-done { max-width: 540px; margin: 0 auto; text-align: center; display: flex; flex-direction: column; align-items: center; gap: var(--space-5); padding: var(--space-10) var(--space-6); }
+.dl-create-done__seal { width: 84px; height: 84px; border-radius: var(--radius-pill); display: grid; place-items: center; background: var(--orb-surface-deep); border: 1px solid var(--orb-rim-strong); box-shadow: var(--orb-shadow), var(--glow-secure); color: var(--accent-secure-ink); }
+.dl-create-done__seal svg { width: 38px; height: 38px; }
+@media (prefers-reduced-motion: no-preference) { .dl-create-done__seal { animation: dl-seal-in var(--dur-4) var(--ease-spring) both; } }
+@keyframes dl-seal-in { from { opacity: 0; transform: scale(.8); } to { opacity: 1; transform: none; } }
+.dl-create-done__title { font-family: var(--font-ui); font-size: var(--text-2xl); font-weight: var(--weight-semibold); color: var(--ink); letter-spacing: var(--tracking-tight); }
+.dl-create-done__text { font-size: var(--text-md); color: var(--ink-muted); line-height: var(--leading-normal); max-width: 46ch; }
+.dl-create-done__actions { display: flex; flex-wrap: wrap; gap: var(--space-3); justify-content: center; margin-top: var(--space-2); }
+
+/* ── Return-from-create banner (Agreements) ───────────────────────────────── */
+.dl-flash { display: flex; align-items: center; gap: var(--space-3); padding: var(--space-3) var(--space-4); border-radius: var(--radius-card); background: var(--accent-secure-soft); border: 1px solid color-mix(in srgb, var(--accent-secure) 28%, var(--border)); color: var(--accent-secure-ink); }
+.dl-flash__icon { width: 24px; height: 24px; flex: 0 0 auto; border-radius: var(--radius-pill); display: grid; place-items: center; background: var(--accent-secure); color: var(--ink-on-accent); }
+.dl-flash__icon svg { width: 14px; height: 14px; }
+.dl-flash__text { flex: 1; min-width: 0; font-size: var(--text-sm); line-height: var(--leading-snug); }
+.dl-flash__close { flex: 0 0 auto; width: 30px; height: 30px; display: grid; place-items: center; border: 0; background: none; border-radius: var(--radius-sm); color: var(--accent-secure-ink); cursor: pointer; opacity: .7; transition: opacity var(--dur-1) var(--ease-standard); }
+.dl-flash__close svg { width: 15px; height: 15px; }
+.dl-app .dl-flash__close:hover { opacity: 1; }
+
+/* ── Responsive ───────────────────────────────────────────────────────────── */
+@media (max-width: 720px) {
+  .dl-wizard__card { --wiz-pad: var(--space-6); }
+  .dl-wizard__panel { padding: var(--space-5); }
+  .dl-wizard__top { flex-direction: column; gap: var(--space-3); }
+  .dl-asset-grid { grid-template-columns: 1fr; }
+  .dl-ms-edit__row { grid-template-columns: 1fr; }
+}
