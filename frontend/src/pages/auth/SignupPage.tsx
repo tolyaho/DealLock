@@ -6,8 +6,8 @@
  * Email is secondary, not the primary identity: it's only asked for AFTER the
  * wallet is signed in, and it completes out-of-band via the verification link
  * (the backend emails /app?verifyEmail=…; in local dev the link prints to the
- * backend console). We surface a calm "check your email" state and let the user
- * continue to the dashboard meanwhile.
+ * backend console). We surface a calm "check your email" state, then send the
+ * (still wallet-only) user on to /verify-email — never straight to the dashboard.
  */
 import { useState } from "react";
 import { Link, Navigate, useNavigate } from "react-router-dom";
@@ -27,22 +27,32 @@ const SUBTITLE =
 const EMAIL_RE = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 export default function SignupPage() {
-  const { status, user, wallets, startEmail } = useAuth();
+  const { status, gateStatus, user, wallets, startEmail, updateProfile } = useAuth();
   const navigate = useNavigate();
 
   // After sign-in the session carries the wallet(s); show the primary one.
   const walletAddress = (wallets.find((w) => w.isPrimary) ?? wallets[0])?.address;
+  const [firstName, setFirstName] = useState(user?.firstName ?? "");
+  const [lastName, setLastName] = useState(user?.lastName ?? "");
+  const [nameError, setNameError] = useState<string | null>(null);
   const [email, setEmail] = useState("");
   const [emailError, setEmailError] = useState<string | null>(null);
   const [sending, setSending] = useState(false);
   const [sent, setSent] = useState(false);
 
-  // Fully onboarded already → dashboard.
-  if (status === "verified") return <Navigate to="/app/home" replace />;
+  // Fully onboarded already (or dev-bypassed) → dashboard.
+  if (gateStatus === "verified") return <Navigate to="/app/home" replace />;
 
   const hasSession = Boolean(user); // wallet signed in, email not yet verified
 
   const submitEmail = async () => {
+    const fn = firstName.trim();
+    const ln = lastName.trim();
+    if (!fn || !ln) {
+      setNameError("Enter your first and last name.");
+      return;
+    }
+    setNameError(null);
     const value = email.trim();
     if (!EMAIL_RE.test(value)) {
       setEmailError("Enter a valid email address.");
@@ -51,10 +61,12 @@ export default function SignupPage() {
     setEmailError(null);
     setSending(true);
     try {
+      // Persist the name first (so the avatar is valid right away), then send the link.
+      await updateProfile(fn, ln);
       await startEmail(value);
       setSent(true);
     } catch (e) {
-      setEmailError(e instanceof ApiError ? e.message : "Could not send the verification email.");
+      setEmailError(e instanceof ApiError ? e.message : "Could not save your details.");
     } finally {
       setSending(false);
     }
@@ -79,6 +91,33 @@ export default function SignupPage() {
       {hasSession && !sent && (
         <div className="dl-auth__steps">
           <WalletRow address={walletAddress} tone="secure" label="Signed in" />
+          <div className="dl-auth__namerow">
+            <TextInput
+              label="First name"
+              autoComplete="given-name"
+              placeholder="Ada"
+              value={firstName}
+              onChange={(e) => {
+                setFirstName(e.target.value);
+                if (nameError) setNameError(null);
+              }}
+              maxLength={60}
+              error={nameError ?? undefined}
+              required
+            />
+            <TextInput
+              label="Last name"
+              autoComplete="family-name"
+              placeholder="Lovelace"
+              value={lastName}
+              onChange={(e) => {
+                setLastName(e.target.value);
+                if (nameError) setNameError(null);
+              }}
+              maxLength={60}
+              required
+            />
+          </div>
           <TextInput
             label="Email"
             type="email"
@@ -121,8 +160,8 @@ export default function SignupPage() {
             notifications and recovery.
           </p>
           <p className="dl-auth__note">In local dev the link is printed in the backend console.</p>
-          <Button block variant="primary" onClick={() => navigate("/app/home")}>
-            Continue to dashboard
+          <Button block variant="primary" onClick={() => navigate("/verify-email")}>
+            Continue to verification
           </Button>
           <button type="button" className="dl-auth__linkbtn" onClick={() => setSent(false)}>
             Use a different email

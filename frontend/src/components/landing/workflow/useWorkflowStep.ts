@@ -17,11 +17,24 @@
  *
  * Either way the output is a single `activeStep`; the rest of the UI derives
  * active / completed / upcoming purely from comparing indices against it.
+ *
+ * It also returns `scrollToStep(i)`, which the (now clickable) action cards call so
+ * "tap a step to walk the flow" is real: on desktop it scrolls the window to the
+ * middle of that step's band on the pinned track (the scroll handler then flips the
+ * active step), and on mobile it scrolls that stacked card to centre. Scroll stays
+ * the single source of truth either way — clicks just move the scroll position.
  */
 
-import { useEffect, useState, type RefObject } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState, type RefObject } from "react";
 
 const MOBILE_QUERY = "(max-width: 960px)";
+
+function prefersReducedMotion() {
+  return (
+    typeof window !== "undefined" &&
+    window.matchMedia("(prefers-reduced-motion: reduce)").matches
+  );
+}
 
 interface Options {
   /** The tall sticky scroll track (.dl-workflow__scroll), measured on desktop. */
@@ -43,6 +56,12 @@ export function useWorkflowStep({ trackRef, cardRefs, stepCount, stepWeights }: 
     () => typeof window !== "undefined" && window.matchMedia(MOBILE_QUERY).matches,
   );
 
+  // Mirror activeStep in a ref so scrollToStep can short-circuit a tap on the current
+  // step without taking `activeStep` as a dep (which would change its identity every
+  // step and defeat the memoized cards/step-nav).
+  const activeStepRef = useRef(activeStep);
+  activeStepRef.current = activeStep;
+
   // Track viewport mode so we can swap scroll strategies without a full remount.
   useEffect(() => {
     const mql = window.matchMedia(MOBILE_QUERY);
@@ -52,23 +71,25 @@ export function useWorkflowStep({ trackRef, cardRefs, stepCount, stepWeights }: 
     return () => mql.removeEventListener("change", onChange);
   }, []);
 
-  // Desktop: scroll progress over the sticky scroll track → step band.
-  useEffect(() => {
-    if (isMobile) return;
-    const track = trackRef.current;
-    if (!track) return;
-
-    // Upper progress bound of each step, derived from the per-step dwell weights
-    // (defaults to even thirds/sixths when no weights are given). Computed once per
-    // effect run, not per frame. With all weights === 1 this reproduces the old
-    // Math.floor(progress * stepCount) equal-band behaviour exactly.
+  // Upper progress bound of each step, derived from the per-step dwell weights
+  // (defaults to even bands when no weights are given). Memoized so both the scroll
+  // effect and scrollToStep share one definition. With all weights === 1 this
+  // reproduces the old Math.floor(progress * stepCount) equal-band behaviour exactly.
+  const bounds = useMemo(() => {
     const weights =
       stepWeights && stepWeights.length === stepCount
         ? stepWeights
         : Array.from({ length: stepCount }, () => 1);
     const totalWeight = weights.reduce((a, w) => a + w, 0);
     let acc = 0;
-    const bounds = weights.map((w) => (acc += w) / totalWeight); // ascending, last === 1
+    return weights.map((w) => (acc += w) / totalWeight); // ascending, last === 1
+  }, [stepWeights, stepCount]);
+
+  // Desktop: scroll progress over the sticky scroll track → step band.
+  useEffect(() => {
+    if (isMobile) return;
+    const track = trackRef.current;
+    if (!track) return;
 
     let raf = 0;
     const measure = () => {
@@ -105,7 +126,7 @@ export function useWorkflowStep({ trackRef, cardRefs, stepCount, stepWeights }: 
       window.removeEventListener("scroll", onScroll);
       window.removeEventListener("resize", onScroll);
     };
-  }, [isMobile, trackRef, stepCount, stepWeights]);
+  }, [isMobile, trackRef, stepCount, bounds]);
 
   // Mobile: the highest stacked card crossing the viewport's centre band wins.
   useEffect(() => {
@@ -134,5 +155,40 @@ export function useWorkflowStep({ trackRef, cardRefs, stepCount, stepWeights }: 
     return () => io.disconnect();
   }, [isMobile, cardRefs, stepCount]);
 
-  return { activeStep, isMobile };
+  // Walk the flow to step `i` from a click/tap. Scroll stays the source of truth:
+  // on desktop we scroll the window to the middle of that step's band on the pinned
+  // track (the scroll handler then sets activeStep); on mobile we bring the stacked
+  // card to centre. Honours reduced-motion (jumps instead of smooth-scrolling).
+  const scrollToStep = useCallback(
+    (i: number) => {
+      // Tapping the step you're already on should do nothing — otherwise it snaps the
+      // free-scrolled position to the band midpoint, which reads as a jiggle.
+      if (i === activeStepRef.current) return;
+      const behavior: ScrollBehavior = prefersReducedMotion() ? "auto" : "smooth";
+
+      if (isMobile) {
+        cardRefs.current?.[i]?.scrollIntoView({ behavior, block: "center" });
+        return;
+      }
+
+      const track = trackRef.current;
+      if (!track) return;
+      const rect = track.getBoundingClientRect();
+      const total = rect.height - window.innerHeight;
+      if (total <= 0) return;
+      // Midpoint of band i (lower bound = previous band's upper bound, or 0).
+      const lower = i === 0 ? 0 : bounds[i - 1];
+      const upper = bounds[i];
+      const progress = (lower + upper) / 2;
+      // To land progress P we need the track top at -(P*total) in the viewport, i.e.
+      // scroll to currentScrollY + rect.top + P*total. Native smooth scroll keeps the
+      // active step updating live as it passes each band (a brief "walk through the
+      // flow"), and the user can interrupt it at any time.
+      const top = window.scrollY + rect.top + progress * total;
+      window.scrollTo({ top, behavior });
+    },
+    [isMobile, cardRefs, trackRef, bounds],
+  );
+
+  return { activeStep, isMobile, scrollToStep };
 }

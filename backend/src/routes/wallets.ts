@@ -2,7 +2,7 @@ import { Router } from "express";
 import { isAddress, verifyMessage, type Address, type Hex } from "viem";
 import { db } from "../db.js";
 import { buildLinkWalletMessage, NONCE_TTL_MS } from "../auth.js";
-import { generateNonce, asyncRoute } from "../utils.js";
+import { generateNonce, asyncRoute, isUniqueConstraintError } from "../utils.js";
 import { type AuthenticatedRequest } from "../middleware/requireAuth.js";
 
 const router = Router();
@@ -126,33 +126,45 @@ router.post(
       return;
     }
 
-    // Re-check wallet ownership (race-condition guard)
-    const existingWallet = await db.wallet.findUnique({ where: { address: normalized } });
-    if (existingWallet && existingWallet.userId !== userId) {
-      res.status(409).json({ error: "Wallet already linked to another account" });
+    const claimed = await db.authNonce.updateMany({
+      where: { id: nonceId, usedAt: null },
+      data: { usedAt: new Date() },
+    });
+    if (claimed.count !== 1) {
+      res.status(400).json({ error: "Nonce already used" });
       return;
     }
-    if (existingWallet?.userId === userId) {
-      // Already linked to this account — idempotent success
-      const wallets = await db.wallet.findMany({ where: { userId } });
-      res.json({ wallets });
-      return;
-    }
-
-    await db.authNonce.update({ where: { id: nonceId }, data: { usedAt: new Date() } });
 
     const walletCount = await db.wallet.count({ where: { userId } });
     const walletLabel =
       typeof label === "string" && label.trim() ? label.trim() : "Linked wallet";
 
-    await db.wallet.create({
-      data: {
-        userId,
-        address: normalized,
-        label: walletLabel,
-        isPrimary: walletCount === 0,
-      },
-    });
+    try {
+      const existingWallet = await db.wallet.findUnique({ where: { address: normalized } });
+      if (existingWallet && existingWallet.userId !== userId) {
+        res.status(409).json({ error: "Wallet already linked to another account" });
+        return;
+      }
+      if (!existingWallet) {
+        await db.wallet.create({
+          data: {
+            userId,
+            address: normalized,
+            label: walletLabel,
+            isPrimary: walletCount === 0,
+          },
+        });
+      }
+    } catch (err) {
+      if (!isUniqueConstraintError(err)) throw err;
+
+      const existingWallet = await db.wallet.findUnique({ where: { address: normalized } });
+      if (!existingWallet) throw err;
+      if (existingWallet.userId !== userId) {
+        res.status(409).json({ error: "Wallet already linked to another account" });
+        return;
+      }
+    }
 
     const wallets = await db.wallet.findMany({ where: { userId } });
     res.json({ wallets });
@@ -186,6 +198,13 @@ router.patch(
         }),
       ]);
     } else {
+      if (isPrimary === false && wallet.isPrimary) {
+        res
+          .status(400)
+          .json({ error: "Cannot unset the primary wallet. Set another wallet as primary first." });
+        return;
+      }
+
       await db.wallet.update({
         where: { address: normalized },
         data: {

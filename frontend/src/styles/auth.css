@@ -28,6 +28,44 @@
 /* drop the dashboard `.dl-app` grain overlay — the wall paints its own */
 .dl-app.dl-auth::after { display: none; }
 
+/* ── Route-guard loading shell (RequireVerified, while GET /auth/me settles) ───
+ * A minimal full-page metallic loader shown before /app resolves — no sidebar,
+ * topbar, or vault scene, just a calm pulse on the same light base as the auth
+ * surface, so the session check reads as part of sign-in rather than a flash of
+ * empty app chrome. Wrapped in `.dl-app` so the design tokens resolve. */
+.dl-app.dl-route-loading {
+  position: fixed;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-3);
+  background: #e9ebec;
+}
+.dl-route-loading__pulse {
+  width: 38px;
+  height: 38px;
+  border-radius: var(--radius-pill);
+  background: var(--orb-surface);
+  border: 1px solid var(--orb-rim);
+  box-shadow: var(--orb-shadow);
+}
+@media (prefers-reduced-motion: no-preference) {
+  .dl-route-loading__pulse { animation: dl-route-pulse 1.6s ease-in-out infinite; }
+}
+@keyframes dl-route-pulse {
+  0%, 100% { opacity: 0.55; transform: scale(0.94); }
+  50%      { opacity: 1; transform: scale(1); }
+}
+.dl-route-loading__label {
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  letter-spacing: 0.16em;
+  text-transform: uppercase;
+  color: var(--ink-faint);
+}
+
 /* ── ← Home — a quiet frosted control, clear of the fluted strip ────────────────
  * Positioned just right of the flute (so it never sits ON the ribs) with a soft
  * frosted-glass pill so the secondary back-link reads cleanly on the busy metal
@@ -513,6 +551,15 @@
   flex-direction: column;
   gap: var(--space-3);
 }
+/* First/last name side by side; stacks on very narrow panels. */
+.dl-auth__namerow {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: var(--space-3);
+}
+@media (max-width: 380px) {
+  .dl-auth__namerow { grid-template-columns: 1fr; }
+}
 .dl-auth__wallet {
   display: flex;
   align-items: center;
@@ -618,6 +665,37 @@
   text-decoration-color: var(--border-strong);
 }
 .dl-auth .dl-auth__linkbtn:hover { color: var(--ink); }
+
+/* ── TEMPORARY dev-only verification box (VerifyEmailPage) ─────────────────────
+ * The throwaway "any code works" step is visually fenced off (dashed rim + a
+ * "Dev only" tag) so it is never mistaken for the real verification UI. Remove
+ * this whole block together with the dev bypass once /email/confirm is wired. */
+.dl-auth__devbox {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  margin-top: var(--space-2);
+  padding: var(--space-4) var(--space-3) var(--space-3);
+  border: 1px dashed var(--border-strong);
+  border-radius: var(--radius-control);
+  background: var(--surface-sunken-cool);
+}
+.dl-auth__devtag {
+  position: absolute;
+  top: -9px;
+  left: var(--space-3);
+  padding: 2px 8px;
+  font-family: var(--font-mono);
+  font-size: var(--text-2xs);
+  font-weight: 600;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: var(--ink-muted);
+  background: var(--surface-action);
+  border: 1px solid var(--border-hairline);
+  border-radius: var(--radius-pill);
+}
 
 /* ── "Check your email" success state ───────────────────────────────────────*/
 .dl-auth__sent {

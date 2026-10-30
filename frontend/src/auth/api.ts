@@ -84,6 +84,7 @@ async function request<T>(path: string, opts: RequestOptions = {}, retryOnCsrf =
 export const api = {
   get: <T>(path: string, signal?: AbortSignal) => request<T>(path, { signal }),
   post: <T>(path: string, body?: unknown) => request<T>(path, { method: "POST", body }),
+  patch: <T>(path: string, body?: unknown) => request<T>(path, { method: "PATCH", body }),
   del: <T>(path: string, body?: unknown) => request<T>(path, { method: "DELETE", body }),
 };
 
@@ -93,6 +94,8 @@ export interface SessionUser {
   id: string;
   email: string | null;
   emailVerifiedAt: string | null;
+  firstName: string | null;
+  lastName: string | null;
 }
 
 export interface WalletRecord {

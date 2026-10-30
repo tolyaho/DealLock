@@ -2,19 +2,12 @@ import { Router } from "express";
 import { isAddress, verifyMessage, type Address, type Hex } from "viem";
 import { db } from "../db.js";
 import { buildSigninMessage, NONCE_TTL_MS } from "../auth.js";
-import { generateNonce, asyncRoute } from "../utils.js";
+import { generateNonce, asyncRoute, isUniqueConstraintError } from "../utils.js";
 import { requireAuth, type AuthenticatedRequest } from "../middleware/requireAuth.js";
 import { getOrCreateCsrfToken } from "../middleware/csrf.js";
+import { publicUser } from "../serializers.js";
 
 const router = Router();
-
-function publicUser(user: { id: string; email: string | null; emailVerifiedAt: Date | null }) {
-  return {
-    id: user.id,
-    email: user.email,
-    emailVerifiedAt: user.emailVerifiedAt?.toISOString() ?? null,
-  };
-}
 
 // GET /auth/csrf
 // Returns a session-bound token required by mutating cookie-session routes.
@@ -117,29 +110,48 @@ router.post(
       return;
     }
 
-    // Mark nonce used
-    await db.authNonce.update({ where: { id: nonceId }, data: { usedAt: new Date() } });
+    // Atomically claim the nonce after signature verification. A concurrent
+    // request using the same signed challenge must lose here, not later while
+    // creating account records.
+    const claimed = await db.authNonce.updateMany({
+      where: { id: nonceId, usedAt: null },
+      data: { usedAt: new Date() },
+    });
+    if (claimed.count !== 1) {
+      res.status(400).json({ error: "Nonce already used" });
+      return;
+    }
 
     // Find or create user + wallet
-    const existingWallet = await db.wallet.findUnique({
-      where: { address: normalized },
-      include: { user: true },
-    });
-
     let userId: string;
-    if (existingWallet) {
-      userId = existingWallet.userId;
-    } else {
-      const newUser = await db.user.create({ data: {} });
-      await db.wallet.create({
-        data: {
-          userId: newUser.id,
-          address: normalized,
-          label: "Primary wallet",
-          isPrimary: true,
-        },
+    try {
+      userId = await db.$transaction(async (tx) => {
+        const existingWallet = await tx.wallet.findUnique({
+          where: { address: normalized },
+          include: { user: true },
+        });
+
+        if (existingWallet) return existingWallet.userId;
+
+        const newUser = await tx.user.create({ data: {} });
+        await tx.wallet.create({
+          data: {
+            userId: newUser.id,
+            address: normalized,
+            label: "Primary wallet",
+            isPrimary: true,
+          },
+        });
+        return newUser.id;
       });
-      userId = newUser.id;
+    } catch (err) {
+      if (!isUniqueConstraintError(err)) throw err;
+
+      // Another valid sign-in with the same wallet may have created the wallet
+      // between our read and create. Recover cleanly instead of surfacing a 500.
+      const existingWallet = await db.wallet.findUnique({ where: { address: normalized } });
+      if (!existingWallet) throw err;
+      userId = existingWallet.userId;
     }
 
     req.session.userId = userId;
